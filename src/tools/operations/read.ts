@@ -94,26 +94,14 @@ export function validateReadParams(params: unknown): string | undefined {
 
   const p = params as Partial<ReadParams>;
 
-  if (!p.type) {
-    return 'Missing required parameter: type';
-  }
-
-  const validTypes = ['agent', 'workflow', 'resource'];
-  if (!validTypes.includes(p.type)) {
-    return `Invalid type: ${p.type}. Must be one of: ${validTypes.join(', ')}`;
-  }
-
-  // Type-specific validation
-  if (p.type === 'agent' && !p.agent) {
-    return 'Missing required parameter: agent (when type=agent)';
-  }
-
-  if (p.type === 'workflow' && !p.workflow) {
-    return 'Missing required parameter: workflow (when type=workflow)';
-  }
-
-  if (p.type === 'resource' && !p.uri) {
-    return 'Missing required parameter: uri (when type=resource)';
+  // type is optional if agent/workflow/uri is provided (will be inferred)
+  if (p.type) {
+    const validTypes = ['agent', 'workflow', 'resource'];
+    if (!validTypes.includes(p.type)) {
+      return `Invalid type: ${p.type}. Must be one of: ${validTypes.join(', ')}`;
+    }
+  } else if (!p.agent && !p.workflow && !p.uri) {
+    return 'Missing required parameter: one of agent, workflow, or uri';
   }
 
   if (p.agent && typeof p.agent !== 'string') {

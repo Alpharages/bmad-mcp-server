@@ -169,11 +169,14 @@ export class ResourceLoaderGit {
     bmadRoot: string;
     module?: string;
   } {
-    // First check if there's a 'bmad' subdirectory (common in Git repos)
+    // First check if there's a 'bmad' or '_bmad' subdirectory (common in Git repos / BMAD v6)
     const bmadSubdir = join(localPath, 'bmad');
     if (existsSync(bmadSubdir)) {
-      // Recursively check the bmad subdirectory
       return this.detectPathType(bmadSubdir);
+    }
+    const _bmadSubdir = join(localPath, '_bmad');
+    if (existsSync(_bmadSubdir)) {
+      return this.detectPathType(_bmadSubdir);
     }
 
     // Check if this path has an 'agents' subdirectory (it's a module or flat structure)
@@ -296,6 +299,49 @@ export class ResourceLoaderGit {
   }
 
   /**
+   * Scan an agents/ directory and return agent names.
+   * Supports both v5 (*.md files) and v6 (bmad-agent-{name}/SKILL.md subdirs).
+   */
+  private scanAgentsDir(agentsPath: string): string[] {
+    if (!existsSync(agentsPath)) return [];
+    const names: string[] = [];
+    try {
+      const entries = readdirSync(agentsPath, { withFileTypes: true });
+      for (const entry of entries) {
+        if (entry.isFile() && entry.name.endsWith('.md') && entry.name.toLowerCase() !== 'readme.md') {
+          // v5: flat *.md file
+          names.push(basename(entry.name, '.md'));
+        } else if (entry.isDirectory()) {
+          // v6: subdirectory containing SKILL.md
+          const skillPath = join(agentsPath, entry.name, 'SKILL.md');
+          if (existsSync(skillPath)) {
+            const agentName = entry.name.startsWith('bmad-agent-')
+              ? entry.name.slice('bmad-agent-'.length)
+              : entry.name;
+            names.push(agentName);
+          }
+        }
+      }
+    } catch {
+      // Ignore errors
+    }
+    return names;
+  }
+
+  /**
+   * Resolve the actual file path for an agent, checking v5 then v6 layout.
+   */
+  private resolveAgentFilePath(agentsDir: string, name: string): string | null {
+    // v5: agents/{name}.md
+    const v5 = join(agentsDir, `${name}.md`);
+    if (existsSync(v5)) return v5;
+    // v6: agents/bmad-agent-{name}/SKILL.md
+    const v6 = join(agentsDir, `bmad-agent-${name}`, 'SKILL.md');
+    if (existsSync(v6)) return v6;
+    return null;
+  }
+
+  /**
    * Resolve Git remote URLs to local cached paths (lazy, one-time)
    */
   private async resolveGitRemotes(): Promise<void> {
@@ -355,10 +401,18 @@ export class ResourceLoaderGit {
         path: join(projectBmad, projectPathInfo.module, 'agents', `${name}.md`),
         source: 'project',
       });
+      candidates.push({
+        path: join(projectBmad, projectPathInfo.module, 'agents', `bmad-agent-${name}`, 'SKILL.md'),
+        source: 'project',
+      });
     } else {
-      // BMAD root - check flat structure
+      // BMAD root - check flat structure (v5 + v6)
       candidates.push({
         path: join(projectBmad, 'agents', `${name}.md`),
+        source: 'project',
+      });
+      candidates.push({
+        path: join(projectBmad, 'agents', `bmad-agent-${name}`, 'SKILL.md'),
         source: 'project',
       });
 
@@ -374,6 +428,10 @@ export class ResourceLoaderGit {
               path: join(projectBmad, module, 'agents', `${name}.md`),
               source: 'project',
             });
+            candidates.push({
+              path: join(projectBmad, module, 'agents', `bmad-agent-${name}`, 'SKILL.md'),
+              source: 'project',
+            });
           }
         } catch {
           // Ignore module scanning errors
@@ -381,11 +439,27 @@ export class ResourceLoaderGit {
       }
     }
 
-    // User - flat structure
-    candidates.push({
-      path: join(this.paths.userBmad, 'agents', `${name}.md`),
-      source: 'user',
-    });
+    // User - use path detection to handle _bmad subdir
+    const userPathInfo = this.detectPathType(this.paths.userBmad);
+    const userBmad = userPathInfo.bmadRoot;
+    if (userPathInfo.module) {
+      candidates.push({ path: join(userBmad, userPathInfo.module, 'agents', `${name}.md`), source: 'user' });
+      candidates.push({ path: join(userBmad, userPathInfo.module, 'agents', `bmad-agent-${name}`, 'SKILL.md'), source: 'user' });
+    } else {
+      candidates.push({ path: join(userBmad, 'agents', `${name}.md`), source: 'user' });
+      candidates.push({ path: join(userBmad, 'agents', `bmad-agent-${name}`, 'SKILL.md'), source: 'user' });
+      try {
+        const modules = readdirSync(userBmad, { withFileTypes: true })
+          .filter((dirent) => dirent.isDirectory())
+          .map((dirent) => dirent.name);
+        for (const module of modules) {
+          candidates.push({ path: join(userBmad, module, 'agents', `${name}.md`), source: 'user' });
+          candidates.push({ path: join(userBmad, module, 'agents', `bmad-agent-${name}`, 'SKILL.md'), source: 'user' });
+        }
+      } catch {
+        // Ignore errors scanning modules
+      }
+    }
 
     // Git remotes - use smart path detection
     for (const localPath of this.resolvedGitPaths.values()) {
@@ -397,11 +471,18 @@ export class ResourceLoaderGit {
           path: join(localPath, 'agents', `${name}.md`),
           source: 'git',
         });
+        candidates.push({
+          path: join(localPath, 'agents', `bmad-agent-${name}`, 'SKILL.md'),
+          source: 'git',
+        });
       } else {
-        // BMAD root - search flat and all modules
-        // Flat structure
+        // BMAD root - search flat and all modules (v5 + v6)
         candidates.push({
           path: join(pathInfo.bmadRoot, 'agents', `${name}.md`),
+          source: 'git',
+        });
+        candidates.push({
+          path: join(pathInfo.bmadRoot, 'agents', `bmad-agent-${name}`, 'SKILL.md'),
           source: 'git',
         });
 
@@ -416,6 +497,10 @@ export class ResourceLoaderGit {
           for (const module of modules) {
             candidates.push({
               path: join(pathInfo.bmadRoot, module, 'agents', `${name}.md`),
+              source: 'git',
+            });
+            candidates.push({
+              path: join(pathInfo.bmadRoot, module, 'agents', `bmad-agent-${name}`, 'SKILL.md'),
               source: 'git',
             });
           }
@@ -634,13 +719,6 @@ export class ResourceLoaderGit {
 
     const agents = new Set<string>();
 
-    // Helper to filter out non-agent files
-    const isAgentFile = (filename: string): boolean => {
-      if (!filename.endsWith('.md')) return false;
-      const name = basename(filename, '.md').toLowerCase();
-      return name !== 'readme';
-    };
-
     // Scan project using smart path detection
     const projectPathInfo = this.getProjectBmadPath();
     const projectBmad = projectPathInfo.bmadRoot;
@@ -648,38 +726,20 @@ export class ResourceLoaderGit {
     if (existsSync(projectBmad)) {
       // If a specific module was detected, only scan that module
       if (projectPathInfo.module) {
-        const moduleAgents = join(
-          projectBmad,
-          projectPathInfo.module,
-          'agents',
-        );
-        if (existsSync(moduleAgents)) {
-          readdirSync(moduleAgents)
-            .filter(isAgentFile)
-            .forEach((f) => agents.add(basename(f, '.md')));
-        }
+        const moduleAgents = join(projectBmad, projectPathInfo.module, 'agents');
+        this.scanAgentsDir(moduleAgents).forEach((name) => agents.add(name));
       } else {
-        // Flat structure: bmad/agents/*.md
-        const flatAgents = join(projectBmad, 'agents');
-        if (existsSync(flatAgents)) {
-          readdirSync(flatAgents)
-            .filter(isAgentFile)
-            .forEach((f) => agents.add(basename(f, '.md')));
-        }
+        // Flat structure: bmad/agents/*.md (v5) or bmad/agents/bmad-agent-*/SKILL.md (v6)
+        this.scanAgentsDir(join(projectBmad, 'agents')).forEach((name) => agents.add(name));
 
-        // Modular structure: bmad/{module}/agents/*.md
+        // Modular structure: bmad/{module}/agents/
         try {
           const modules = readdirSync(projectBmad, { withFileTypes: true })
             .filter((dirent) => dirent.isDirectory())
             .map((dirent) => dirent.name);
 
           for (const module of modules) {
-            const moduleAgents = join(projectBmad, module, 'agents');
-            if (existsSync(moduleAgents)) {
-              readdirSync(moduleAgents)
-                .filter(isAgentFile)
-                .forEach((f) => agents.add(basename(f, '.md')));
-            }
+            this.scanAgentsDir(join(projectBmad, module, 'agents')).forEach((name) => agents.add(name));
           }
         } catch {
           // Ignore errors scanning modules
@@ -687,12 +747,25 @@ export class ResourceLoaderGit {
       }
     }
 
-    // Scan user - flat structure only
-    const userAgents = join(this.paths.userBmad, 'agents');
-    if (existsSync(userAgents)) {
-      readdirSync(userAgents)
-        .filter(isAgentFile)
-        .forEach((f) => agents.add(basename(f, '.md')));
+    // Scan user - use path detection to handle _bmad subdir
+    const userPathInfo = this.detectPathType(this.paths.userBmad);
+    const userBmad = userPathInfo.bmadRoot;
+    if (existsSync(userBmad)) {
+      if (userPathInfo.module) {
+        this.scanAgentsDir(join(userBmad, userPathInfo.module, 'agents')).forEach((name) => agents.add(name));
+      } else {
+        this.scanAgentsDir(join(userBmad, 'agents')).forEach((name) => agents.add(name));
+        try {
+          const modules = readdirSync(userBmad, { withFileTypes: true })
+            .filter((dirent) => dirent.isDirectory())
+            .map((dirent) => dirent.name);
+          for (const module of modules) {
+            this.scanAgentsDir(join(userBmad, module, 'agents')).forEach((name) => agents.add(name));
+          }
+        } catch {
+          // Ignore errors scanning modules
+        }
+      }
     }
 
     // Scan Git remotes - use smart path detection
@@ -700,38 +773,18 @@ export class ResourceLoaderGit {
       const pathInfo = this.detectPathType(localPath);
 
       if (pathInfo.module) {
-        // Specific module was requested
-        const moduleAgents = join(localPath, 'agents');
-        if (existsSync(moduleAgents)) {
-          readdirSync(moduleAgents)
-            .filter(isAgentFile)
-            .forEach((f) => agents.add(basename(f, '.md')));
-        }
+        this.scanAgentsDir(join(localPath, 'agents')).forEach((name) => agents.add(name));
       } else {
         // BMAD root - scan flat and modular
-        // Flat structure
-        const flatAgents = join(pathInfo.bmadRoot, 'agents');
-        if (existsSync(flatAgents)) {
-          readdirSync(flatAgents)
-            .filter(isAgentFile)
-            .forEach((f) => agents.add(basename(f, '.md')));
-        }
+        this.scanAgentsDir(join(pathInfo.bmadRoot, 'agents')).forEach((name) => agents.add(name));
 
-        // Modular structure
         try {
-          const modules = readdirSync(pathInfo.bmadRoot, {
-            withFileTypes: true,
-          })
+          const modules = readdirSync(pathInfo.bmadRoot, { withFileTypes: true })
             .filter((dirent) => dirent.isDirectory())
             .map((dirent) => dirent.name);
 
           for (const module of modules) {
-            const moduleAgents = join(pathInfo.bmadRoot, module, 'agents');
-            if (existsSync(moduleAgents)) {
-              readdirSync(moduleAgents)
-                .filter(isAgentFile)
-                .forEach((f) => agents.add(basename(f, '.md')));
-            }
+            this.scanAgentsDir(join(pathInfo.bmadRoot, module, 'agents')).forEach((name) => agents.add(name));
           }
         } catch {
           // Ignore errors scanning modules
@@ -982,7 +1035,16 @@ export class ResourceLoaderGit {
       // Extract XML section
       const xmlMatch = content.match(AGENT_XML_REGEX);
       if (!xmlMatch) {
-        return metadata; // No XML, return basic metadata
+        // v6 SKILL.md: parse markdown headings
+        const h1 = content.match(/^#\s+(.+)$/m);
+        if (h1) metadata.displayName = h1[1].trim();
+        const overview = content.match(/##\s+Overview\s*\n+([\s\S]*?)(?=\n##|$)/);
+        if (overview) metadata.description = overview[1].trim().substring(0, 300);
+        const style = content.match(/##\s+Communication Style\s*\n+([\s\S]*?)(?=\n##|$)/);
+        if (style) metadata.communicationStyle = style[1].trim();
+        const principles = content.match(/##\s+Principles\s*\n+([\s\S]*?)(?=\n##|$)/);
+        if (principles) metadata.principles = principles[1].trim();
+        return metadata;
       }
 
       const xmlContent = xmlMatch[0];
