@@ -8,11 +8,16 @@
  * a BMADServerLiteMultiToolGit instance that exposes BMAD agents and workflows
  * as MCP tools to AI assistants.
  *
+ * No separate BMAD installation is required — the server automatically fetches
+ * and caches BMAD content from the official Alpharages/BMAD-METHOD repository
+ * on first use, falling back gracefully to any locally installed BMAD.
+ *
  * @remarks
  * The server supports multiple BMAD content sources in priority order:
  * 1. Project-local: `./bmad/` directory (highest priority)
  * 2. User-global: `~/.bmad/` directory
- * 3. Git remotes: URLs passed as CLI arguments (lowest priority)
+ * 3. Git remotes: URLs passed as CLI arguments
+ * 4. Official Alpharages/BMAD-METHOD repo (auto-fetched, always present)
  *
  * @example
  * ```bash

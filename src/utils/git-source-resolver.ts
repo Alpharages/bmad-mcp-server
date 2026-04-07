@@ -211,7 +211,10 @@ export class GitSourceResolver {
    * const path = await resolver.resolve('git+ssh://git@github.com/myorg/private.git#develop');
    * ```
    */
-  async resolve(gitUrl: string): Promise<string> {
+  async resolve(
+    gitUrl: string,
+    onProgress?: (message: string) => void,
+  ): Promise<string> {
     const spec = this.parseGitUrl(gitUrl);
     // Simplified cache key without URL hash - just host-org-repo-ref
     // This ensures consistent paths and avoids stale cache issues
@@ -224,6 +227,7 @@ export class GitSourceResolver {
     const cacheExists = await this.pathExists(cachePath);
     if (cacheExists) {
       // Wait for any ongoing clone operation to complete
+      onProgress?.(`Waiting for ${spec.org}/${spec.repo} cache…`);
       await this.waitForCloneCompletion(cachePath);
 
       const metadata = await this.loadMetadata(cachePath);
@@ -237,24 +241,30 @@ export class GitSourceResolver {
           logger.info(
             `Updating cached repo: ${spec.org}/${spec.repo}#${spec.ref}`,
           );
+          onProgress?.(`Updating ${spec.org}/${spec.repo}…`);
           await this.updateRepository(spec, cachePath, gitUrl);
         } else {
           // Auto-update disabled AND cache fresh → USE CACHED VERSION
           logger.info(
             `Using cached repo (auto-update disabled, cache fresh): ${spec.org}/${spec.repo}#${spec.ref}`,
           );
+          onProgress?.(`Using cached ${spec.org}/${spec.repo}`);
         }
       } else {
         // URL changed (different subpath/branch) → DELETE & RECLONE
         logger.warn(
           `Cache invalid for ${gitUrl} (URL or spec changed), re-cloning...`,
         );
+        onProgress?.(`Re-cloning ${spec.org}/${spec.repo}…`);
         await this.removeDirectory(cachePath);
         await this.cloneRepository(spec, cachePath, gitUrl);
       }
     } else {
       // No cache → FRESH CLONE
       logger.info(`Cloning ${spec.org}/${spec.repo}#${spec.ref}`);
+      onProgress?.(
+        `Cloning ${spec.org}/${spec.repo} (first run — this takes ~30 s)…`,
+      );
       await this.cloneRepository(spec, cachePath, gitUrl);
     }
 
