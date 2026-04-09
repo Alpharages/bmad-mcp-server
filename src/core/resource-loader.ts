@@ -43,6 +43,13 @@ import { GitSourceResolver } from '../utils/git-source-resolver.js';
 import type { Workflow } from '../types/index.js';
 
 /**
+ * Official BMAD-METHOD repository — used as the automatic fallback source
+ * so users don't need to install BMAD separately.
+ */
+const DEFAULT_BMAD_REMOTE =
+  'git+https://github.com/Alpharages/BMAD-METHOD.git';
+
+/**
  * Constants for resource loading
  */
 
@@ -138,16 +145,25 @@ export class ResourceLoaderGit {
    * ```
    */
   constructor(projectRoot?: string, gitRemotes?: string[]) {
+    // Always append the official BMAD-METHOD repo as the last-resort fallback
+    // so users don't need to install BMAD separately — it is auto-fetched and
+    // cached on first use via GitSourceResolver.
+    const remotes = [...(gitRemotes || [])];
+    const hasOfficialRepo = remotes.some((r) =>
+      /alpharages\/bmad-method/i.test(r),
+    );
+    if (!hasOfficialRepo) {
+      remotes.push(DEFAULT_BMAD_REMOTE);
+    }
+
     this.paths = {
       projectRoot: projectRoot || process.cwd(),
       userBmad: join(homedir(), '.bmad'),
-      gitRemotes: gitRemotes || [],
+      gitRemotes: remotes,
     };
 
-    // Initialize Git resolver if we have remote URLs
-    if (gitRemotes && gitRemotes.length > 0) {
-      this.gitResolver = new GitSourceResolver();
-    }
+    // Always initialize the Git resolver (needed for the default remote fallback)
+    this.gitResolver = new GitSourceResolver();
   }
 
   /**
@@ -341,6 +357,82 @@ export class ResourceLoaderGit {
     return null;
   }
 
+  // ============================================================================
+  // BMM Skills Support (src/bmm-skills/ layout used by Alpharages/BMAD-METHOD)
+  // ============================================================================
+
+  /**
+   * Find the bmm-skills root directory within basePath.
+   * Checks src/bmm-skills first, then bmm-skills at root level.
+   */
+  private findBmmSkillsRoot(basePath: string): string | null {
+    for (const rel of ['src/bmm-skills', 'bmm-skills']) {
+      const candidate = join(basePath, rel);
+      if (existsSync(candidate)) return candidate;
+    }
+    return null;
+  }
+
+  /**
+   * Recursively scan a bmm-skills directory tree for SKILL.md files.
+   *
+   * Directories named "bmad-agent-{name}" → agent (name = stripped suffix).
+   * All other directories with a SKILL.md → workflow-skill (name = dir name).
+   *
+   * Recursion stops at the first directory that contains a SKILL.md so that
+   * nested helper dirs (e.g. prompts/) are not mistaken for skills.
+   */
+  private scanBmmSkills(root: string): {
+    agents: Map<string, string>; // agentName → path/to/SKILL.md
+    workflows: Map<string, string>; // skillName → path/to/SKILL.md
+  } {
+    const agents = new Map<string, string>();
+    const workflows = new Map<string, string>();
+
+    const walk = (dir: string) => {
+      if (!existsSync(dir)) return;
+      let entries: Array<{ name: string; isDirectory: () => boolean }>;
+      try {
+        entries = readdirSync(dir, { withFileTypes: true, encoding: 'utf8' });
+      } catch {
+        return;
+      }
+      for (const entry of entries) {
+        if (!entry.isDirectory()) continue;
+        const fullPath = join(dir, entry.name);
+        const skillFile = join(fullPath, 'SKILL.md');
+        if (existsSync(skillFile)) {
+          if (entry.name.startsWith('bmad-agent-')) {
+            const agentName = entry.name.slice('bmad-agent-'.length);
+            if (!agents.has(agentName)) agents.set(agentName, skillFile);
+          } else {
+            if (!workflows.has(entry.name)) workflows.set(entry.name, skillFile);
+          }
+          // Do NOT recurse — this directory owns its SKILL.md
+        } else {
+          // Category / grouping dir — recurse deeper
+          walk(fullPath);
+        }
+      }
+    };
+
+    walk(root);
+    return { agents, workflows };
+  }
+
+  /**
+   * Load the full content for a bmm-skills workflow-skill.
+   * Concatenates SKILL.md with workflow.md (sibling file) when present.
+   */
+  private loadBmmSkillContent(skillPath: string): string {
+    let content = readFileSync(skillPath, 'utf-8');
+    const workflowMd = join(dirname(skillPath), 'workflow.md');
+    if (existsSync(workflowMd)) {
+      content += '\n\n---\n\n' + readFileSync(workflowMd, 'utf-8');
+    }
+    return content;
+  }
+
   /**
    * Resolve Git remote URLs to local cached paths (lazy, one-time)
    */
@@ -352,7 +444,9 @@ export class ResourceLoaderGit {
       if (this.resolvedGitPaths.has(gitUrl)) continue;
 
       try {
-        const localPath = await this.gitResolver.resolve(gitUrl);
+        const localPath = await this.gitResolver.resolve(gitUrl, (msg) =>
+          console.error(`[BMAD] ${msg}`),
+        );
         this.resolvedGitPaths.set(gitUrl, localPath);
       } catch (error) {
         console.error(`Failed to resolve Git remote: ${gitUrl}`, error);
@@ -521,6 +615,24 @@ export class ResourceLoaderGit {
       }
     }
 
+    // Fallback: bmm-skills layout (Alpharages/BMAD-METHOD)
+    const bmmSources: Array<{ root: string; source: Resource['source'] }> = [
+      { root: this.paths.projectRoot, source: 'project' },
+      { root: this.paths.userBmad, source: 'user' },
+      ...Array.from(this.resolvedGitPaths.values()).map((p) => ({
+        root: p,
+        source: 'git' as Resource['source'],
+      })),
+    ];
+    for (const { root, source } of bmmSources) {
+      const bmmRoot = this.findBmmSkillsRoot(root);
+      if (!bmmRoot) continue;
+      const skillPath = this.scanBmmSkills(bmmRoot).agents.get(name);
+      if (skillPath && existsSync(skillPath)) {
+        return { name, path: skillPath, content: readFileSync(skillPath, 'utf-8'), source };
+      }
+    }
+
     throw new Error(`Agent not found: ${name}`);
   }
 
@@ -664,6 +776,29 @@ export class ResourceLoaderGit {
       }
     }
 
+    // Fallback: bmm-skills layout (Alpharages/BMAD-METHOD)
+    const bmmSources: Array<{ root: string; source: Resource['source'] }> = [
+      { root: this.paths.projectRoot, source: 'project' },
+      { root: this.paths.userBmad, source: 'user' },
+      ...Array.from(this.resolvedGitPaths.values()).map((p) => ({
+        root: p,
+        source: 'git' as Resource['source'],
+      })),
+    ];
+    for (const { root, source } of bmmSources) {
+      const bmmRoot = this.findBmmSkillsRoot(root);
+      if (!bmmRoot) continue;
+      const skillPath = this.scanBmmSkills(bmmRoot).workflows.get(name);
+      if (skillPath && existsSync(skillPath)) {
+        return {
+          name,
+          path: skillPath,
+          content: this.loadBmmSkillContent(skillPath),
+          source,
+        };
+      }
+    }
+
     throw new Error(`Workflow not found: ${name}`);
   }
 
@@ -790,6 +925,22 @@ export class ResourceLoaderGit {
           // Ignore errors scanning modules
         }
       }
+
+      // Also scan bmm-skills layout (Alpharages/BMAD-METHOD)
+      const bmmRoot = this.findBmmSkillsRoot(localPath);
+      if (bmmRoot) {
+        this.scanBmmSkills(bmmRoot).agents.forEach((_, name) => agents.add(name));
+      }
+    }
+
+    // Project & user bmm-skills
+    const projectBmmRoot = this.findBmmSkillsRoot(this.paths.projectRoot);
+    if (projectBmmRoot) {
+      this.scanBmmSkills(projectBmmRoot).agents.forEach((_, name) => agents.add(name));
+    }
+    const userBmmRoot = this.findBmmSkillsRoot(this.paths.userBmad);
+    if (userBmmRoot) {
+      this.scanBmmSkills(userBmmRoot).agents.forEach((_, name) => agents.add(name));
     }
 
     return Array.from(agents).sort();
@@ -948,6 +1099,22 @@ export class ResourceLoaderGit {
           // Ignore errors
         }
       }
+
+      // Also scan bmm-skills layout (Alpharages/BMAD-METHOD)
+      const bmmRoot = this.findBmmSkillsRoot(localPath);
+      if (bmmRoot) {
+        this.scanBmmSkills(bmmRoot).workflows.forEach((_, name) => workflows.add(name));
+      }
+    }
+
+    // Project & user bmm-skills
+    const projectBmmRoot = this.findBmmSkillsRoot(this.paths.projectRoot);
+    if (projectBmmRoot) {
+      this.scanBmmSkills(projectBmmRoot).workflows.forEach((_, name) => workflows.add(name));
+    }
+    const userBmmRoot = this.findBmmSkillsRoot(this.paths.userBmad);
+    if (userBmmRoot) {
+      this.scanBmmSkills(userBmmRoot).workflows.forEach((_, name) => workflows.add(name));
     }
 
     return Array.from(workflows).sort();
@@ -994,15 +1161,21 @@ export class ResourceLoaderGit {
         displayName: name,
       };
 
-      // Detect module from file path
-      // Paths look like: /path/to/bmad/{module}/agents/{name}.md
+      // Detect module from file path.
+      // Standard layout: /path/to/bmad/{module}/agents/{name}.md
+      // bmm-skills layout: /path/to/src/bmm-skills/{category}/bmad-agent-{name}/SKILL.md
       const pathParts = resource.path.split('/');
       const agentsIndex = pathParts.lastIndexOf('agents');
       if (agentsIndex > 0) {
         const potentialModule = pathParts[agentsIndex - 1];
-        // Only set if it looks like a module (not "bmad" itself)
         if (potentialModule !== 'bmad' && potentialModule !== '.bmad') {
           metadata.module = potentialModule;
+        }
+      } else {
+        // bmm-skills: use parent category dir (e.g. "2-plan-workflows")
+        const bmmIdx = pathParts.lastIndexOf('bmm-skills');
+        if (bmmIdx >= 0 && bmmIdx + 2 < pathParts.length) {
+          metadata.module = pathParts[bmmIdx + 1]; // e.g. "2-plan-workflows"
         }
       }
 
@@ -1320,12 +1493,40 @@ export class ResourceLoaderGit {
 
       return workflows;
     } catch {
-      // If manifest doesn't exist, fall back to name-only list
+      // No manifest — build list from discovered workflows + bmm-skills frontmatter
       const workflowNames = await this.listWorkflows();
+
+      // Pre-build a description map from bmm-skills SKILL.md frontmatter
+      const descMap = new Map<string, string>();
+      const allBmmRoots = [
+        this.paths.projectRoot,
+        this.paths.userBmad,
+        ...Array.from(this.resolvedGitPaths.values()),
+      ];
+      for (const root of allBmmRoots) {
+        const bmmRoot = this.findBmmSkillsRoot(root);
+        if (!bmmRoot) continue;
+        this.scanBmmSkills(bmmRoot).workflows.forEach((skillPath, name) => {
+          if (descMap.has(name)) return;
+          try {
+            const raw = readFileSync(skillPath, 'utf-8');
+            const fm = raw.match(/^---\n([\s\S]*?)\n---/);
+            if (fm) {
+              /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
+              const parsed = parseYaml(fm[1]) as any;
+              if (parsed?.description) descMap.set(name, String(parsed.description));
+              /* eslint-enable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
+            }
+          } catch {
+            // Ignore parse errors
+          }
+        });
+      }
+
       return workflowNames.map((name) => ({
         name,
-        description: '',
-        module: 'unknown',
+        description: descMap.get(name) ?? '',
+        module: 'bmm-skills',
         path: '',
         standalone: true,
       }));

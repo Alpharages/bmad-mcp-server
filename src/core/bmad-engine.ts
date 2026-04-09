@@ -111,6 +111,7 @@ export class BMADEngine {
   private workflows: Workflow[] = [];
   private cachedResources: Array<{ uri: string; relativePath: string }> = [];
   private initialized = false;
+  private initPromise?: Promise<void>;
 
   /**
    * Creates a new BMAD Engine instance
@@ -123,11 +124,18 @@ export class BMADEngine {
   }
 
   /**
-   * Initialize the engine (loads manifests and caches metadata)
+   * Initialize the engine (loads manifests and caches metadata).
+   * Concurrent callers all await the same in-flight promise — no duplicate work.
    */
   async initialize(): Promise<void> {
     if (this.initialized) return;
+    if (!this.initPromise) {
+      this.initPromise = this._doInitialize();
+    }
+    return this.initPromise;
+  }
 
+  private async _doInitialize(): Promise<void> {
     // Load all agents with metadata
     this.agentMetadata = await this.loader.listAgentsWithMetadata();
 

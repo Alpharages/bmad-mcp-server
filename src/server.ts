@@ -231,17 +231,49 @@ export class BMADServerLiteMultiToolGit {
     this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const toolName = request.params.name;
       const args = request.params.arguments ?? {};
+      const progressToken = request.params._meta?.progressToken;
 
-      if (toolName === 'bmad') {
-        return await handleBMADTool(
-          args as unknown as BMADToolParams,
-          this.engine,
-        );
+      // Send a progress heartbeat every 3 s so Claude Desktop knows the server
+      // is still working during long-running operations (Git clone, init, etc.)
+      let progressValue = 0;
+      let heartbeat: ReturnType<typeof setInterval> | undefined;
+      if (progressToken !== undefined) {
+        heartbeat = setInterval(() => {
+          progressValue = Math.min(progressValue + 5, 90);
+          this.server
+            .notification({
+              method: 'notifications/progress',
+              params: { progressToken, progress: progressValue, total: 100 },
+            })
+            .catch(() => {
+              /* ignore — client may not support progress */
+            });
+        }, 3000);
       }
 
-      throw new Error(
-        `Unknown tool: ${toolName}. Only 'bmad' tool is available.`,
-      );
+      try {
+        if (toolName === 'bmad') {
+          return await handleBMADTool(
+            args as unknown as BMADToolParams,
+            this.engine,
+          );
+        }
+
+        throw new Error(
+          `Unknown tool: ${toolName}. Only 'bmad' tool is available.`,
+        );
+      } finally {
+        if (heartbeat) clearInterval(heartbeat);
+        // Signal 100% completion so the client clears any progress indicator
+        if (progressToken !== undefined) {
+          this.server
+            .notification({
+              method: 'notifications/progress',
+              params: { progressToken, progress: 100, total: 100 },
+            })
+            .catch(() => {/* ignore */});
+        }
+      }
     });
 
     // List available prompts (agents)
