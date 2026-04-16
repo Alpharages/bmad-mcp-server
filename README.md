@@ -406,6 +406,16 @@ Claude Desktop only supports stdio-based servers. Use [`mcp-remote`](https://www
 }
 ```
 
+**Claude Code (CLI)**:
+
+```bash
+claude mcp add --transport http bmad https://your-domain.com/mcp \
+  --header "Authorization: Bearer your-secret-key-here" \
+  --scope user
+```
+
+Use `--scope project` instead to share with your team via `.mcp.json`.
+
 **VS Code / Cline** (supports HTTP natively):
 
 ```json
