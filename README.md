@@ -392,7 +392,6 @@ If `BMAD_API_KEY` is not set, the server runs in open mode (development only).
 {
   "mcpServers": {
     "bmad": {
-      "type": "http",
       "url": "https://your-domain.com/mcp",
       "headers": {
         "Authorization": "Bearer your-secret-key-here"
@@ -408,7 +407,6 @@ If `BMAD_API_KEY` is not set, the server runs in open mode (development only).
 {
   "mcpServers": {
     "bmad": {
-      "type": "http",
       "url": "https://your-domain.com/mcp",
       "headers": {
         "Authorization": "Bearer your-secret-key-here"
