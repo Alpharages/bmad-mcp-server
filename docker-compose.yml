@@ -1,0 +1,15 @@
+services:
+  bmad-mcp-server:
+    build: .
+    env_file:
+      - .env
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      NODE_ENV: "production"
+    volumes:
+      - bmad-cache:/root/.bmad
+    restart: unless-stopped
+
+volumes:
+  bmad-cache:

@@ -6,6 +6,7 @@
 
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import type { Transport } from '@modelcontextprotocol/sdk/shared/transport.js';
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
@@ -424,6 +425,10 @@ export class BMADServerLiteMultiToolGit {
     if (relativePath.endsWith('.xml')) return 'application/xml';
     if (relativePath.endsWith('.csv')) return 'text/csv';
     return 'text/plain';
+  }
+
+  async connect(transport: Transport): Promise<void> {
+    await this.server.connect(transport);
   }
 
   async start(): Promise<void> {
