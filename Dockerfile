@@ -9,6 +9,7 @@ COPY src/ ./src/
 RUN npm run build && npm prune --omit=dev
 
 FROM node:22-alpine AS runtime
+RUN apk add --no-cache git
 RUN addgroup -S bmad && adduser -S bmad -G bmad
 WORKDIR /app
 
