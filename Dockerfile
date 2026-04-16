@@ -17,10 +17,10 @@ COPY --from=builder --chown=bmad:bmad /app/node_modules ./node_modules
 COPY --chown=bmad:bmad package.json ./
 
 USER bmad
-EXPOSE 3000
+EXPOSE ${PORT:-3000}
 ENV NODE_ENV=production
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD wget -qO- http://localhost:3000/health || exit 1
+  CMD wget -qO- http://localhost:${PORT:-3000}/health || exit 1
 
 CMD ["node", "build/index-http.js"]
