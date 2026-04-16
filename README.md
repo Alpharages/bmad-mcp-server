@@ -388,15 +388,24 @@ If `BMAD_API_KEY` is not set, the server runs in open mode (development only).
 
 **Claude Desktop** (`~/Library/Application Support/Claude/claude_desktop_config.json`):
 
-Claude Desktop only supports stdio-based servers. Use [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) as a local bridge:
+Claude Desktop only supports stdio-based servers. Use [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) as a local bridge.
+
+First, install mcp-remote globally with Node 20+:
+
+```bash
+# Find your Node 20+ path (adjust version as needed)
+/Users/<you>/.nvm/versions/node/v22.18.0/bin/npm install -g mcp-remote
+```
+
+Then configure Claude Desktop to call `node` directly (avoids shebang picking up wrong Node version):
 
 ```json
 {
   "mcpServers": {
     "bmad": {
-      "command": "npx",
+      "command": "/Users/<you>/.nvm/versions/node/v22.18.0/bin/node",
       "args": [
-        "mcp-remote",
+        "/Users/<you>/.nvm/versions/node/v22.18.0/lib/node_modules/mcp-remote/dist/proxy.js",
         "https://your-domain.com/mcp",
         "--header",
         "Authorization: Bearer your-secret-key-here"
@@ -405,6 +414,8 @@ Claude Desktop only supports stdio-based servers. Use [`mcp-remote`](https://www
   }
 }
 ```
+
+> **Note:** Replace `<you>` with your username and adjust the Node version to match what you have installed. Using `npx mcp-remote` or the `mcp-remote` bin directly will fail if Node 18 appears first in your PATH.
 
 **Claude Code (CLI)**:
 
