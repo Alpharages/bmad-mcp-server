@@ -10,7 +10,9 @@ RUN npm run build && npm prune --omit=dev
 
 FROM node:22-alpine AS runtime
 RUN apk add --no-cache git
-RUN addgroup -S bmad && adduser -S bmad -G bmad
+RUN addgroup -S bmad && adduser -S bmad -G bmad && \
+    mkdir -p /home/bmad/.bmad/cache/git && \
+    chown -R bmad:bmad /home/bmad/.bmad
 WORKDIR /app
 
 COPY --from=builder --chown=bmad:bmad /app/build ./build
