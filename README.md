@@ -388,20 +388,25 @@ If `BMAD_API_KEY` is not set, the server runs in open mode (development only).
 
 **Claude Desktop** (`~/Library/Application Support/Claude/claude_desktop_config.json`):
 
+Claude Desktop only supports stdio-based servers. Use [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) as a local bridge:
+
 ```json
 {
   "mcpServers": {
     "bmad": {
-      "url": "https://your-domain.com/mcp",
-      "headers": {
-        "Authorization": "Bearer your-secret-key-here"
-      }
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "https://your-domain.com/mcp",
+        "--header",
+        "Authorization: Bearer your-secret-key-here"
+      ]
     }
   }
 }
 ```
 
-**VS Code / Cline:**
+**VS Code / Cline** (supports HTTP natively):
 
 ```json
 {
