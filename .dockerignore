@@ -1,0 +1,11 @@
+node_modules
+build
+coverage
+test-results
+.bmad
+.git
+.github
+.env
+tests
+scripts
+*.md

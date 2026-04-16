@@ -7,7 +7,7 @@
 
 A Model Context Protocol server that brings the [BMAD Method](https://github.com/bmad-code-org/BMAD-METHOD) to AI assistants.
 
-[Features](#features) • [Installation](#installation) • [Usage](#usage) • [Documentation](#documentation)
+[Features](#features) • [Installation](#installation) • [Docker Deployment](#docker-deployment) • [Usage](#usage) • [Documentation](#documentation)
 
 </div>
 
@@ -334,6 +334,129 @@ You can also work with the tool directly (useful for development/testing):
 }
 ```
 
+---
+
+## Docker Deployment
+
+Deploy the BMAD MCP Server as an HTTP service accessible over a domain — useful for teams sharing a single server instance.
+
+### Quick Start
+
+```bash
+git clone https://github.com/Alpharages/bmad-mcp-server.git
+cd bmad-mcp-server
+cp .env.example .env
+```
+
+Edit `.env` and set a strong API key:
+
+```env
+PORT=3000
+BMAD_API_KEY=your-secret-key-here
+BMAD_DEBUG=false
+```
+
+Then build and run:
+
+```bash
+docker compose up -d
+```
+
+The server starts on `http://localhost:3000`. BMAD content is automatically fetched from the official repository on first start and updated on each restart.
+
+### Endpoints
+
+| Endpoint | Auth required | Description |
+|---|---|---|
+| `GET /health` | No | Health check — returns `{"status":"ok","sessions":N}` |
+| `POST /mcp` | Yes | MCP Streamable HTTP transport |
+| `GET /mcp` | Yes | SSE stream for server-to-client notifications |
+| `DELETE /mcp` | Yes | Close MCP session |
+
+### Authentication
+
+All `/mcp` requests require an API key via one of:
+
+```
+Authorization: Bearer your-secret-key-here
+X-API-Key: your-secret-key-here
+```
+
+If `BMAD_API_KEY` is not set, the server runs in open mode (development only).
+
+### Connecting AI Clients
+
+**Claude Desktop** (`~/Library/Application Support/Claude/claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "bmad": {
+      "type": "http",
+      "url": "https://your-domain.com/mcp",
+      "headers": {
+        "Authorization": "Bearer your-secret-key-here"
+      }
+    }
+  }
+}
+```
+
+**VS Code / Cline:**
+
+```json
+{
+  "mcpServers": {
+    "bmad": {
+      "type": "http",
+      "url": "https://your-domain.com/mcp",
+      "headers": {
+        "Authorization": "Bearer your-secret-key-here"
+      }
+    }
+  }
+}
+```
+
+### Reverse Proxy (nginx example)
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name your-domain.com;
+
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Connection '';
+        proxy_set_header Host $host;
+        proxy_buffering off;
+        proxy_cache off;
+    }
+}
+```
+
+> **Note:** `proxy_buffering off` is required for SSE streams to work correctly.
+
+### Environment Variables
+
+| Variable | Default | Description |
+|---|---|---|
+| `PORT` | `3000` | HTTP port the server listens on |
+| `BMAD_API_KEY` | _(none)_ | API key for authentication — set this in production |
+| `BMAD_ROOT` | _(auto)_ | Override project root for local BMAD content |
+| `BMAD_DEBUG` | `false` | Enable verbose debug logging |
+
+### Pinning a BMAD Version
+
+By default the server always pulls the latest BMAD content. To pin a specific version, override the `CMD` in `docker-compose.yml`:
+
+```yaml
+command: ["node", "build/index-http.js", "git+https://github.com/Alpharages/BMAD-METHOD.git#v6.0.0"]
+```
+
+---
+
 ### Resource Discovery Priority
 
 The server searches for BMAD content in this order:
@@ -394,7 +517,10 @@ src/
 
 ```bash
 npm run build          # Compile TypeScript
-npm run dev            # Development mode with auto-restart
+npm run dev            # stdio mode with auto-restart
+npm run dev:http       # HTTP mode with auto-restart
+npm start              # Run compiled server (stdio/MCP)
+npm run start:http     # Run compiled server (HTTP)
 npm test               # Run all tests
 npm run test:unit      # Unit tests only
 npm run test:coverage  # Coverage report
