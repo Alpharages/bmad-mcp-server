@@ -62,4 +62,9 @@ reconciles these against our root `package.json`:
    confirm nothing regressed. If tsc now errors inside the vendored tree, the
    exclude in `tsconfig.json` already shields it; if the register-tools surface
    changed, reconcile the adapter in `src/server.ts` (Story 1.3's territory).
-5. Commit with: `chore(clickup): bump vendored SHA → <new-short-sha>`.
+5. Commit with `ALLOW_VENDOR_EDIT=1` to bypass the pre-commit guard that
+   normally blocks edits under `src/tools/clickup/`:
+
+   ```bash
+   ALLOW_VENDOR_EDIT=1 git commit -m "chore(clickup): bump vendored SHA → <new-short-sha>"
+   ```

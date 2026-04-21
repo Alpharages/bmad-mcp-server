@@ -1,1 +1,15 @@
+# Guard: block edits to vendored third-party trees (see VENDOR.md).
+# Set ALLOW_VENDOR_EDIT=1 to bypass — used by the vendor upgrade procedure.
+if [ -z "${ALLOW_VENDOR_EDIT:-}" ]; then
+  vendored_changes=$(git diff --cached --name-only | grep -E '^src/tools/clickup/' || true)
+  if [ -n "$vendored_changes" ]; then
+    echo "Pre-commit guard: commit touches vendored third-party tree:" >&2
+    echo "$vendored_changes" | sed 's/^/  /' >&2
+    echo "" >&2
+    echo "Vendored trees are read-only; re-vendor from upstream instead (see VENDOR.md)." >&2
+    echo "To bypass for the documented upgrade procedure: ALLOW_VENDOR_EDIT=1 git commit ..." >&2
+    exit 1
+  fi
+fi
+
 npx lint-staged
