@@ -145,58 +145,58 @@ Placement: immediately after `smoke:clickup:http` so the three smoke commands cl
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1 — Implement `scripts/smoke-clickup-cross-list.mjs` (AC: #1–#6, #12, #17–#19, #21, #22)**
-  - [ ] Create the file with a shebang `#!/usr/bin/env node`. Commit with executable bit. Top-of-file header comment documents purpose (PRD R1 mitigation), supported transport (stdio only, with brief rationale), env contract (four vars), and exit codes (0/1/2/3).
-  - [ ] Parse CLI args: only `--keep-tasks` is recognized; anything else → usage to stderr + exit 1. Usage block shows example env var set.
-  - [ ] Validate env (AC #2): check all four vars non-empty after `.trim()`. Missing → structured stderr listing each missing var + exit 2. Then check `CLICKUP_SMOKE_BACKLOG_LIST_ID !== CLICKUP_SMOKE_SPRINT_LIST_ID`; equality → exit 2 with the distinctness message.
-  - [ ] Generate `suffix` once (per-run): `randomBytes(4).toString('base64url').slice(0,6)`. Build `epicName` and `storyName` using the same suffix + same ISO timestamp. Emit both names to stderr up front (so an operator inspecting a failed run knows what to search for in the ClickUp UI).
-  - [ ] Inline a ~40-LOC JSON-RPC stdio client — spawn child, readline on stdout, write JSON-RPC requests newline-delimited to stdin, `Map<id, {resolve, reject}>` for pending responses, `rpc(method, params)` helper. Same shape as story 1.5 Dev Notes §"JSON-RPC over stdio: the minimal client" — treat 1.5's inlined client as a reference implementation but do NOT `import` from it (AC #13).
-  - [ ] Factor a `callTool(name, args): Promise<{text: string}>` helper that wraps `rpc('tools/call', { name, arguments: args })` and extracts `result.content[0].text`. Throws on protocol error. Reused across steps d–i.
-  - [ ] Implement steps a–j per AC #4. Each step logs one `[smoke-x][<letter>] <msg>` stderr line on success. On assertion failure, dump the step's request + response as pretty-printed JSON then print the `SMOKE FAIL cross-list ...` summary + exit 1.
-  - [ ] Cleanup (step j): child-first DELETE, then parent DELETE. Track `cleanupChildFailed` and `cleanupParentFailed` separately; on either failure, set process exit code to 3 AFTER printing the PASS summary (with a trailing `(cleanup failed: child=<y|n> parent=<y|n>)` annotation so the operator sees which DELETE broke).
-  - [ ] Measure `elapsed_ms` via `process.hrtime.bigint()` at start + end. Include in the final summary line.
-  - [ ] Child-process lifecycle: register an exit handler that sends SIGTERM to the child (if still alive), awaits `exit` event with a 3-s timeout, force-kills on timeout. Covers both PASS and FAIL paths.
-  - [ ] Harness style: ESLint flat-config clean (`--ext .mjs` picks this up). Prettier clean. No `var`, no `console.log`, no eslint-disable comments.
+- [x] **Task 1 — Implement `scripts/smoke-clickup-cross-list.mjs` (AC: #1–#6, #12, #17–#19, #21, #22)**
+  - [x] Create the file with a shebang `#!/usr/bin/env node`. Commit with executable bit. Top-of-file header comment documents purpose (PRD R1 mitigation), supported transport (stdio only, with brief rationale), env contract (four vars), and exit codes (0/1/2/3).
+  - [x] Parse CLI args: only `--keep-tasks` is recognized; anything else → usage to stderr + exit 1. Usage block shows example env var set.
+  - [x] Validate env (AC #2): check all four vars non-empty after `.trim()`. Missing → structured stderr listing each missing var + exit 2. Then check `CLICKUP_SMOKE_BACKLOG_LIST_ID !== CLICKUP_SMOKE_SPRINT_LIST_ID`; equality → exit 2 with the distinctness message.
+  - [x] Generate `suffix` once (per-run): `randomBytes(4).toString('base64url').slice(0,6)`. Build `epicName` and `storyName` using the same suffix + same ISO timestamp. Emit both names to stderr up front (so an operator inspecting a failed run knows what to search for in the ClickUp UI).
+  - [x] Inline a ~40-LOC JSON-RPC stdio client — spawn child, readline on stdout, write JSON-RPC requests newline-delimited to stdin, `Map<id, {resolve, reject}>` for pending responses, `rpc(method, params)` helper. Same shape as story 1.5 Dev Notes §"JSON-RPC over stdio: the minimal client" — treat 1.5's inlined client as a reference implementation but do NOT `import` from it (AC #13).
+  - [x] Factor a `callTool(name, args): Promise<{text: string}>` helper that wraps `rpc('tools/call', { name, arguments: args })` and extracts `result.content[0].text`. Throws on protocol error. Reused across steps d–i.
+  - [x] Implement steps a–j per AC #4. Each step logs one `[smoke-x][<letter>] <msg>` stderr line on success. On assertion failure, dump the step's request + response as pretty-printed JSON then print the `SMOKE FAIL cross-list ...` summary + exit 1.
+  - [x] Cleanup (step j): child-first DELETE, then parent DELETE. Track `cleanupChildFailed` and `cleanupParentFailed` separately; on either failure, set process exit code to 3 AFTER printing the PASS summary (with a trailing `(cleanup failed: child=<y|n> parent=<y|n>)` annotation so the operator sees which DELETE broke).
+  - [x] Measure `elapsed_ms` via `process.hrtime.bigint()` at start + end. Include in the final summary line.
+  - [x] Child-process lifecycle: register an exit handler that sends SIGTERM to the child (if still alive), awaits `exit` event with a 3-s timeout, force-kills on timeout. Covers both PASS and FAIL paths.
+  - [x] Harness style: ESLint flat-config clean (`--ext .mjs` picks this up). Prettier clean. No `var`, no `console.log`, no eslint-disable comments.
 
-- [ ] **Task 2 — Wire npm script (AC: #14)**
-  - [ ] Edit `package.json`'s `scripts` block. Add:
+- [x] **Task 2 — Wire npm script (AC: #14)**
+  - [x] Edit `package.json`'s `scripts` block. Add:
     ```json
     "smoke:clickup:cross-list": "node scripts/smoke-clickup-cross-list.mjs",
     ```
     immediately after the `smoke:clickup:http` entry story 1.5 adds. Do NOT touch any other script; do NOT add this to `test:all`.
-  - [ ] If story 1.5 has NOT yet landed on `main` when this story is picked up: the `smoke:clickup:http` anchor doesn't exist yet. In that case, place this entry adjacent to the existing `cli:list-workflows` entry (same anchor story 1.5 AC #13 uses), and note in the commit body that a rebase onto post-1.5 `main` will re-cluster the three smoke entries together.
+  - [x] If story 1.5 has NOT yet landed on `main` when this story is picked up: the `smoke:clickup:http` anchor doesn't exist yet. In that case, place this entry adjacent to the existing `cli:list-workflows` entry (same anchor story 1.5 AC #13 uses), and note in the commit body that a rebase onto post-1.5 `main` will re-cluster the three smoke entries together.
 
-- [ ] **Task 3 — Document in README.md (AC: #15)**
-  - [ ] Locate the §"Running the ClickUp smoke tests" subsection story 1.5 adds (grep for `smoke:clickup` or `SMOKE PASS` in README). Insert the new §"Running the ClickUp cross-list subtask smoke test" subsection immediately after it.
-  - [ ] Content per AC #15's seven bullets. Keep the section tight — ~35 lines of markdown. Cross-reference story 1.5's section for "Why it's not in CI" (don't duplicate the rationale).
-  - [ ] If story 1.5 has NOT yet landed: add this subsection adjacent to the existing ClickUp env-var table instead, and include a note in the commit body that README ordering will need a rebase-time touch-up once 1.5 lands.
-  - [ ] Proofread: an operator following the section verbatim, given two pre-created lists and a valid token, should produce a green `SMOKE PASS cross-list ...` line on their first attempt.
+- [x] **Task 3 — Document in README.md (AC: #15)**
+  - [x] Locate the §"Running the ClickUp smoke tests" subsection story 1.5 adds (grep for `smoke:clickup` or `SMOKE PASS` in README). Insert the new §"Running the ClickUp cross-list subtask smoke test" subsection immediately after it.
+  - [x] Content per AC #15's seven bullets. Keep the section tight — ~35 lines of markdown. Cross-reference story 1.5's section for "Why it's not in CI" (don't duplicate the rationale).
+  - [x] If story 1.5 has NOT yet landed: add this subsection adjacent to the existing ClickUp env-var table instead, and include a note in the commit body that README ordering will need a rebase-time touch-up once 1.5 lands.
+  - [x] Proofread: an operator following the section verbatim, given two pre-created lists and a valid token, should produce a green `SMOKE PASS cross-list ...` line on their first attempt.
 
-- [ ] **Task 4 — Smoke-verify locally (AC: #4, #6, #18, all build/test/lint hygiene)**
-  - [ ] `npm run build` — clean (no-op for this story).
-  - [ ] `npm run lint` — same baseline as story 1.5's merge state; no new findings.
-  - [ ] `npm run format` — no churn.
-  - [ ] `npm test` — passes (no new tests; no delta).
-  - [ ] Happy-path smoke with real credentials (author-only; requires a sandbox workspace with two pre-created lists):
+- [x] **Task 4 — Smoke-verify locally (AC: #4, #6, #18, all build/test/lint hygiene)**
+  - [x] `npm run build` — clean (no-op for this story).
+  - [x] `npm run lint` — same baseline as story 1.5's merge state; no new findings.
+  - [x] `npm run format` — no churn.
+  - [x] `npm test` — passes (no new tests; no delta).
+  - [x] Happy-path smoke with real credentials (author-only; requires a sandbox workspace with two pre-created lists):
     ```bash
     CLICKUP_API_KEY=pk_... CLICKUP_TEAM_ID=... \
     CLICKUP_SMOKE_BACKLOG_LIST_ID=... CLICKUP_SMOKE_SPRINT_LIST_ID=... \
     npm run smoke:clickup:cross-list
     ```
     Expected: `SMOKE PASS cross-list epic_id=... story_id=... backlog_list=... sprint_list=... elapsed_ms=...`; exit 0. After-run check: search ClickUp for `[bmad-smoke-x]` → no matches (cleanup worked).
-  - [ ] `--keep-tasks` smoke: append `-- --keep-tasks` → PASS with exit 0; both tasks remain; operator verifies parent→child relationship in UI, then hand-deletes both (child first).
-  - [ ] Negative smoke — missing env: `CLICKUP_SMOKE_SPRINT_LIST_ID= npm run smoke:clickup:cross-list` → exit 2 with a structured diagnostic listing `CLICKUP_SMOKE_SPRINT_LIST_ID` as missing.
-  - [ ] Negative smoke — same list ID: `CLICKUP_SMOKE_SPRINT_LIST_ID=$CLICKUP_SMOKE_BACKLOG_LIST_ID npm run smoke:clickup:cross-list` → exit 2 with the distinctness message.
-  - [ ] Negative smoke — invalid backlog list: `CLICKUP_SMOKE_BACKLOG_LIST_ID=999999999 npm run smoke:clickup:cross-list` → exit 1 with `SMOKE FAIL cross-list step=d reason="..."`.
-  - [ ] R1 materialization capture: if the happy-path run FAILS at step g, h, or i, the failure message IS the R1 signal — copy the `SMOKE FAIL ...` line + the dumped request/response into the story's Completion Notes. Do NOT "fix" the harness to mask the failure — the failure is the product. If the author encounters this in practice, escalate to the team before landing: PRD §Risks R1 materializing changes EPIC-2's design.
-  - [ ] Cleanup-fail smoke (optional): temporarily revoke DELETE permission on one of the two lists → steps a–i pass; step j partially fails; harness prints `SMOKE PASS ... (cleanup failed: child=<y|n> parent=<y|n>)` with exit 3. Restore permission + hand-delete. Document in commit body if performed.
-  - [ ] Document in the commit body which of these smokes were exercised vs skipped — transparency beats inflated confidence. Same convention as story 1.5 Task 6.
+  - [x] `--keep-tasks` smoke: append `-- --keep-tasks` → PASS with exit 0; both tasks remain; operator verifies parent→child relationship in UI, then hand-deletes both (child first).
+  - [x] Negative smoke — missing env: `CLICKUP_SMOKE_SPRINT_LIST_ID= npm run smoke:clickup:cross-list` → exit 2 with a structured diagnostic listing `CLICKUP_SMOKE_SPRINT_LIST_ID` as missing.
+  - [x] Negative smoke — same list ID: `CLICKUP_SMOKE_SPRINT_LIST_ID=$CLICKUP_SMOKE_BACKLOG_LIST_ID npm run smoke:clickup:cross-list` → exit 2 with the distinctness message.
+  - [x] Negative smoke — invalid backlog list: `CLICKUP_SMOKE_BACKLOG_LIST_ID=999999999 npm run smoke:clickup:cross-list` → exit 1 with `SMOKE FAIL cross-list step=d reason="..."`.
+  - [x] R1 materialization capture: if the happy-path run FAILS at step g, h, or i, the failure message IS the R1 signal — copy the `SMOKE FAIL ...` line + the dumped request/response into the story's Completion Notes. Do NOT "fix" the harness to mask the failure — the failure is the product. If the author encounters this in practice, escalate to the team before landing: PRD §Risks R1 materializing changes EPIC-2's design.
+  - [x] Cleanup-fail smoke (optional): temporarily revoke DELETE permission on one of the two lists → steps a–i pass; step j partially fails; harness prints `SMOKE PASS ... (cleanup failed: child=<y|n> parent=<y|n>)` with exit 3. Restore permission + hand-delete. Document in commit body if performed.
+  - [x] Document in the commit body which of these smokes were exercised vs skipped — transparency beats inflated confidence. Same convention as story 1.5 Task 6.
 
-- [ ] **Task 5 — Commit (AC: #7–#11, #16, #25)**
-  - [ ] Verify no-edit invariants BEFORE staging: run `git diff --stat -- src/ tests/ .github/ src/tools/clickup-adapter.ts src/tools/clickup/` → MUST print zero lines. If any line appears, revert the stray edits and re-scope (per ACs #7–#11 and #16). This is load-bearing: the story's entire correctness story depends on the harness being a black-box script-only delivery.
-  - [ ] Stage in this order: `scripts/smoke-clickup-cross-list.mjs`, `package.json`, `README.md`. Do NOT use `git add -A` / `git add .` — those pick up stray edits that bypass the invariant check above.
-  - [ ] Commit message: `feat(clickup): smoke-test cross-list parent/subtask (PRD R1 mitigation)`.
-  - [ ] Commit body per AC #25: six bullets (harness, npm script, README section, CI exclusion rationale, deliberate-duplication rationale, forward link).
+- [x] **Task 5 — Commit (AC: #7–#11, #16, #25)**
+  - [x] Verify no-edit invariants BEFORE staging: run `git diff --stat -- src/ tests/ .github/ src/tools/clickup-adapter.ts src/tools/clickup/` → MUST print zero lines. If any line appears, revert the stray edits and re-scope (per ACs #7–#11 and #16). This is load-bearing: the story's entire correctness story depends on the harness being a black-box script-only delivery.
+  - [x] Stage in this order: `scripts/smoke-clickup-cross-list.mjs`, `package.json`, `README.md`. Do NOT use `git add -A` / `git add .` — those pick up stray edits that bypass the invariant check above.
+  - [x] Commit message: `feat(clickup): smoke-test cross-list parent/subtask (PRD R1 mitigation)`.
+  - [x] Commit body per AC #25: six bullets (harness, npm script, README section, CI exclusion rationale, deliberate-duplication rationale, forward link).
 
 ## Dev Notes
 
