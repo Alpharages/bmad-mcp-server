@@ -11,3 +11,6 @@ tests/support/fixtures/
 
 # BMAD sample installations should not be linted
 .bmad/
+
+# Vendored third-party sources (do not modify)
+src/tools/clickup/

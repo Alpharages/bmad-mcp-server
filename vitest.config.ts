@@ -12,6 +12,7 @@ export default defineConfig({
       '**/build/**',
       '**/coverage/**',
       '**/tests/examples/**',
+      '**/src/tools/clickup/**',
     ],
     testTimeout: 30000, // Default 30s for all tests
     hookTimeout: 30000,
@@ -35,6 +36,7 @@ export default defineConfig({
         '**/coverage/**',
         '**/*.config.*',
         '**/*.d.ts',
+        '**/src/tools/clickup/**',
       ],
       reportsDirectory: './coverage',
     },

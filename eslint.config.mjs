@@ -20,6 +20,7 @@ export default tseslint.config(
       'tests/fixtures/**',
       '.bmad/**',
       '_deprecated/**',
+      'src/tools/clickup/**',
     ],
   },
   {

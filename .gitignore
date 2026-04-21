@@ -93,3 +93,6 @@ test-results/
 playwright-report/
 master-manifest.json
 bin/graph
+
+# Vendored third-party sources (must override src/**/*.js above)
+!src/tools/clickup/**
