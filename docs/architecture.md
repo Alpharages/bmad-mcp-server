@@ -496,3 +496,33 @@ Each layer has single responsibility:
 - **BMAD Method:** https://github.com/bmad-code-org/BMAD-METHOD
 - **TypeScript:** https://www.typescriptlang.org/
 - **Vitest:** https://vitest.dev/
+
+---
+
+## ClickUp Adapter Layer
+
+The adapter is a dispatch shim at `src/tools/clickup-adapter.ts` that
+dynamic-imports the vendored tree when `CLICKUP_API_KEY + CLICKUP_TEAM_ID` are
+present. Dynamic import is load-bearing because
+`src/tools/clickup/src/shared/config.ts:70` throws at module-evaluation time
+when env vars are absent — a static import chain would crash BMAD-only usage.
+
+```
+BMADServerLiteMultiToolGit
+  └── start() / connect()
+        └── ensureInitialized()
+              ├── this.initialize()          (BMADEngine)
+              └── registerClickUpTools(server, session)
+                    └── dynamic import('./clickup/src/tools/*.js')
+                          └── upstream register*Tools(server, userData)
+                                └── server.tool(...)   (McpServer API)
+```
+
+The adapter re-registers the upstream `my-todos` MCP prompt itself (lines
+108–151) rather than calling upstream's `initializeServer()`, because
+`initializeServer()` constructs its own `McpServer` which would shadow ours.
+
+The mode-dispatch table in `README.md` and the adapter's `step()` calls both
+enumerate the same tool-name-per-mode mapping. This duplication is known and
+flagged as deferred work — auto-generating `docs/api-contracts.md` from the
+adapter is out of scope for EPIC-1.

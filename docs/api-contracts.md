@@ -428,6 +428,135 @@ bmad://cis/knowledge/brainstorming/scamper.md
 
 ---
 
+## ClickUp Tools
+
+ClickUp tools are registered by `src/tools/clickup-adapter.ts` when both
+`CLICKUP_API_KEY` and `CLICKUP_TEAM_ID` are present. The adapter dispatches
+upstream `register*Tools` functions based on `CLICKUP_MCP_MODE`.
+
+### `getTaskById`
+
+- **Mode:** `read-minimal`
+- **Purpose:** Fetch a single task with comments and status history.
+- **Input:** `id` — `string`, 6–9 chars, alphanumeric (required).
+- **Returns:** `{ content: [{ type: 'text', text: string }] }` with task details, comments, and URLs.
+- **Source:** `src/tools/clickup/src/tools/task-tools.ts:12–60`
+
+### `searchTasks`
+
+- **Mode:** `read-minimal`
+- **Purpose:** Fuzzy search tasks by name, content, assignees, or ID.
+- **Input:** `terms` — `string[]` (optional); `list_ids` — `string[]` (optional); `space_ids` — `string[]` (optional); `only_todo` — `boolean` (optional); `status` — `string[]` (optional); `assigned_to_me` — `boolean` (optional).
+- **Returns:** `{ content: [{ type: 'text', text: string }] }` with ranked matches.
+- **Source:** `src/tools/clickup/src/tools/search-tools.ts:25–59`
+
+### `searchSpaces`
+
+- **Mode:** `read`
+- **Purpose:** Fuzzy search spaces by name or ID; auto-fetches lists/folders when ≤5 matches.
+- **Input:** `terms` — `string[]` (optional); `archived` — `boolean` (optional).
+- **Returns:** `{ content: [{ type: 'text', text: string }] }` with space tree or summary.
+- **Source:** `src/tools/clickup/src/tools/space-tools.ts:7–26`
+
+### `getListInfo`
+
+- **Mode:** `read`
+- **Purpose:** Get list metadata, statuses, tags, and description.
+- **Input:** `list_id` — `string` (required).
+- **Returns:** `{ content: [{ type: 'text', text: string }] }` with list context and valid statuses.
+- **Source:** `src/tools/clickup/src/tools/list-tools.ts:7–22`
+
+### `getTimeEntries`
+
+- **Mode:** `read`
+- **Purpose:** Read time entries for a task or the current user.
+- **Input:** `task_id` — `string` (optional); `start_date` — `string` ISO (optional); `end_date` — `string` ISO (optional); `list_id` — `string` (optional); `space_id` — `string` (optional); `include_all_users` — `boolean` (optional).
+- **Returns:** `{ content: [{ type: 'text', text: string }] }` with formatted time entries.
+- **Source:** `src/tools/clickup/src/tools/time-tools.ts:59–90`
+
+### `readDocument`
+
+- **Mode:** `read`
+- **Purpose:** Read a ClickUp document with page structure and content.
+- **Input:** `doc_id` — `string` (required); `page` — `string` ID or name (optional).
+- **Returns:** `{ content: [{ type: 'text', text: string }] }` with document metadata and page content.
+- **Source:** `src/tools/clickup/src/tools/doc-tools.ts:54–80`
+
+### `searchDocuments`
+
+- **Mode:** `read`
+- **Purpose:** Search documents by name or content (upstream placeholder — not yet implemented at vendored SHA `c79b21e3`).
+- **Input:** _(schema TBD when upstream ships)._
+- **Returns:** _(TBD)._
+- **Source:** `src/tools/clickup/src/tools/doc-tools.ts` (future)
+
+### `addComment`
+
+- **Mode:** `write`
+- **Purpose:** Add a comment to a task.
+- **Input:** `task_id` — `string` 6–9 chars (required); `comment` — `string` markdown (required).
+- **Returns:** `{ content: [{ type: 'text', text: string }] }` with confirmation and `comment_id`.
+- **Source:** `src/tools/clickup/src/tools/task-write-tools.ts:16–46`
+
+### `updateTask`
+
+- **Mode:** `write`
+- **Purpose:** Update task fields (append-only description, status, priority, dates, assignees, dependencies).
+- **Input:** `task_id` — `string` 6–9 chars (required); `name` — `string` (optional); `append_description` — `string` markdown (optional); `status` — `string` (optional); `priority` — `"urgent" | "high" | "normal" | "low"` (optional); `due_date` — `string` ISO (optional); `start_date` — `string` ISO (optional); `time_estimate` — `number` hours (optional); `tags` — `string[]` (optional); `parent_task_id` — `string` (optional); `assignees` — `string[]` (optional); `waiting_on` — `string[]` (optional); `blocking` — `string[]` (optional); `linked_tasks` — `string[]` (optional).
+- **Returns:** `{ content: [{ type: 'text', text: string }] }` with updated task summary.
+- **Source:** `src/tools/clickup/src/tools/task-write-tools.ts:102–140`
+
+### `createTask`
+
+- **Mode:** `write`
+- **Purpose:** Create a new task in a list.
+- **Input:** `list_id` — `string` (required); `name` — `string` (required); `description` — `string` markdown (optional); `status` — `string` (optional); `priority` — `"urgent" | "high" | "normal" | "low"` (optional); `due_date` — `string` ISO (optional); `start_date` — `string` ISO (optional); `time_estimate` — `number` hours (optional); `tags` — `string[]` (optional); `parent_task_id` — `string` (optional); `assignees` — `string[]` (optional).
+- **Returns:** `{ content: [{ type: 'text', text: string }] }` with `task_id` and clickable URL.
+- **Source:** `src/tools/clickup/src/tools/task-write-tools.ts:324–365`
+
+### `updateListInfo`
+
+- **Mode:** `write`
+- **Purpose:** Append markdown to a list description (preserves existing content).
+- **Input:** `list_id` — `string` (required); `append_description` — `string` markdown (required).
+- **Returns:** `{ content: [{ type: 'text', text: string }] }` with updated list summary.
+- **Source:** `src/tools/clickup/src/tools/list-tools.ts:123–145`
+
+### `createTimeEntry`
+
+- **Mode:** `write`
+- **Purpose:** Book time on a task for the current user.
+- **Input:** `task_id` — `string` 6–9 chars (required); `hours` — `number` 0.01–24 (required); `description` — `string` (optional); `start_time` — `string` ISO (optional).
+- **Returns:** `{ content: [{ type: 'text', text: string }] }` with confirmation.
+- **Source:** `src/tools/clickup/src/tools/time-tools.ts:324–360`
+
+### `updateDocumentPage`
+
+- **Mode:** `write`
+- **Purpose:** Update an existing document page's name and/or content.
+- **Input:** `doc_id` — `string` (required); `page_id` — `string` (required); `name` — `string` (optional); `content` — `string` markdown (optional); `append` — `boolean` (optional).
+- **Returns:** `{ content: [{ type: 'text', text: string }] }` with updated page summary.
+- **Source:** `src/tools/clickup/src/tools/doc-tools.ts:210–240`
+
+### `createDocumentOrPage`
+
+- **Mode:** `write`
+- **Purpose:** Create a new document (with `space_id` or `list_id`) or add a page to an existing document (with `doc_id`).
+- **Input:** `space_id` — `string` (optional); `list_id` — `string` (optional); `doc_id` — `string` (optional); `parent_page_id` — `string` (optional); `name` — `string` (required); `content` — `string` markdown (optional).
+- **Returns:** `{ content: [{ type: 'text', text: string }] }` with document/page URL.
+- **Source:** `src/tools/clickup/src/tools/doc-tools.ts:318–345`
+
+### Resource: `clickup://space/{spaceId}`
+
+- **Mode gating:** `read` and `write` only (not `read-minimal`).
+- **Purpose:** List and read ClickUp spaces with their complete structure (lists, folders, documents).
+- **URI template:** `clickup://space/{spaceId}`
+- **List handler:** Returns `{ resources: [{ uri, name, title, mimeType }] }` for all active spaces.
+- **Read handler:** Returns `{ contents: [{ uri, text }] }` with space tree, lists, folders, and documents.
+- **Source:** `src/tools/clickup/src/resources/space-resources.ts:21–109`
+
+---
+
 ## TypeScript API (Internal)
 
 ### BMADEngine

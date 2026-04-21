@@ -47,6 +47,25 @@ reconciled these against our root `package.json`:
 }
 ```
 
+### What our adapter does on top
+
+- Our adapter at `src/tools/clickup-adapter.ts` dynamic-imports the vendored tree
+  only when both env vars are present (avoids upstream's module-eval throw at
+  `src/tools/clickup/src/shared/config.ts:70`).
+- Upstream's own `initializeServer()` bootstrap in
+  `src/tools/clickup/src/index.ts` is never called — our adapter dispatches the
+  individual `register*Tools` functions directly, respecting `CLICKUP_MCP_MODE`.
+- The upstream `my-todos` prompt is re-registered by our adapter (lines 108–151)
+  via `server.prompt(...)`; upstream's own `registerPrompt` call is bypassed
+  because `initializeServer()` is bypassed.
+- Mode-dispatch logic lives in the adapter; upstream's mode dispatch in
+  `src/tools/clickup/src/index.ts:101–128` is dead code in our build.
+- `userData` and space-index pre-fetch failures are caught and surfaced as
+  `prefetchError` in the `RegisterResult` return value; tool registration
+  proceeds with `undefined` user data rather than crashing startup.
+
+**User-facing setup:** see [README.md §ClickUp Integration](./README.md#clickup-integration).
+
 ### Upgrade procedure
 
 1. Capture the new SHA:
@@ -61,7 +80,8 @@ reconciled these against our root `package.json`:
 4. Re-run `npm run build` / `npm run lint` / `npm run format` / `npm test` to
    confirm nothing regressed. If tsc now errors inside the vendored tree, the
    exclude in `tsconfig.json` already shields it; if the register-tools surface
-   changed, reconcile the adapter in `src/server.ts` (Story 1.3's territory).
+   changed, reconcile the adapter at `src/tools/clickup-adapter.ts` (story 1.2
+   established the dispatch pattern).
 5. After re-vendoring, re-run `npm run build` to confirm `scripts/build-clickup.mjs`
    (esbuild bundler) still accepts the new upstream tree. If upstream adds a new
    `register*Tools` function, wire it into `src/tools/clickup-adapter.ts` per the

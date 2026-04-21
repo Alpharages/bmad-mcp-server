@@ -230,6 +230,21 @@ tests/
     └── test-fixtures.ts
 ```
 
+### ClickUp Development Workflow
+
+- Run the server locally with ClickUp enabled:
+  ```bash
+  CLICKUP_API_KEY=pk_... CLICKUP_TEAM_ID=... CLICKUP_MCP_MODE=read-minimal npm run dev
+  ```
+- Smoke-test scripts live at `scripts/smoke-clickup-crud.mjs` (CRUD round-trip) and
+  `scripts/smoke-clickup-cross-list.mjs` (cross-list parent/subtask). Both are
+  opt-in (`npm run smoke:clickup` / `npm run smoke:clickup:cross-list`) and
+  require live ClickUp credentials.
+- Use a free-tier personal ClickUp workspace for development; do not point smoke
+  tests at production workspaces.
+- Start with `CLICKUP_MCP_MODE=read-minimal` for low-risk local testing — it
+  exposes only `getTaskById` and `searchTasks`.
+
 ### Running Tests
 
 ```bash

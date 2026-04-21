@@ -7,7 +7,7 @@
 
 A Model Context Protocol server that brings the [BMAD Method](https://github.com/bmad-code-org/BMAD-METHOD) to AI assistants.
 
-[Features](#features) • [Installation](#installation) • [Docker Deployment](#docker-deployment) • [Usage](#usage) • [Documentation](#documentation)
+[Features](#features) • [Installation](#installation) • [Docker Deployment](#docker-deployment) • [ClickUp Integration](#clickup-integration) • [Usage](#usage) • [Documentation](#documentation)
 
 </div>
 
@@ -541,8 +541,7 @@ On PASS the harness DELETEs both tasks (unless `--keep-tasks`). On FAIL between 
 
 **Why it's not in CI**
 
-Brief note pointing at story 1.5's README section's [Why it's not in CI](#why-its-not-in-ci) subsection — same three reasons (credentials, rate limits, non-determinism) apply unchanged.
-
+Excluded for the same reasons as the basic ClickUp smoke test — see [Why it's not in CI](#why-its-not-in-ci). Live credentials, rate limits, and external infrastructure non-determinism apply unchanged.
 
 By default the server always pulls the latest BMAD content. To pin a specific version, override the `CMD` in `docker-compose.yml`:
 
@@ -565,6 +564,86 @@ The server searches for BMAD content in this order:
 2. **User-global**: `~/.bmad/` (personal defaults)
 3. **Git remotes**: Cloned to `~/.bmad/cache/git/` (shared/team content)
 4. **Package defaults**: Built-in BMAD files (always available)
+
+---
+
+## ClickUp Integration
+
+ClickUp tools are additive — the unified `bmad` tool continues to work as before. The ClickUp surface is enabled when both `CLICKUP_API_KEY` and `CLICKUP_TEAM_ID` are set. Tool visibility depends on `CLICKUP_MCP_MODE`. When either env var is missing, the server logs `ClickUp tools disabled: ...` and keeps running in BMAD-only mode.
+
+### Environment Variables
+
+| Variable                   | Required | Purpose                                                                                                  | Default  |
+| -------------------------- | -------- | -------------------------------------------------------------------------------------------------------- | -------- |
+| `CLICKUP_API_KEY`          | Yes      | Personal token from [ClickUp Settings → Apps](https://app.clickup.com/settings/apps) (starts with `pk_`) | _(none)_ |
+| `CLICKUP_TEAM_ID`          | Yes      | Workspace / team ID (7–10 digits)                                                                        | _(none)_ |
+| `CLICKUP_MCP_MODE`         | No       | Tool surface scope: `read-minimal`, `read`, or `write`                                                   | `write`  |
+| `CLICKUP_PRIMARY_LANGUAGE` | No       | Tool description language: `de`, `en`, `fr`, `es`, `it`. Falls back to `$LANG`                           | `en`     |
+| `MAX_IMAGES`               | No       | Max inline images per tool response                                                                      | `4`      |
+| `MAX_RESPONSE_SIZE_MB`     | No       | Max response payload in MB                                                                               | `1`      |
+
+`CLICKUP_PRIMARY_LANGUAGE` defaults to the first two characters of `$LANG` (e.g., `de_DE.UTF-8` → German tool descriptions and `my-todos` prompt). If `$LANG` is unset or unsupported, English is used.
+
+### Mode → Tool Matrix
+
+| Mode              | Tools registered                                                                                                                       | Resource template           | Notes                               |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- | ----------------------------------- |
+| `read-minimal`    | `getTaskById`, `searchTasks`                                                                                                           | _(none)_                    | `registerSpaceResources` not called |
+| `read`            | above plus `searchSpaces`, `getListInfo`, `getTimeEntries`, `readDocument`, `searchDocuments`                                          | `clickup://space/{spaceId}` | adds space/list/time/doc reads      |
+| `write` (default) | above plus `addComment`, `updateTask`, `createTask`, `updateListInfo`, `createTimeEntry`, `updateDocumentPage`, `createDocumentOrPage` | `clickup://space/{spaceId}` | 13 tools total                      |
+
+`.trim().toLowerCase()` normalization accepts `"  Read  "` as `read`; unknown values fall through to `write` with a `stderr` warning.
+
+### Example Client Config
+
+```json
+{
+  "mcpServers": {
+    "bmad": {
+      "command": "npx",
+      "args": ["-y", "bmad-mcp-server"],
+      "env": {
+        "CLICKUP_API_KEY": "pk_...",
+        "CLICKUP_TEAM_ID": "12345678",
+        "CLICKUP_MCP_MODE": "read"
+      }
+    }
+  }
+}
+```
+
+`CLICKUP_MCP_MODE=read` is shown as the default in the example — safer than `write` for first-run exploration.
+
+### Docker Env-Var Pass-Through
+
+When running via Docker (see [Docker Deployment](#docker-deployment) above), append the ClickUp keys to `docker-compose.yml`'s `environment:` map:
+
+```yaml
+environment:
+  - BMAD_API_KEY=${BMAD_API_KEY}
+  - CLICKUP_API_KEY=${CLICKUP_API_KEY}
+  - CLICKUP_TEAM_ID=${CLICKUP_TEAM_ID}
+  - CLICKUP_MCP_MODE=${CLICKUP_MCP_MODE:-read}
+```
+
+### Space Selection
+
+The adapter registers three session-scoped picker tools (`pickSpace`, `getCurrentSpace`, `clearCurrentSpace`) in all modes. The first interaction per session caches the chosen space; subsequent space-scoped calls honor that choice. The cache resets on process restart. Call `pickSpace` with no arguments to list all non-archived spaces, with `query` for fuzzy search, or with `spaceId` for an exact match.
+
+### Cross-List Parent/Subtask
+
+Stories live in the active Sprint list while their parent epic lives in the Backlog list. This cross-list `parent_task_id` relationship is verified by `npm run smoke:clickup:cross-list` (see below).
+
+### `my-todos` Prompt
+
+ClickUp adds a German/English MCP prompt for triaging assigned tasks. Language follows `CLICKUP_PRIMARY_LANGUAGE` or `$LANG`.
+
+### Not Supported (This Phase)
+
+- Jira/Linear integration — out of scope per [PRD §Non-goals](PRD.md)
+- ClickUp custom fields — deferred to EPIC-5
+- Bidirectional sync (two-way update with external systems) — out of scope
+- Historical migration of existing tasks into BMAD — out of scope
 
 ---
 
