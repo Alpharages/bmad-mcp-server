@@ -582,15 +582,17 @@ ClickUp tools are additive — the unified `bmad` tool continues to work as befo
 | `MAX_IMAGES`               | No       | Max inline images per tool response                                                                      | `4`      |
 | `MAX_RESPONSE_SIZE_MB`     | No       | Max response payload in MB                                                                               | `1`      |
 
-`CLICKUP_PRIMARY_LANGUAGE` defaults to the first two characters of `$LANG` (e.g., `de_DE.UTF-8` → German tool descriptions and `my-todos` prompt). If `$LANG` is unset or unsupported, English is used.
+`CLICKUP_PRIMARY_LANGUAGE` defaults to the first two characters of `$LANG` (e.g., `de_DE.UTF-8` → German tool descriptions). If `$LANG` is unset or unsupported, English is used.
 
 ### Mode → Tool Matrix
 
-| Mode              | Tools registered                                                                                                                       | Resource template           | Notes                               |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- | ----------------------------------- |
-| `read-minimal`    | `getTaskById`, `searchTasks`                                                                                                           | _(none)_                    | `registerSpaceResources` not called |
-| `read`            | above plus `searchSpaces`, `getListInfo`, `getTimeEntries`, `readDocument`, `searchDocuments`                                          | `clickup://space/{spaceId}` | adds space/list/time/doc reads      |
-| `write` (default) | above plus `addComment`, `updateTask`, `createTask`, `updateListInfo`, `createTimeEntry`, `updateDocumentPage`, `createDocumentOrPage` | `clickup://space/{spaceId}` | 13 tools total                      |
+| Mode              | Tools registered                                                                                                                       | Resource template           | Notes                                    |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- | ---------------------------------------- |
+| `read-minimal`    | `getTaskById`, `searchTasks`                                                                                                           | _(none)_                    | `registerSpaceResources` not called      |
+| `read`            | above plus `searchSpaces`, `getListInfo`, `getTimeEntries`, `readDocument`                                                             | `clickup://space/{spaceId}` | 6 tools total; `searchDocuments` pending† |
+| `write` (default) | above plus `addComment`, `updateTask`, `createTask`, `updateListInfo`, `createTimeEntry`, `updateDocumentPage`, `createDocumentOrPage` | `clickup://space/{spaceId}` | 13 tools total                           |
+
+† `searchDocuments` is not registered at vendored SHA `c79b21e3` (upstream placeholder — will activate automatically on re-vendor when upstream ships it).
 
 `.trim().toLowerCase()` normalization accepts `"  Read  "` as `read`; unknown values fall through to `write` with a `stderr` warning.
 
@@ -636,7 +638,7 @@ Stories live in the active Sprint list while their parent epic lives in the Back
 
 ### `my-todos` Prompt
 
-ClickUp adds a German/English MCP prompt for triaging assigned tasks. Language follows `CLICKUP_PRIMARY_LANGUAGE` or `$LANG`.
+ClickUp adds an MCP prompt for triaging assigned tasks. The prompt text is German or English — `CLICKUP_PRIMARY_LANGUAGE=de` (or `$LANG=de_*`) selects German; all other values use English. Tool descriptions (not the prompt) honor all five language codes.
 
 ### Not Supported (This Phase)
 

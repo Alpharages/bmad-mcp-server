@@ -482,10 +482,10 @@ upstream `register*Tools` functions based on `CLICKUP_MCP_MODE`.
 - **Returns:** `{ content: [{ type: 'text', text: string }] }` with document metadata and page content.
 - **Source:** `src/tools/clickup/src/tools/doc-tools.ts:54–80`
 
-### `searchDocuments`
+### `searchDocuments` _(pending)_
 
-- **Mode:** `read`
-- **Purpose:** Search documents by name or content (upstream placeholder — not yet implemented at vendored SHA `c79b21e3`).
+- **Mode:** `read` — **not currently registered** at vendored SHA `c79b21e3`.
+- **Purpose:** Search documents by name or content (upstream placeholder — will activate automatically on re-vendor when upstream ships it).
 - **Input:** _(schema TBD when upstream ships)._
 - **Returns:** _(TBD)._
 - **Source:** `src/tools/clickup/src/tools/doc-tools.ts` (future)
@@ -545,6 +545,34 @@ upstream `register*Tools` functions based on `CLICKUP_MCP_MODE`.
 - **Input:** `space_id` — `string` (optional); `list_id` — `string` (optional); `doc_id` — `string` (optional); `parent_page_id` — `string` (optional); `name` — `string` (required); `content` — `string` markdown (optional).
 - **Returns:** `{ content: [{ type: 'text', text: string }] }` with document/page URL.
 - **Source:** `src/tools/clickup/src/tools/doc-tools.ts:318–345`
+
+### Space Picker Tools
+
+These three tools are registered by the adapter in **all** modes (including `read-minimal`) and are not part of the upstream vendored surface.
+
+#### `pickSpace`
+
+- **Mode:** all
+- **Purpose:** Select a ClickUp space for the current session by exact ID, fuzzy query, or list all.
+- **Input:** `spaceId` — `string` (optional, exact match); `query` — `string` (optional, fuzzy search). No arguments lists all non-archived spaces.
+- **Returns:** Confirmation text with space name and ID, or a numbered list when multiple fuzzy matches exist.
+- **Source:** `src/tools/clickup-space-picker.ts`
+
+#### `getCurrentSpace`
+
+- **Mode:** all
+- **Purpose:** Return the space currently selected for this MCP session.
+- **Input:** _(none)_
+- **Returns:** `"Current space: <name> (id: <id>)"` or a prompt to call `pickSpace` if nothing is selected.
+- **Source:** `src/tools/clickup-space-picker.ts`
+
+#### `clearCurrentSpace`
+
+- **Mode:** all
+- **Purpose:** Clear the session-cached space selection.
+- **Input:** _(none)_
+- **Returns:** Confirmation of the cleared space, or a note if no space was selected.
+- **Source:** `src/tools/clickup-space-picker.ts`
 
 ### Resource: `clickup://space/{spaceId}`
 

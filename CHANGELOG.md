@@ -3,7 +3,7 @@
 ### Features
 
 - ClickUp MCP tools integrated alongside the unified `bmad` tool (EPIC-1). Vendored from `hauptsacheNet/clickup-mcp` — see `VENDOR.md` for upstream SHA and upgrade procedure.
-- Tool surface scales with `CLICKUP_MCP_MODE`: `read-minimal` (2 tools), `read` (7 tools), `write` (13 tools, default). Unknown or missing mode values default to `write` with a `stderr` warning.
+- Tool surface scales with `CLICKUP_MCP_MODE`: `read-minimal` (2 tools), `read` (6 tools), `write` (13 tools, default). Unknown or missing mode values default to `write` with a `stderr` warning. (`searchDocuments` is a registered placeholder pending upstream implementation; excluded from the count.)
 - Session-scoped ClickUp space picker — first interaction per session caches the chosen space; cache resets on process restart.
 - Cross-list parent/subtask behavior verified: stories live in the active Sprint list while their parent epic lives in the Backlog list.
 - `my-todos` MCP prompt added (German/English; follows `CLICKUP_PRIMARY_LANGUAGE` or `$LANG`).

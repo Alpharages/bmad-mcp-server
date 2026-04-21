@@ -55,7 +55,7 @@ reconciled these against our root `package.json`:
 - Upstream's own `initializeServer()` bootstrap in
   `src/tools/clickup/src/index.ts` is never called — our adapter dispatches the
   individual `register*Tools` functions directly, respecting `CLICKUP_MCP_MODE`.
-- The upstream `my-todos` prompt is re-registered by our adapter (lines 108–151)
+- The upstream `my-todos` prompt is re-registered by our adapter (lines 112–155)
   via `server.prompt(...)`; upstream's own `registerPrompt` call is bypassed
   because `initializeServer()` is bypassed.
 - Mode-dispatch logic lives in the adapter; upstream's mode dispatch in

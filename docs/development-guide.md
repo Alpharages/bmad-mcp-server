@@ -244,6 +244,8 @@ tests/
   tests at production workspaces.
 - Start with `CLICKUP_MCP_MODE=read-minimal` for low-risk local testing — it
   exposes only `getTaskById` and `searchTasks`.
+- Copy `.env.example` to `.env` and fill in your credentials — `.env` is
+  `.gitignore`d and must never be committed.
 
 ### Running Tests
 
