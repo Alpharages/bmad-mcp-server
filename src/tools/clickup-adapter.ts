@@ -1,6 +1,8 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument */
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { validateClickUpEnv, type ClickUpMode } from '../utils/clickup-env.js';
+import type { ClickUpSessionState } from './clickup-session.js';
+import { registerSpacePickerTools } from './clickup-space-picker.js';
 
 export type RegisterResult =
   | { disabled: true; reason: string }
@@ -22,6 +24,7 @@ function sanitizeErrorMessage(input: unknown): string {
 
 export async function registerClickUpTools(
   server: McpServer,
+  session: ClickUpSessionState,
 ): Promise<RegisterResult> {
   const envResult = validateClickUpEnv();
 
@@ -217,6 +220,13 @@ Use the ClickUp search tools to find tasks assigned to me, and get detailed info
       ['updateDocumentPage', 'createDocumentOrPage'],
     );
   }
+
+  // Register the interactive picker tools (AC #3, #8, #16)
+  // These are registered in all modes (read-minimal, read, write)
+  step(
+    () => registerSpacePickerTools(server, session, utils.getSpaceSearchIndex),
+    ['pickSpace', 'getCurrentSpace', 'clearCurrentSpace'],
+  );
 
   return {
     disabled: false,

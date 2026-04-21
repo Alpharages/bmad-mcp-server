@@ -1,6 +1,6 @@
 # Story 1.4: Interactive ClickUp space picker with session caching
 
-Status: ready-for-dev
+Status: done
 
 Epic: [EPIC-1: ClickUp MCP integration layer](../epics/EPIC-1-clickup-mcp-integration.md)
 
@@ -49,7 +49,7 @@ so that the Dev agent's story-creation `createTask` flow (story 2.6) can prompt 
    ): Promise<RegisterResult>;
    ```
 
-   The `RegisterResult` type is extended so `toolsRegistered` in the `ok` branch includes the three new tool names (`pickSpace`, `getCurrentSpace`, `clearCurrentSpace`) appended to the existing per-mode lists. The start-banner line from story 1.3 (`ClickUp tools registered (mode=<mode>, count=<n>)`) therefore reports a count 3 higher than story 1.2's baseline for each mode: 5 (`read-minimal`), 10 (`read`), 16 (`write`). The `disabled` branch is unchanged — if env validation fails, no picker tools are registered either, because they would be useless without upstream's space-search utilities.
+   The `RegisterResult` type is extended so `toolsRegistered` in the `ok` branch includes the three new tool names (`pickSpace`, `getCurrentSpace`, `clearCurrentSpace`) appended to the existing per-mode lists. The start-banner line from story 1.3 (`ClickUp tools registered (mode=<mode>, count=<n>)`) therefore reports a count 3 higher than story 1.2's baseline for each mode: 5 (`read-minimal`), 9 (`read`), 16 (`write`). **Note:** the `read` count is 9 (6 upstream tools + 3 picker), not 10, because `searchDocuments` is not yet present in the vendored tree at SHA c79b21e3 — the adapter comment already notes it will appear automatically when upstream ships it. The `disabled` branch is unchanged — if env validation fails, no picker tools are registered either, because they would be useless without upstream's space-search utilities.
 
 4. New MCP tool `pickSpace` is registered unconditionally whenever the adapter reaches the `ok` branch (all three modes: `read-minimal`, `read`, `write`). Name, description, schema, and handler shape:
    - Name: `pickSpace`

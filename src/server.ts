@@ -31,14 +31,16 @@ import {
   createBMADTool,
 } from './tools/index.js';
 import { registerClickUpTools } from './tools/clickup-adapter.js';
+import { ClickUpSessionState } from './tools/clickup-session.js';
 import { logger } from './utils/logger.js';
 
 export class BMADServerLiteMultiToolGit {
   private server: McpServer;
   private engine: BMADEngine;
   private initialized = false;
-  private prepared: Promise<void> | undefined;
+  private initPromise: Promise<void> | null = null;
   private bmadToolHandle: RegisteredTool | undefined;
+  private readonly clickUpSession = new ClickUpSessionState();
 
   constructor(projectRoot?: string, gitRemotes?: string[]) {
     this.engine = new BMADEngine(projectRoot, gitRemotes);
@@ -62,26 +64,43 @@ export class BMADServerLiteMultiToolGit {
   }
 
   /**
-   * Idempotent server preparation: initialize the engine and register every
+   * Idempotent server initialization: initialize the engine and register every
    * BMAD surface (tool, resources, prompts, completions) plus any ClickUp
    * tools. Both `start()` (stdio) and `connect()` (HTTP) invoke this before
    * attaching a transport, so all surfaces are reachable on the first
    * `tools/list` / `prompts/list` request.
+   *
+   * Concurrency-safe via `initPromise`: first call creates the promise,
+   * subsequent calls await the same promise. On rejection the promise is
+   * cleared so the next call retries.
    */
-  private prepare(): Promise<void> {
-    if (!this.prepared) {
-      this.prepared = this.doPrepare();
-    }
-    return this.prepared;
+  private async ensureInitialized(): Promise<void> {
+    if (this.initPromise) return this.initPromise;
+    this.initPromise = this.doInitialize().catch((err) => {
+      this.initPromise = null;
+      throw err;
+    });
+    return this.initPromise;
   }
 
-  private async doPrepare(): Promise<void> {
+  private async doInitialize(): Promise<void> {
     await this.initializeEngine();
     this.registerBmadTool();
     this.registerResources();
     this.registerPrompts();
     this.registerCompletionHandler();
     await this.registerClickUp();
+
+    const gitPaths = this.engine.getLoader().getResolvedGitPaths();
+    const agentCount = this.engine.getAgentMetadata().length;
+    const workflowCount = this.engine.getWorkflowMetadata().length;
+    const resourceCount = this.engine.getCachedResources().length;
+    console.error(
+      `Loaded ${agentCount} agents, ${workflowCount} workflows, ${resourceCount} resources`,
+    );
+    if (gitPaths.size > 0) {
+      console.error(`Git remotes resolved: ${gitPaths.size}`);
+    }
   }
 
   private async initializeEngine(): Promise<void> {
@@ -498,7 +517,10 @@ export class BMADServerLiteMultiToolGit {
 
   private async registerClickUp(): Promise<void> {
     try {
-      const result = await registerClickUpTools(this.server);
+      const result = await registerClickUpTools(
+        this.server,
+        this.clickUpSession,
+      );
       const requireClickUp = /^(1|true)$/i.test(
         (process.env.BMAD_REQUIRE_CLICKUP ?? '').trim(),
       );
@@ -543,24 +565,16 @@ export class BMADServerLiteMultiToolGit {
   }
 
   async connect(transport: Transport): Promise<void> {
-    await this.prepare();
+    await this.ensureInitialized();
     await this.server.connect(transport);
   }
 
   async start(): Promise<void> {
+    await this.ensureInitialized().catch((err) =>
+      console.error('BMAD init error:', err),
+    );
     const transport = new StdioServerTransport();
     await this.connect(transport);
-
-    const gitPaths = this.engine.getLoader().getResolvedGitPaths();
-    const agentCount = this.engine.getAgentMetadata().length;
-    const workflowCount = this.engine.getWorkflowMetadata().length;
-    const resourceCount = this.engine.getCachedResources().length;
-    console.error(
-      `Loaded ${agentCount} agents, ${workflowCount} workflows, ${resourceCount} resources`,
-    );
-    if (gitPaths.size > 0) {
-      console.error(`Git remotes resolved: ${gitPaths.size}`);
-    }
     console.error('BMAD MCP Server started');
   }
 }
