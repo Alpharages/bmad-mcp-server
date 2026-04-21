@@ -469,6 +469,44 @@ ClickUp env vars are optional by default — missing ClickUp vars soft-disable o
 | `CLICKUP_TEAM_ID`      | _(unset)_ | Workspace ID — 7–10 digit number. See `.env.example`.                                                                                  |
 | `CLICKUP_MCP_MODE`     | `write`   | One of `read-minimal`, `read`, `write`. Controls which ClickUp tools are exposed (see upstream docs in `src/tools/clickup/README.md`). |
 
+### Running the ClickUp Smoke Tests
+
+A standalone smoke harness validates the full ClickUp CRUD round-trip (create task → comment → status update → read-back → cleanup) against a live workspace. It is **not** part of `npm test` or CI — it requires real ClickUp credentials and is gated behind explicit npm script entries.
+
+**Prerequisites**
+
+- A pre-created list in the target ClickUp workspace with at least two distinct statuses. Capture the list ID (last segment of the ClickUp list URL, or from the `getListInfo` tool output).
+- A valid `CLICKUP_API_KEY` with permissions to create tasks, comment, update status, and DELETE tasks in that list.
+- Run `npm run build` before the first smoke invocation — the harness spawns `build/index.js` and `build/index-http.js` as child processes.
+
+**Commands**
+
+```bash
+# stdio transport
+CLICKUP_API_KEY=pk_... CLICKUP_TEAM_ID=... CLICKUP_SMOKE_LIST_ID=... npm run smoke:clickup
+
+# HTTP transport (uses CLICKUP_SMOKE_PORT or defaults to 3456)
+CLICKUP_API_KEY=pk_... CLICKUP_TEAM_ID=... CLICKUP_SMOKE_LIST_ID=... npm run smoke:clickup:http
+```
+
+Run both commands to cover both transports.
+
+**What it verifies**
+
+The harness drives: `initialize` → `tools/list` → `getListInfo` → `createTask` → `getTaskById` → `addComment` → `updateTask(status)` → `getTaskById` → direct-API `DELETE` cleanup. This proves the ClickUp tool surface is correctly registered and functional end-to-end over the chosen transport.
+
+**Expected output**
+
+A single `SMOKE PASS transport=<t> task_id=<id> ...` line on stderr with exit code 0. A failing run prints `SMOKE FAIL transport=<t> step=<letter> reason="..."`.
+
+**Cleanup**
+
+On PASS the harness DELETEs the smoke task (unless `--keep-task` is passed). On FAIL between steps e and j the task may be left behind — search ClickUp for `[bmad-smoke]` to audit and hand-delete.
+
+**Why it's not in CI**
+
+The smoke test is intentionally excluded from CI because it requires live credentials, is subject to ClickUp rate limits, and depends on external infrastructure state. See the story's Dev Notes for the full rationale.
+
 ### Pinning a BMAD Version
 
 By default the server always pulls the latest BMAD content. To pin a specific version, override the `CMD` in `docker-compose.yml`:

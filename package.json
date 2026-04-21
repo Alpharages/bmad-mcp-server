@@ -39,7 +39,9 @@
     "cli:list-tools": "node scripts/bmad-cli.mjs tools/list",
     "cli:list-resources": "node scripts/bmad-cli.mjs resources/list",
     "cli:list-agents": "node scripts/show-list-agents.mjs",
-    "cli:list-workflows": "node scripts/show-list-workflows.mjs"
+    "cli:list-workflows": "node scripts/show-list-workflows.mjs",
+    "smoke:clickup": "node scripts/smoke-clickup-crud.mjs stdio",
+    "smoke:clickup:http": "node scripts/smoke-clickup-crud.mjs http"
   },
   "files": [
     "build/"
