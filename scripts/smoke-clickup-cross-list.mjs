@@ -1,21 +1,21 @@
 #!/usr/bin/env node
 /**
  * Smoke-test harness for ClickUp cross-list parent/subtask (PRD R1 mitigation).
- * 
+ *
  * Verifies whether ClickUp accepts a story as a subtask of an epic when the
  * two tasks live in different lists (story in sprint list, parent in backlog list).
- * 
+ *
  * Supported transport: stdio only (stdio alone is sufficient proof for API capability).
- * 
+ *
  * Usage:
  *   node scripts/smoke-clickup-cross-list.mjs [--keep-tasks]
- * 
+ *
  * Environment:
  *   CLICKUP_API_KEY                (required) ClickUp personal token
  *   CLICKUP_TEAM_ID                (required) ClickUp workspace ID
  *   CLICKUP_SMOKE_BACKLOG_LIST_ID  (required) Target list for parent epic task
  *   CLICKUP_SMOKE_SPRINT_LIST_ID   (required) Target list for child story task
- * 
+ *
  * Exit codes:
  *   0 — all assertions passed, cleanup succeeded
  *   1 — assertion failure, protocol error, server crash, or R1 materialization
@@ -38,15 +38,15 @@ const __dirname = dirname(__filename);
 
 const args = process.argv.slice(2);
 const keepTasks = args.includes('--keep-tasks');
-const unknownArgs = args.filter(a => a !== '--keep-tasks');
+const unknownArgs = args.filter((a) => a !== '--keep-tasks');
 
 if (unknownArgs.length > 0) {
   console.error(
     `Usage: node scripts/smoke-clickup-cross-list.mjs [--keep-tasks]\n\n` +
-    `Example:\n` +
-    `  CLICKUP_API_KEY=pk_... CLICKUP_TEAM_ID=... \\\n` +
-    `  CLICKUP_SMOKE_BACKLOG_LIST_ID=... CLICKUP_SMOKE_SPRINT_LIST_ID=... \\\n` +
-    `  node scripts/smoke-clickup-cross-list.mjs`
+      `Example:\n` +
+      `  CLICKUP_API_KEY=pk_... CLICKUP_TEAM_ID=... \\\n` +
+      `  CLICKUP_SMOKE_BACKLOG_LIST_ID=... CLICKUP_SMOKE_SPRINT_LIST_ID=... \\\n` +
+      `  node scripts/smoke-clickup-cross-list.mjs`,
   );
   process.exit(1);
 }
@@ -65,7 +65,7 @@ const missing = requiredVars.filter((v) => !process.env[v]?.trim());
 
 if (missing.length > 0) {
   console.error(
-    `SMOKE FAIL cross-list step=env reason="Missing required environment variables: ${missing.join(', ')}"`
+    `SMOKE FAIL cross-list step=env reason="Missing required environment variables: ${missing.join(', ')}"`,
   );
   process.exit(2);
 }
@@ -76,7 +76,7 @@ const sprintListId = process.env.CLICKUP_SMOKE_SPRINT_LIST_ID.trim();
 
 if (backlogListId === sprintListId) {
   console.error(
-    `SMOKE FAIL cross-list step=env reason="backlog and sprint list IDs must differ — same-list subtask is story 1.5's CRUD scope, not cross-list"`
+    `SMOKE FAIL cross-list step=env reason="backlog and sprint list IDs must differ — same-list subtask is story 1.5's CRUD scope, not cross-list"`,
   );
   process.exit(2);
 }
@@ -113,7 +113,9 @@ function log(step, msg) {
  * @returns {string[]}
  */
 function parseStatuses(text) {
-  const match = text.match(/Valid status names for createTask\/updateTask: (.+)/);
+  const match = text.match(
+    /Valid status names for createTask\/updateTask: (.+)/,
+  );
   if (match) {
     return match[1].split(',').map((s) => s.trim());
   }
@@ -161,6 +163,19 @@ class StdioClient {
 
     this.child.on('error', (err) => {
       console.error(`[smoke-x][a] child process error: ${err.message}`);
+      for (const cb of this.pending.values()) {
+        cb.reject(new Error(`child process error: ${err.message}`));
+      }
+      this.pending.clear();
+    });
+
+    this.child.on('exit', (code) => {
+      if (this.pending.size > 0) {
+        for (const cb of this.pending.values()) {
+          cb.reject(new Error(`child process exited with code ${code}`));
+        }
+        this.pending.clear();
+      }
     });
   }
 
@@ -181,6 +196,7 @@ class StdioClient {
   async close() {
     this.child.stdin.end();
     this.rl.close();
+    this.child.kill('SIGTERM');
     await new Promise((resolve) => {
       const t = setTimeout(() => {
         this.child.kill('SIGKILL');
@@ -223,7 +239,7 @@ async function main() {
         console.error(JSON.stringify(client.lastExchange.response, null, 2));
       }
       console.error(
-        `SMOKE FAIL cross-list step=${stepLetter} reason="${reason}" elapsed_ms=${Math.round(elapsed)}`
+        `SMOKE FAIL cross-list step=${stepLetter} reason="${reason}" elapsed_ms=${Math.round(elapsed)}`,
       );
       if (client) await client.close();
       process.exit(1);
@@ -271,10 +287,13 @@ async function main() {
     const missingTools = required.filter((n) => !toolNames.includes(n));
     if (missingTools.length > 0) {
       throw new Error(
-        `ClickUp tools not registered — verify CLICKUP_API_KEY / CLICKUP_TEAM_ID and that story 1.5's ensureInitialized fix is on main`
+        `ClickUp tools not registered — verify CLICKUP_API_KEY / CLICKUP_TEAM_ID and that story 1.5's ensureInitialized fix is on main`,
       );
     }
-    log('c', `tools/list returned ${toolNames.length} tools including ${required.join(', ')}`);
+    log(
+      'c',
+      `tools/list returned ${toolNames.length} tools including ${required.join(', ')}`,
+    );
   });
 
   // d. getListInfo (backlog)
@@ -304,7 +323,8 @@ async function main() {
     const { text } = await callTool('createTask', {
       list_id: backlogListId,
       name: epicName,
-      description: 'smoke-cross-list epic (parent) from bmad-mcp-server story 1-6',
+      description:
+        'smoke-cross-list epic (parent) from bmad-mcp-server story 1-6',
       status: backlogStatus,
     });
     const match = text.match(/^task_id:\s*(\S+)\s*$/m);
@@ -323,48 +343,68 @@ async function main() {
         list_id: sprintListId,
         parent_task_id: epicId,
         name: storyName,
-        description: 'smoke-cross-list story (subtask) from bmad-mcp-server story 1-6',
+        description:
+          'smoke-cross-list story (subtask) from bmad-mcp-server story 1-6',
         status: sprintStatus,
-      }
+      },
     });
     const text = result?.content?.[0]?.text ?? '';
     if (text.includes('Error creating task:')) {
-      throw new Error(`R1 Materialization: ClickUp rejected cross-list create: ${text.split('\n')[0]}`);
+      throw new Error(
+        `R1 Materialization: ClickUp rejected cross-list create: ${text.split('\n')[0]}`,
+      );
     }
     const match = text.match(/^task_id:\s*(\S+)\s*$/m);
     storyId = match ? match[1] : undefined;
     if (!storyId) {
       throw new Error('createTask (story) response did not contain task_id');
     }
-    log('g', `created story ${storyId} as subtask of ${epicId} in list ${sprintListId}`);
+    log(
+      'g',
+      `created story ${storyId} as subtask of ${epicId} in list ${sprintListId}`,
+    );
   });
 
   // h. getTaskById (story)
   await step('h', async () => {
     const { text } = await callTool('getTaskById', { task_id: storyId });
-    
+
     // list.id check
     const listMatch = text.match(/^list:\s*.+?\s*\((\S+)\)\s*$/m);
-    const reportedStoryListId = listMatch ? listMatch[1] : undefined;
+    if (!listMatch) {
+      throw new Error(
+        'could not parse list field from getTaskById response — upstream format may have changed',
+      );
+    }
+    const reportedStoryListId = listMatch[1];
     if (reportedStoryListId !== sprintListId) {
-      throw new Error(`cross-list placement not honored — child is in list ${reportedStoryListId}, expected ${sprintListId}`);
+      throw new Error(
+        `cross-list placement not honored — child is in list ${reportedStoryListId}, expected ${sprintListId}`,
+      );
     }
 
     // parent_task_id check
     const parentMatch = text.match(/^parent_task_id:\s*(\S+)\s*$/m);
     const reportedParentId = parentMatch ? parentMatch[1] : undefined;
     if (reportedParentId !== epicId) {
-      throw new Error(`parent linkage not preserved — expected parent_task_id ${epicId}, got ${reportedParentId || 'missing'}`);
+      throw new Error(
+        `parent linkage not preserved — expected parent_task_id ${epicId}, got ${reportedParentId || 'missing'}`,
+      );
     }
 
     // name check
     const nameMatch = text.match(/^name:\s*(.+)$/m);
     const reportedName = nameMatch ? nameMatch[1].trim() : undefined;
     if (reportedName !== storyName) {
-      throw new Error(`name mismatch: expected "${storyName}", got "${reportedName}"`);
+      throw new Error(
+        `name mismatch: expected "${storyName}", got "${reportedName}"`,
+      );
     }
 
-    log('h', `story in sprint list (id=${sprintListId}), parent_task_id=${epicId}, name matches`);
+    log(
+      'h',
+      `story in sprint list (id=${sprintListId}), parent_task_id=${epicId}, name matches`,
+    );
   });
 
   // i. getTaskById (epic)
@@ -372,10 +412,12 @@ async function main() {
     const { text } = await callTool('getTaskById', { task_id: epicId });
     const childrenMatch = text.match(/^child_task_ids:\s*(.+)$/m);
     const childrenStr = childrenMatch ? childrenMatch[1] : '';
-    const children = childrenStr.split(',').map(s => s.trim());
-    
+    const children = childrenStr.split(',').map((s) => s.trim());
+
     if (!children.includes(storyId)) {
-      throw new Error(`parent does not report child — expected storyId ${storyId} in child_task_ids, got ${childrenStr || 'missing'}`);
+      throw new Error(
+        `parent does not report child — expected storyId ${storyId} in child_task_ids, got ${childrenStr || 'missing'}`,
+      );
     }
     log('i', `epic reports story in child_task_ids`);
   });
@@ -387,26 +429,36 @@ async function main() {
 
   if (!keepTasks) {
     // Delete child first
-    const delStoryRes = await fetch(`https://api.clickup.com/api/v2/task/${storyId}`, {
-      method: 'DELETE',
-      headers: { Authorization: apiKey },
-    });
+    const delStoryRes = await fetch(
+      `https://api.clickup.com/api/v2/task/${storyId}`,
+      {
+        method: 'DELETE',
+        headers: { Authorization: apiKey },
+      },
+    );
     if (!delStoryRes.ok) {
       const body = await delStoryRes.text().catch(() => '');
-      console.error(`[smoke-x][j] cleanup child DELETE failed: ${delStoryRes.status} ${body}`);
+      console.error(
+        `[smoke-x][j] cleanup child DELETE failed: ${delStoryRes.status} ${body}`,
+      );
       cleanupChildFailed = true;
     } else {
       log('j', `deleted story ${storyId}`);
     }
 
     // Then delete parent
-    const delEpicRes = await fetch(`https://api.clickup.com/api/v2/task/${epicId}`, {
-      method: 'DELETE',
-      headers: { Authorization: apiKey },
-    });
+    const delEpicRes = await fetch(
+      `https://api.clickup.com/api/v2/task/${epicId}`,
+      {
+        method: 'DELETE',
+        headers: { Authorization: apiKey },
+      },
+    );
     if (!delEpicRes.ok) {
       const body = await delEpicRes.text().catch(() => '');
-      console.error(`[smoke-x][j] cleanup parent DELETE failed: ${delEpicRes.status} ${body}`);
+      console.error(
+        `[smoke-x][j] cleanup parent DELETE failed: ${delEpicRes.status} ${body}`,
+      );
       cleanupParentFailed = true;
     } else {
       log('j', `deleted epic ${epicId}`);
@@ -415,9 +467,10 @@ async function main() {
     log('j', 'skipped cleanup (--keep-tasks)');
   }
 
-  const cleanupStatus = (cleanupChildFailed || cleanupParentFailed) 
-    ? ` (cleanup failed: child=${cleanupChildFailed ? 'y' : 'n'} parent=${cleanupParentFailed ? 'y' : 'n'})` 
-    : '';
+  const cleanupStatus =
+    cleanupChildFailed || cleanupParentFailed
+      ? ` (cleanup failed: child=${cleanupChildFailed ? 'y' : 'n'} parent=${cleanupParentFailed ? 'y' : 'n'})`
+      : '';
 
   const summary = `SMOKE PASS cross-list epic_id=${epicId} story_id=${storyId} backlog_list=${backlogListId} sprint_list=${sprintListId} elapsed_ms=${Math.round(elapsed)}${cleanupStatus}`;
   console.error(summary);
@@ -428,7 +481,7 @@ async function main() {
 
 main().catch((err) => {
   console.error(
-    `SMOKE FAIL cross-list step=unknown reason="${err instanceof Error ? err.message : String(err)}"`
+    `SMOKE FAIL cross-list step=unknown reason="${err instanceof Error ? err.message : String(err)}"`,
   );
   process.exit(1);
 });

@@ -1,6 +1,6 @@
 # Story 1.6: Smoke-test ClickUp cross-list parent/subtask (epic in backlog list, story-subtask in sprint list)
 
-Status: in-progress
+Status: done
 
 Epic: [EPIC-1: ClickUp MCP integration layer](../epics/EPIC-1-clickup-mcp-integration.md)
 
@@ -36,7 +36,7 @@ I want a repeatable smoke harness at `scripts/smoke-clickup-cross-list.mjs` that
 4. Operation sequence. Stdio-only; ten steps (a–j) — step a boots the server, steps b–i are eight JSON-RPC tool calls, step j performs two DELETE cleanups:
    a. **Boot server.** Spawn `node build/index.js` as a child process with `stdio: ['pipe', 'pipe', 'inherit']`; parent writes JSON-RPC requests to stdin (line-delimited), reads responses from stdout via `node:readline`. Same pattern as story 1.5 AC #4a's stdio path — if story 1.5's harness already exists on `main` when this story is picked up, lift the ~40 LOC JSON-RPC client factor into a shared module is OUT OF SCOPE (see AC #13 and the Dev Notes §"Deliberate duplication vs sharing with 1.5's harness"); just inline the minimal client here.
    b. **`initialize`.** Assert JSON-RPC `result.capabilities.tools` is present.
-   c. **`tools/list`.** Assert the response contains at minimum: `bmad`, `createTask`, `getTaskById`, `getListInfo`. If `bmad` is the ONLY tool returned, fail with `step=c reason="ClickUp tools not registered — verify CLICKUP_API_KEY / CLICKUP_TEAM_ID and that story 1.5's ensureInitialized fix is on main"` and exit 1.
+   c. **`tools/list`.** Assert the response contains at minimum: `bmad`, `createTask`, `getTaskById`, `getListInfo`. If any of these four tools are absent, fail with `step=c reason="ClickUp tools not registered — verify CLICKUP_API_KEY / CLICKUP_TEAM_ID and that story 1.5's ensureInitialized fix is on main"` and exit 1. (The "bmad is ONLY tool" framing in the original spec was an imprecise description of this broader condition — the correct check is whether all four required tools are present, not whether the list is exactly one entry.)
    d. **`tools/call getListInfo {list_id: $CLICKUP_SMOKE_BACKLOG_LIST_ID}`.** Parse the response text for the status list (same parsing approach as story 1.5 AC #4d, per upstream's format at `src/tools/clickup/src/tools/list-tools.ts:69-83`). Capture `backlogStatus` = first status returned. If zero statuses are parsed, fail with `step=d reason="backlog list returned no statuses — verify list ID"`.
    e. **`tools/call getListInfo {list_id: $CLICKUP_SMOKE_SPRINT_LIST_ID}`.** Same parsing; capture `sprintStatus` = first status returned. If zero, fail with `step=e reason="sprint list returned no statuses — verify list ID"`. The two statuses MAY be the same string (e.g. both lists use `to do`) — the harness does NOT compare them.
    f. **`tools/call createTask {list_id: $CLICKUP_SMOKE_BACKLOG_LIST_ID, name: <epicName>, description: "smoke-cross-list epic (parent) from bmad-mcp-server story 1-6", status: <backlogStatus>}`.** Parse the first `/^task_id:\s*(\S+)\s*$/m` match from the response text. Upstream's `formatTaskResponse` at `src/tools/clickup/src/tools/task-write-tools.ts:647-659` emits this line identically for create and read paths (the line immediately after the summary `Task created successfully!` line). Capture as `epicId`. This is the PARENT task.
