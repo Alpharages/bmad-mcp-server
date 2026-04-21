@@ -5,3 +5,6 @@ playwright-report/
 test-results/
 *.log
 .DS_Store
+
+# Vendored third-party sources (do not modify)
+src/tools/clickup/

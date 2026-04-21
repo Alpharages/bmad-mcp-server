@@ -18,5 +18,5 @@
     "types": ["node"]
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "build", "tests"]
+  "exclude": ["node_modules", "build", "tests", "src/tools/clickup/**"]
 }

@@ -7,7 +7,18 @@
 
 import { describe, it } from 'vitest';
 import { readFileSync, readdirSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, relative, sep } from 'node:path';
+
+// Vendored third-party trees are read-only and audited at their upstream pin,
+// not against our package.json. See VENDOR.md for the vendoring posture.
+const VENDORED_PATHS = ['src/tools/clickup'];
+
+const isVendored = (absPath: string, rootDir: string): boolean => {
+  const rel = relative(rootDir, absPath).split(sep).join('/');
+  return VENDORED_PATHS.some(
+    (v) => rel === v || rel.startsWith(`${v}/`),
+  );
+};
 
 describe('dependency-audit', () => {
   it('should only import from declared dependencies', () => {
@@ -39,16 +50,20 @@ describe('dependency-audit', () => {
       'child_process',
     ]);
 
-    // Recursively find all TypeScript source files
-    const findTsFiles = (dir: string): string[] => {
+    // Recursively find all TypeScript source files (excluding vendored trees).
+    const findTsFiles = (dir: string, rootDir: string): string[] => {
       const files: string[] = [];
       const entries = readdirSync(dir, { withFileTypes: true });
 
       for (const entry of entries) {
         const fullPath = join(dir, entry.name);
 
+        if (isVendored(fullPath, rootDir)) {
+          continue;
+        }
+
         if (entry.isDirectory()) {
-          files.push(...findTsFiles(fullPath));
+          files.push(...findTsFiles(fullPath, rootDir));
         } else if (
           entry.isFile() &&
           entry.name.endsWith('.ts') &&
@@ -62,7 +77,8 @@ describe('dependency-audit', () => {
       return files;
     };
 
-    const sourceFiles = findTsFiles(join(process.cwd(), 'src'));
+    const srcRoot = join(process.cwd(), 'src');
+    const sourceFiles = findTsFiles(srcRoot, process.cwd());
 
     const violations: string[] = [];
 
@@ -101,16 +117,20 @@ describe('dependency-audit', () => {
   });
 
   it('should use js-yaml consistently (not yaml package)', () => {
-    // Recursively find all TypeScript source files
-    const findTsFiles = (dir: string): string[] => {
+    // Recursively find all TypeScript source files (excluding vendored trees).
+    const findTsFiles = (dir: string, rootDir: string): string[] => {
       const files: string[] = [];
       const entries = readdirSync(dir, { withFileTypes: true });
 
       for (const entry of entries) {
         const fullPath = join(dir, entry.name);
 
+        if (isVendored(fullPath, rootDir)) {
+          continue;
+        }
+
         if (entry.isDirectory()) {
-          files.push(...findTsFiles(fullPath));
+          files.push(...findTsFiles(fullPath, rootDir));
         } else if (
           entry.isFile() &&
           entry.name.endsWith('.ts') &&
@@ -124,7 +144,8 @@ describe('dependency-audit', () => {
       return files;
     };
 
-    const sourceFiles = findTsFiles(join(process.cwd(), 'src'));
+    const srcRoot = join(process.cwd(), 'src');
+    const sourceFiles = findTsFiles(srcRoot, process.cwd());
 
     const violations: string[] = [];
 
