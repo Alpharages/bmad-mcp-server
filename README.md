@@ -456,12 +456,18 @@ server {
 
 ### Environment Variables
 
-| Variable       | Default  | Description                                         |
-| -------------- | -------- | --------------------------------------------------- |
-| `PORT`         | `3000`   | HTTP port the server listens on                     |
-| `BMAD_API_KEY` | _(none)_ | API key for authentication — set this in production |
-| `BMAD_ROOT`    | _(auto)_ | Override project root for local BMAD content        |
-| `BMAD_DEBUG`   | `false`  | Enable verbose debug logging                        |
+ClickUp env vars are optional by default — missing ClickUp vars soft-disable only the ClickUp tool surface. Set `BMAD_REQUIRE_CLICKUP=1` for deployments where ClickUp must be configured at boot. See `.env.example` for the canonical list of supported vars.
+
+| Variable               | Default   | Description                                                                                                                            |
+| ---------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `PORT`                 | `3000`    | HTTP port the server listens on                                                                                                        |
+| `BMAD_API_KEY`         | _(none)_  | API key for authentication — set this in production                                                                                    |
+| `BMAD_ROOT`            | _(auto)_  | Override project root for local BMAD content                                                                                           |
+| `BMAD_DEBUG`           | `false`   | Enable verbose debug logging                                                                                                           |
+| `BMAD_REQUIRE_CLICKUP` | _(unset)_ | `1` or `true` → hard-fail at boot if ClickUp env vars missing. Default soft-disables ClickUp tools and keeps BMAD tools available.     |
+| `CLICKUP_API_KEY`      | _(unset)_ | Per-user ClickUp personal token. Usually starts with `pk_`. See `.env.example`.                                                        |
+| `CLICKUP_TEAM_ID`      | _(unset)_ | Workspace ID — 7–10 digit number. See `.env.example`.                                                                                  |
+| `CLICKUP_MCP_MODE`     | `write`   | One of `read-minimal`, `read`, `write`. Controls which ClickUp tools are exposed (see upstream docs in `src/tools/clickup/README.md`). |
 
 ### Pinning a BMAD Version
 

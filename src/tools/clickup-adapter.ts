@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return */
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-
-type ClickUpMode = 'read-minimal' | 'read' | 'write';
+import { validateClickUpEnv, type ClickUpMode } from '../utils/clickup-env.js';
 
 export type RegisterResult =
   | { disabled: true; reason: string }
@@ -9,6 +8,7 @@ export type RegisterResult =
       disabled: false;
       mode: ClickUpMode;
       toolsRegistered: readonly string[];
+      warnings: readonly string[];
       prefetchError?: string;
     };
 
@@ -23,15 +23,16 @@ function sanitizeErrorMessage(input: unknown): string {
 export async function registerClickUpTools(
   server: McpServer,
 ): Promise<RegisterResult> {
-  const apiKey = process.env.CLICKUP_API_KEY?.trim();
-  const teamId = process.env.CLICKUP_TEAM_ID?.trim();
+  const envResult = validateClickUpEnv();
 
-  if (!apiKey || !teamId) {
+  if (envResult.kind !== 'ok') {
     return {
       disabled: true,
-      reason: 'CLICKUP_API_KEY and CLICKUP_TEAM_ID required',
+      reason: envResult.diagnostic,
     };
   }
+
+  const { mode, warnings } = envResult;
 
   // Paths are stored as a constant manifest so TypeScript doesn't trace the
   // vendored tree at compile time (it's excluded from the strict root tsc pass).
@@ -150,21 +151,7 @@ Use the ClickUp search tools to find tasks assigned to me, and get detailed info
     }),
   );
 
-  // Mode dispatch. Trim to survive copy-paste whitespace in .env files
-  // (prevents privilege-escalation-by-typo where "  read " falls through
-  // the equality check and defaults to 'write').
-  const modeRaw = process.env.CLICKUP_MCP_MODE?.trim().toLowerCase();
-  let mode: ClickUpMode;
-  if (modeRaw === 'read-minimal' || modeRaw === 'read' || modeRaw === 'write') {
-    mode = modeRaw;
-  } else {
-    if (modeRaw) {
-      console.warn(
-        `Unknown CLICKUP_MCP_MODE '${modeRaw}', defaulting to write mode`,
-      );
-    }
-    mode = 'write';
-  }
+  // Registration logic remains the same, using the validated mode
 
   // Register in order, pushing names incrementally so a partial failure still
   // reports what was successfully registered.
@@ -235,6 +222,7 @@ Use the ClickUp search tools to find tasks assigned to me, and get detailed info
     disabled: false,
     mode,
     toolsRegistered,
+    warnings,
     prefetchError,
   };
 }

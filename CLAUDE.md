@@ -101,12 +101,18 @@ tests/
 
 ## Environment Variables
 
-| Variable               | Purpose                                           | Default                  |
-| ---------------------- | ------------------------------------------------- | ------------------------ |
-| `BMAD_ROOT`            | Override BMAD installation root                   | Auto-discovered          |
-| `BMAD_DEBUG`           | Enable verbose debug logging (`1` or `true`)      | `false`                  |
-| `NODE_ENV`             | Environment (`test`, `development`, `production`) | `development`            |
-| `BMAD_GIT_AUTO_UPDATE` | Auto-update Git cache                             | `true` (CI sets `false`) |
+| Variable               | Purpose                                                   | Default                  |
+| ---------------------- | --------------------------------------------------------- | ------------------------ |
+| `BMAD_ROOT`            | Override BMAD installation root                           | Auto-discovered          |
+| `BMAD_DEBUG`           | Enable verbose debug logging (`1` or `true`)              | `false`                  |
+| `NODE_ENV`             | Environment (`test`, `development`, `production`)         | `development`            |
+| `BMAD_GIT_AUTO_UPDATE` | Auto-update Git cache                                     | `true` (CI sets `false`) |
+| `BMAD_REQUIRE_CLICKUP` | `1` or `true` → hard-fail at boot if ClickUp vars missing | `unset` (soft-disable)   |
+| `CLICKUP_API_KEY`      | Per-user ClickUp personal token                           | `unset`                  |
+| `CLICKUP_TEAM_ID`      | Workspace ID (7–10 digits)                                | `unset`                  |
+| `CLICKUP_MCP_MODE`     | Tool surface: `read-minimal`, `read`, `write`             | `write`                  |
+| `PORT`                 | HTTP port for `src/http-server.ts`                        | `3000`                   |
+| `BMAD_API_KEY`         | API key for HTTP-transport authentication                 | `unset`                  |
 
 ---
 

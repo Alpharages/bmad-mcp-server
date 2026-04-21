@@ -31,6 +31,7 @@ import {
   createBMADTool,
 } from './tools/index.js';
 import { registerClickUpTools } from './tools/clickup-adapter.js';
+import { logger } from './utils/logger.js';
 
 export class BMADServerLiteMultiToolGit {
   private server: McpServer;
@@ -498,18 +499,33 @@ export class BMADServerLiteMultiToolGit {
   private async registerClickUp(): Promise<void> {
     try {
       const result = await registerClickUpTools(this.server);
+      const requireClickUp = /^(1|true)$/i.test(
+        (process.env.BMAD_REQUIRE_CLICKUP ?? '').trim(),
+      );
+
       if (result.disabled) {
-        console.error(`ClickUp tools disabled: ${result.reason}`);
+        if (requireClickUp) {
+          logger.error(result.reason);
+          process.exitCode = 1;
+          process.exit(1);
+        } else {
+          logger.info(result.reason);
+        }
       } else {
+        // Log any warnings from the adapter
+        for (const warning of result.warnings) {
+          logger.warn(`ClickUp env warning: ${warning}`);
+        }
+
         const suffix = result.prefetchError
           ? ` — pre-fetch warning: ${result.prefetchError}`
           : '';
-        console.error(
+        logger.info(
           `ClickUp tools registered (mode=${result.mode}, count=${result.toolsRegistered.length})${suffix}`,
         );
       }
     } catch (err) {
-      console.error(
+      logger.error(
         'ClickUp registration error (continuing without ClickUp tools):',
         err instanceof Error ? err.message : String(err),
       );

@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js';
 import { BMADServerLiteMultiToolGit } from './server.js';
+import { validateClickUpEnv } from './utils/clickup-env.js';
 
 interface Session {
   transport: StreamableHTTPServerTransport;
@@ -164,6 +165,22 @@ export function startHttpServer(): void {
       console.error(
         'WARNING: BMAD_API_KEY not set — server is open to all clients',
       );
+    }
+
+    const clickUpEnv = validateClickUpEnv();
+    const requireClickUp = /^(1|true)$/i.test(
+      (process.env.BMAD_REQUIRE_CLICKUP ?? '').trim(),
+    );
+
+    if (clickUpEnv.kind !== 'ok') {
+      console.error(clickUpEnv.diagnostic);
+      if (requireClickUp) {
+        process.exit(1);
+      }
+    } else {
+      for (const w of clickUpEnv.warnings) {
+        console.error(`ClickUp env warning: ${w}`);
+      }
     }
   });
 }
