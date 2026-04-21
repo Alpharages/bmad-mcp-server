@@ -1,6 +1,6 @@
 # Story 1.6: Smoke-test ClickUp cross-list parent/subtask (epic in backlog list, story-subtask in sprint list)
 
-Status: ready-for-dev
+Status: in-progress
 
 Epic: [EPIC-1: ClickUp MCP integration layer](../epics/EPIC-1-clickup-mcp-integration.md)
 

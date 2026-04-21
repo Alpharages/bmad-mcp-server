@@ -41,7 +41,8 @@
     "cli:list-agents": "node scripts/show-list-agents.mjs",
     "cli:list-workflows": "node scripts/show-list-workflows.mjs",
     "smoke:clickup": "node scripts/smoke-clickup-crud.mjs stdio",
-    "smoke:clickup:http": "node scripts/smoke-clickup-crud.mjs http"
+    "smoke:clickup:http": "node scripts/smoke-clickup-crud.mjs http",
+    "smoke:clickup:cross-list": "node scripts/smoke-clickup-cross-list.mjs"
   },
   "files": [
     "build/"

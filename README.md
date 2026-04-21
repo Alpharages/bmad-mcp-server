@@ -507,7 +507,42 @@ On PASS the harness DELETEs the smoke task (unless `--keep-task` is passed). On 
 
 The smoke test is intentionally excluded from CI because it requires live credentials, is subject to ClickUp rate limits, and depends on external infrastructure state. See the story's Dev Notes for the full rationale.
 
-### Pinning a BMAD Version
+### Running the ClickUp cross-list subtask smoke test
+
+One-paragraph explanation: this harness verifies [PRD §Risks R1](PRD.md#R1) — whether ClickUp accepts a story as a subtask of an epic when the two tasks live in different lists (story in sprint list, parent in backlog list per [PRD §ClickUp-layout](PRD.md#ClickUp-layout)). A PASS greenlights the EPIC-2 sprint-layout design; a FAIL means the layout needs redesign before Dev-agent story-creation plumbing depends on it.
+
+**Prerequisites**
+
+- Two pre-created lists in the target ClickUp workspace: one backlog list, one sprint list. Each MUST have at least one status. Lists MAY live in the same space or different spaces — the harness is agnostic.
+- A valid `CLICKUP_API_KEY` with permissions to create tasks, set `parent_task_id`, and DELETE tasks in both lists.
+- Run `npm run build` before the first smoke invocation — the harness spawns `build/index.js` as a child process.
+
+**Command**
+
+```bash
+CLICKUP_API_KEY=pk_... CLICKUP_TEAM_ID=... CLICKUP_SMOKE_BACKLOG_LIST_ID=... CLICKUP_SMOKE_SPRINT_LIST_ID=... npm run smoke:clickup:cross-list
+```
+
+**What it verifies**
+
+- Epic created in backlog list
+- Story created in sprint list with `parent_task_id=<epic-id>`
+- `getTaskById(story)` reports `list.id == SPRINT_LIST_ID` AND `parent_task_id == EPIC_ID`
+- `getTaskById(epic)` reports `storyId` in `child_task_ids`
+- DELETE cleanup (child first, then parent)
+
+**Expected output**
+
+A single `SMOKE PASS cross-list epic_id=<id> story_id=<id> ...` line on stderr with exit code 0. A failing run prints `SMOKE FAIL cross-list step=<letter> reason="..."` + the failing request/response pair.
+
+**Cleanup**
+
+On PASS the harness DELETEs both tasks (unless `--keep-tasks`). On FAIL between steps f and j, one or both tasks may be left behind — search ClickUp for `[bmad-smoke-x]` to audit and hand-delete. Note the prefix differs from story 1.5's `[bmad-smoke]` for exactly this audit purpose.
+
+**Why it's not in CI**
+
+Brief note pointing at story 1.5's README section's [Why it's not in CI](#why-its-not-in-ci) subsection — same three reasons (credentials, rate limits, non-determinism) apply unchanged.
+
 
 By default the server always pulls the latest BMAD content. To pin a specific version, override the `CMD` in `docker-compose.yml`:
 
