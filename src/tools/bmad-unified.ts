@@ -484,7 +484,11 @@ async function handleRead(
   engine: BMADEngine,
 ): Promise<{ content: TextContent[] }> {
   // Infer type from parameters (same pattern as execute)
-  let inferredType = params.type as 'agent' | 'workflow' | 'resource' | undefined;
+  let inferredType = params.type as
+    | 'agent'
+    | 'workflow'
+    | 'resource'
+    | undefined;
   if (!inferredType) {
     if (params.agent) inferredType = 'agent';
     else if (params.workflow) inferredType = 'workflow';

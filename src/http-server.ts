@@ -157,6 +157,22 @@ export function startHttpServer(): void {
     process.exit(1);
   });
 
+  const clickUpEnv = validateClickUpEnv();
+  const requireClickUp = /^(1|true)$/i.test(
+    (process.env.BMAD_REQUIRE_CLICKUP ?? '').trim(),
+  );
+
+  if (clickUpEnv.kind !== 'ok') {
+    console.error(clickUpEnv.diagnostic);
+    if (requireClickUp) {
+      process.exit(1);
+    }
+  } else {
+    for (const w of clickUpEnv.warnings) {
+      console.error(`ClickUp env warning: ${w}`);
+    }
+  }
+
   httpServer.listen(port, '0.0.0.0', () => {
     console.error(`BMAD MCP HTTP Server listening on port ${port}`);
     console.error(`MCP endpoint: http://0.0.0.0:${port}/mcp`);
@@ -165,22 +181,6 @@ export function startHttpServer(): void {
       console.error(
         'WARNING: BMAD_API_KEY not set — server is open to all clients',
       );
-    }
-
-    const clickUpEnv = validateClickUpEnv();
-    const requireClickUp = /^(1|true)$/i.test(
-      (process.env.BMAD_REQUIRE_CLICKUP ?? '').trim(),
-    );
-
-    if (clickUpEnv.kind !== 'ok') {
-      console.error(clickUpEnv.diagnostic);
-      if (requireClickUp) {
-        process.exit(1);
-      }
-    } else {
-      for (const w of clickUpEnv.warnings) {
-        console.error(`ClickUp env warning: ${w}`);
-      }
     }
   });
 }

@@ -30,7 +30,7 @@ I want a repeatable smoke-test harness at `scripts/smoke-clickup-crud.mjs` that 
 
 3. Unique task name per run. Format: `[bmad-smoke] CRUD roundtrip <ISO-UTC-timestamp>-<random-suffix>` where `<random-suffix>` is 6 base36 chars from `node:crypto.randomBytes(4).toString('base64url').slice(0, 6)` (or equivalent). Examples:
    - `[bmad-smoke] CRUD roundtrip 2026-04-21T18:32:11Z-ez81xk`
-   The `[bmad-smoke]` prefix is load-bearing — operators rely on searching it in the ClickUp UI to verify cleanup worked and to bulk-delete stragglers after a failed run. Do NOT parametrize the prefix via env var (scope creep; no user story demands it).
+     The `[bmad-smoke]` prefix is load-bearing — operators rely on searching it in the ClickUp UI to verify cleanup worked and to bulk-delete stragglers after a failed run. Do NOT parametrize the prefix via env var (scope creep; no user story demands it).
 
 4. Operation sequence. Both transports run the same ten-step flow (nine operations + one cleanup step); only the transport wiring differs:
    a. **Boot server.** Stdio: spawn `node build/index.js` as a child process with `stdio: ['pipe', 'pipe', 'inherit']`; parent writes JSON-RPC requests to stdin (line-delimited), reads responses from stdout via `node:readline`. HTTP: spawn `node build/index-http.js` as a child process (inherits stderr, discards stdout); wait for the `HTTP Server listening` banner OR up to 10 s; then `POST http://127.0.0.1:${CLICKUP_SMOKE_PORT}/mcp` with the JSON-RPC payloads.
@@ -47,7 +47,7 @@ I want a repeatable smoke-test harness at `scripts/smoke-clickup-crud.mjs` that 
 5. Per-step logging to stderr only. Stdout is reserved for JSON-RPC traffic to the stdio subprocess and MUST stay clean. Every step logs exactly one line of the form `[smoke][<transport>][<step-letter>] <message>` on success — e.g. `[smoke][stdio][c] tools/list returned 15 tools including createTask, addComment, updateTask, getTaskById, getListInfo, pickSpace`. The final summary line (on both PASS and FAIL) is a single line with machine-parseable fields:
    - PASS: `SMOKE PASS transport=<stdio|http> task_id=<id> comment_id=<id> status_from="<name>" status_to="<name>" elapsed_ms=<n>`
    - FAIL: `SMOKE FAIL transport=<t> step=<letter> reason="<message>" elapsed_ms=<n>`
-   On FAIL, the failing step's full JSON-RPC request AND response are dumped to stderr (pretty-printed with `JSON.stringify(..., null, 2)`) immediately before the summary line, so an operator can diagnose without re-running. Successful steps stay one-line to keep signal-to-noise high.
+     On FAIL, the failing step's full JSON-RPC request AND response are dumped to stderr (pretty-printed with `JSON.stringify(..., null, 2)`) immediately before the summary line, so an operator can diagnose without re-running. Successful steps stay one-line to keep signal-to-noise high.
 
 6. Exit codes:
    - `0` — all assertions passed; cleanup succeeded (or was intentionally skipped via `--keep-task`).
@@ -89,10 +89,12 @@ I want a repeatable smoke-test harness at `scripts/smoke-clickup-crud.mjs` that 
 12. `tests/unit/dependency-audit.test.ts` requires no changes. Rationale: the audit walks `src/` only (per `findTsFiles(SRC_ROOT)` at the top of that test), and `scripts/smoke-clickup-crud.mjs` is outside that tree. The new test file `tests/unit/server-init.test.ts` imports only already-declared packages (`@modelcontextprotocol/sdk`, `vitest`) plus `../../src/server.js`. The `SCAN_EXCLUDED_PATHS` three-entry list from story 1.2 AC #11 stays untouched. If a future story extends the audit to scan `scripts/`, that story owns the decision — not this one.
 
 13. `package.json` gains two new script entries in the `scripts` block, placed after the existing `cli:list-workflows` entry and before the `"files"` key:
+
     ```json
     "smoke:clickup": "node scripts/smoke-clickup-crud.mjs stdio",
     "smoke:clickup:http": "node scripts/smoke-clickup-crud.mjs http",
     ```
+
     The entries do NOT depend on `npm run build` — the harness script assumes the operator has already built (`build/index.js` + `build/index-http.js` must exist for the spawn targets). Document this prerequisite in README per AC #14.
 
 14. `README.md` gains a new subsection §"Running the ClickUp smoke tests" under the existing environment/ClickUp area (add it after the env-var table introduced by story 1.3 AC #10). Content (approximate — exact wording at author's discretion):
@@ -111,7 +113,7 @@ I want a repeatable smoke-test harness at `scripts/smoke-clickup-crud.mjs` that 
     - Reach into the vendored tree directly (`src/tools/clickup/**`).
     - Call `registerClickUpTools` or `BMADServerLiteMultiToolGit` in-process.
     - Use any MCP SDK helper for HTTP (`Client.connect`, etc.) — keep it dependency-free; a hand-rolled `fetch`-based JSON-RPC client is ~40 LOC and has zero surprise.
-    Rationale: a black-box smoke proves the real transport + real serialization + real schema validation works end-to-end, which is exactly the failure mode unit tests can't catch.
+      Rationale: a black-box smoke proves the real transport + real serialization + real schema validation works end-to-end, which is exactly the failure mode unit tests can't catch.
 
 17. Idempotency of the harness itself: re-running `npm run smoke:clickup` N times creates N distinct tasks (one per run, per AC #3's uniqueness). Cleanup-on-pass ensures the workspace accumulates zero artifacts across a series of green runs. A series that includes red runs may accumulate orphaned tasks — the `[bmad-smoke]` prefix makes these discoverable.
 
@@ -203,7 +205,7 @@ I want a repeatable smoke-test harness at `scripts/smoke-clickup-crud.mjs` that 
     - Stdio: writes `{ jsonrpc: '2.0', id: <counter>, method: 'tools/call', params: { name, arguments: args } }` newline-delimited to child stdin, reads one newline-delimited response from child stdout, parses, extracts `result.content[0].text`. Throws on protocol error or non-2xx equivalent.
     - HTTP: POSTs the same JSON-RPC payload to `http://127.0.0.1:${port}/mcp` with `Mcp-Session-Id` header + optional `x-api-key` header; reads the response body, parses, extracts text. The `Mcp-Session-Id` is captured from the `initialize` response's response header and reused for every subsequent call.
   - [ ] Implement the ten-step operation sequence per AC #4. Each step logs exactly one `[smoke][<transport>][<letter>] <msg>` stderr line on success. On assertion failure, dump the step's request + response as pretty-printed JSON then print the `SMOKE FAIL ...` summary + exit 1.
-  - [ ] Cleanup (step j): `await fetch(\`https://api.clickup.com/api/v2/task/${taskId}\`, { method: 'DELETE', headers: { Authorization: process.env.CLICKUP_API_KEY } })`. Check `response.ok`; on failure, log body + set exit code to 3 (but still print `SMOKE PASS` with a trailing `(cleanup failed — task still present)` note so the operator sees the partial success).
+  - [ ] Cleanup (step j): `await fetch(\`https://api.clickup.com/api/v2/task/${taskId}\`, { method: 'DELETE', headers: { Authorization: process.env.CLICKUP_API_KEY } })`. Check `response.ok`; on failure, log body + set exit code to 3 (but still print `SMOKE PASS`with a trailing`(cleanup failed — task still present)` note so the operator sees the partial success).
   - [ ] Measure `elapsed_ms` via `process.hrtime.bigint()` captured at start + end of the flow. Include in the final summary line.
   - [ ] Ensure child process lifecycle: on exit (pass or fail), send SIGTERM to the child (stdio or http child), await its 'exit' event with a 3-second timeout, then force-kill if still alive. Don't leak child processes.
   - [ ] Harness style: ESLint flat-config clean (`--ext .mjs` picks this up). Prettier clean. No `var`, no `console.log`, no eslint-disable comments.
@@ -253,18 +255,18 @@ I want a repeatable smoke-test harness at `scripts/smoke-clickup-crud.mjs` that 
 
 ### Smoke-test flow at a glance
 
-| Step | Tool / Action | Assertion |
-|---|---|---|
-| a | Spawn `node build/index.js` (stdio) or `node build/index-http.js` (http) | Child process alive; HTTP banner `listening on port <N>` seen within 10 s |
-| b | JSON-RPC `initialize` | `result.capabilities.tools` present; HTTP: `Mcp-Session-Id` captured |
-| c | JSON-RPC `tools/list` | Contains at minimum `bmad`, `createTask`, `addComment`, `updateTask`, `getTaskById`, `getListInfo`; (`pickSpace` if 1.4 landed) |
-| d | `getListInfo(list_id=$CLICKUP_SMOKE_LIST_ID)` | Response parses; ≥2 distinct statuses; capture `statusFrom`, `statusTo` |
-| e | `createTask(list_id, name=smokeName, status=statusFrom)` | Response contains task ID; capture it |
-| f | `getTaskById(task_id)` | `name == smokeName`, `status ~= statusFrom` (case-insensitive) |
-| g | `addComment(task_id, comment)` | Response contains `Comment added successfully`; capture `comment_id` |
-| h | `updateTask(task_id, status=statusTo)` | Response does not contain `Error updating task:` |
-| i | `getTaskById(task_id)` | `status ~= statusTo` (case-insensitive) — the round-trip proof |
-| j | `fetch DELETE /api/v2/task/{task_id}` (skip if `--keep-task`) | HTTP 2xx |
+| Step | Tool / Action                                                            | Assertion                                                                                                                       |
+| ---- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| a    | Spawn `node build/index.js` (stdio) or `node build/index-http.js` (http) | Child process alive; HTTP banner `listening on port <N>` seen within 10 s                                                       |
+| b    | JSON-RPC `initialize`                                                    | `result.capabilities.tools` present; HTTP: `Mcp-Session-Id` captured                                                            |
+| c    | JSON-RPC `tools/list`                                                    | Contains at minimum `bmad`, `createTask`, `addComment`, `updateTask`, `getTaskById`, `getListInfo`; (`pickSpace` if 1.4 landed) |
+| d    | `getListInfo(list_id=$CLICKUP_SMOKE_LIST_ID)`                            | Response parses; ≥2 distinct statuses; capture `statusFrom`, `statusTo`                                                         |
+| e    | `createTask(list_id, name=smokeName, status=statusFrom)`                 | Response contains task ID; capture it                                                                                           |
+| f    | `getTaskById(task_id)`                                                   | `name == smokeName`, `status ~= statusFrom` (case-insensitive)                                                                  |
+| g    | `addComment(task_id, comment)`                                           | Response contains `Comment added successfully`; capture `comment_id`                                                            |
+| h    | `updateTask(task_id, status=statusTo)`                                   | Response does not contain `Error updating task:`                                                                                |
+| i    | `getTaskById(task_id)`                                                   | `status ~= statusTo` (case-insensitive) — the round-trip proof                                                                  |
+| j    | `fetch DELETE /api/v2/task/{task_id}` (skip if `--keep-task`)            | HTTP 2xx                                                                                                                        |
 
 Ten steps total — nine operations (a–i) plus one cleanup (j). The five tools exercised (`getListInfo`, `createTask`, `addComment`, `updateTask`, `getTaskById`) are exactly the subset needed for the story-creation → implementation loop in EPIC-2 + EPIC-3. Everything else on the tool surface is validated by story 1.6 (cross-list parent/subtask) + upstream's own tests.
 
@@ -278,9 +280,9 @@ Three escalating concerns:
 
 These three concerns compound: fixing any one of them (e.g. only guarding CI but leaving the test in the suite) still leaves the others. The cleanest answer is a separate entry point with explicit human gating.
 
-If a future team *does* want CI coverage, the right pattern is a scheduled GitHub Actions workflow (`schedule: cron: '0 6 * * 1'` — weekly Monday mornings) that runs against a dedicated sandbox workspace with a CI-only API token. That is its own story (candidate: EPIC-5's pilot-iterate scope or a standalone ops story), not this one.
+If a future team _does_ want CI coverage, the right pattern is a scheduled GitHub Actions workflow (`schedule: cron: '0 6 * * 1'` — weekly Monday mornings) that runs against a dedicated sandbox workspace with a CI-only API token. That is its own story (candidate: EPIC-5's pilot-iterate scope or a standalone ops story), not this one.
 
-### Why close the HTTP-mode gap in *this* story
+### Why close the HTTP-mode gap in _this_ story
 
 The 1.2/1.3/1.4 forward-pointer ("story 1.5's HTTP smoke test, or a dedicated 1.4.5-style story") gave two options. Reasons to fold the fix into 1.5 rather than spawn 1.4.5:
 
@@ -350,7 +352,9 @@ rl.on('line', (line) => {
 
 async function rpc(method, params) {
   const id = ++nextId;
-  child.stdin.write(JSON.stringify({ jsonrpc: '2.0', id, method, params }) + '\n');
+  child.stdin.write(
+    JSON.stringify({ jsonrpc: '2.0', id, method, params }) + '\n',
+  );
   return new Promise((resolve, reject) => pending.set(id, { resolve, reject }));
 }
 ```
@@ -371,13 +375,13 @@ Picked option 3. `3456` is an arbitrary unused port in the ephemeral range that'
 
 ### Artifact lifecycle: what the smoke leaves behind
 
-| Outcome | Artifacts in workspace |
-|---|---|
-| `SMOKE PASS` (default, no `--keep-task`) | Zero. Task deleted by step j. |
-| `SMOKE PASS` (with `--keep-task`) | One task (the smoke task), inspectable in UI. |
-| `SMOKE PASS` (exit 3, cleanup failed) | One task. Operator hand-deletes. |
-| `SMOKE FAIL` between steps a–d | Zero (no task was created yet). |
-| `SMOKE FAIL` between steps e–i | One task in indeterminate state. Operator hand-deletes via `[bmad-smoke]` search. |
+| Outcome                                  | Artifacts in workspace                                                            |
+| ---------------------------------------- | --------------------------------------------------------------------------------- |
+| `SMOKE PASS` (default, no `--keep-task`) | Zero. Task deleted by step j.                                                     |
+| `SMOKE PASS` (with `--keep-task`)        | One task (the smoke task), inspectable in UI.                                     |
+| `SMOKE PASS` (exit 3, cleanup failed)    | One task. Operator hand-deletes.                                                  |
+| `SMOKE FAIL` between steps a–d           | Zero (no task was created yet).                                                   |
+| `SMOKE FAIL` between steps e–i           | One task in indeterminate state. Operator hand-deletes via `[bmad-smoke]` search. |
 
 Zero scenarios leave more than one task per run. The `[bmad-smoke]` prefix ensures discoverability. For operators who want a cleanup pass after a burst of failed runs, a one-liner works: `getTaskById` + `searchTasks` via the MCP tools + a manual delete — or the same `fetch DELETE` pattern the harness uses.
 
@@ -427,12 +431,12 @@ Both 1.3 and 1.4 are `ready-for-dev` but not yet merged at story-creation time. 
 
 Three workflows are explicitly not touched:
 
-| File | Why this story doesn't touch it |
-|---|---|
-| `.github/workflows/ci.yml` | Lint + unit + integration + build. Smoke is manually gated; adding it here would require `CLICKUP_API_KEY` as a repo secret + rate-limit budgeting + PR-fork leak prevention — not this story's scope. |
-| `.github/workflows/release-draft.yml` | Drafts release notes from commits. Smoke isn't a release gate. |
-| `.github/workflows/release-publish.yml` | Publishes to npm on GitHub release. Smoke isn't a publish gate either — publish reflects `main`'s passing test suite, which is intentionally smoke-free. |
-| `.github/workflows/pr-title-check.yml` | Validates PR title format. Orthogonal. |
+| File                                    | Why this story doesn't touch it                                                                                                                                                                        |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `.github/workflows/ci.yml`              | Lint + unit + integration + build. Smoke is manually gated; adding it here would require `CLICKUP_API_KEY` as a repo secret + rate-limit budgeting + PR-fork leak prevention — not this story's scope. |
+| `.github/workflows/release-draft.yml`   | Drafts release notes from commits. Smoke isn't a release gate.                                                                                                                                         |
+| `.github/workflows/release-publish.yml` | Publishes to npm on GitHub release. Smoke isn't a publish gate either — publish reflects `main`'s passing test suite, which is intentionally smoke-free.                                               |
+| `.github/workflows/pr-title-check.yml`  | Validates PR title format. Orthogonal.                                                                                                                                                                 |
 
 If a future workflow adds a scheduled smoke run (see Dev Notes §"Why a script, not a vitest test" — the "future team" paragraph), it lives in a new file like `.github/workflows/smoke-scheduled.yml`, not by augmenting `ci.yml`.
 
@@ -506,7 +510,7 @@ The smoke harness's use of `globalThis.fetch` requires Node 18+. `.nvmrc` pins 2
 
 ## Change Log
 
-| Date       | Change                                                                                                                              |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-04-21 | Story drafted from EPIC-1 bullet 6 + 1.2/1.3/1.4 forward-pointers via `bmad-create-story`. Status → ready-for-dev. Folds the HTTP-mode tool-registration gap-closure (inherited from stories 1.2/1.3/1.4) into this story per the story-1.4 AC #15 authorization. |
+| Date       | Change                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-04-21 | Story drafted from EPIC-1 bullet 6 + 1.2/1.3/1.4 forward-pointers via `bmad-create-story`. Status → ready-for-dev. Folds the HTTP-mode tool-registration gap-closure (inherited from stories 1.2/1.3/1.4) into this story per the story-1.4 AC #15 authorization.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | 2026-04-21 | Validation pass: fixed step-count inconsistency (AC #4 intro, Task 3 bullet, and Dev Notes §"Smoke-test flow at a glance" summary line now agree on ten steps a–j = nine operations + one cleanup — earlier drafts said "nine-step flow" while listing ten items). Verified (a) sprint-status.yaml's renamed "Dev agent story-creation mode" / "Dev agent implementation mode" labels are consistent with this story's Out-of-Scope EPIC-2 / EPIC-3 references (already draft-correct), (b) all `src/**` file-path + line-number citations are live against the current branch, (c) all cross-references to stories 1.2 / 1.3 / 1.4 (AC #, Out-of-Scope bullet #) resolve, (d) EPIC-1 §Outcomes bullet 4 + §Stories bullet 6 mapping is correct given story 1-1 absorbs bullets 1+2 per sprint-status comment, (e) File List matches AC coverage, (f) Task-to-AC index is complete for all 29 ACs. |

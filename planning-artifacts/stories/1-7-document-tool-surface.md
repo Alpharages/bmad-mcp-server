@@ -17,23 +17,23 @@ so that a new adopter can (a) discover the tool surface without reading the vend
 1. **README.md gains a new section `## ClickUp Integration`** placed **after the `## Docker Deployment` block ends** (i.e., after the `### Resource Discovery Priority` subsection at current line 488, and **before** `## Documentation` at current line 492). Rationale for this placement: `### Resource Discovery Priority` is a subsection _of_ Docker Deployment (it's an `###`, not a sibling `##`), so inserting between them would orphan it from its parent. Verify current line numbers before editing; insert at the `---` separator just above `## Documentation`.
    1.1. Add `[ClickUp Integration](#clickup-integration)` to the header nav badge row (currently `[Features] • [Installation] • [Docker Deployment] • [Usage] • [Documentation]` at around line 10).
    1.2. Section contents, in order:
-      - One-paragraph intro: ClickUp is additive (the `bmad` unified tool still works); enabled when both `CLICKUP_API_KEY` and `CLICKUP_TEAM_ID` are set; tool visibility depends on `CLICKUP_MCP_MODE`; when either env var is missing the server logs `ClickUp tools disabled: ...` and keeps running BMAD-only.
-      - **Env-var table** with the six vars from AC #3 (same names, same order).
-      - **Mode-to-tools table** per AC #2.
-      - **Example client config** block for Claude Desktop (JSON), using `CLICKUP_MCP_MODE=read` as the default — safer than `write` for first-run.
-      - **Docker env-var pass-through** — one-paragraph callout showing the same three env vars in `docker-compose.yml`'s `environment:` map (the existing `## Docker Deployment` section already explains the broader docker setup; this callout just shows ClickUp-specific keys appended to that block). Cross-link to `## Docker Deployment` above.
-      - **Space selection** subsection, 3–5 sentences describing the story-1.4 space-picker UX verbatim from story 1.4's Completion Notes (Task 1 extracts this).
-      - **Cross-list parent/subtask** subsection, 2–3 sentences: stories live in the active Sprint list while their parent epic lives in the Backlog list; one link to the story-1.6 smoke-test evidence.
-      - **`my-todos` prompt** one-sentence callout: ClickUp adds a German/English MCP prompt for triaging assigned tasks; language follows `CLICKUP_PRIMARY_LANGUAGE` or `$LANG`.
-      - **Not supported (this phase)** subsection, 3–5 bullets pointing at [PRD §Non-goals](../PRD.md): Jira/Linear, custom fields, bidirectional sync, historical migration.
+   - One-paragraph intro: ClickUp is additive (the `bmad` unified tool still works); enabled when both `CLICKUP_API_KEY` and `CLICKUP_TEAM_ID` are set; tool visibility depends on `CLICKUP_MCP_MODE`; when either env var is missing the server logs `ClickUp tools disabled: ...` and keeps running BMAD-only.
+   - **Env-var table** with the six vars from AC #3 (same names, same order).
+   - **Mode-to-tools table** per AC #2.
+   - **Example client config** block for Claude Desktop (JSON), using `CLICKUP_MCP_MODE=read` as the default — safer than `write` for first-run.
+   - **Docker env-var pass-through** — one-paragraph callout showing the same three env vars in `docker-compose.yml`'s `environment:` map (the existing `## Docker Deployment` section already explains the broader docker setup; this callout just shows ClickUp-specific keys appended to that block). Cross-link to `## Docker Deployment` above.
+   - **Space selection** subsection, 3–5 sentences describing the story-1.4 space-picker UX verbatim from story 1.4's Completion Notes (Task 1 extracts this).
+   - **Cross-list parent/subtask** subsection, 2–3 sentences: stories live in the active Sprint list while their parent epic lives in the Backlog list; one link to the story-1.6 smoke-test evidence.
+   - **`my-todos` prompt** one-sentence callout: ClickUp adds a German/English MCP prompt for triaging assigned tasks; language follows `CLICKUP_PRIMARY_LANGUAGE` or `$LANG`.
+   - **Not supported (this phase)** subsection, 3–5 bullets pointing at [PRD §Non-goals](../PRD.md): Jira/Linear, custom fields, bidirectional sync, historical migration.
 
 2. **Mode → tool table** must match the adapter source exactly. Verify against `src/tools/clickup-adapter.ts` lines 181–229 before committing — the adapter dispatches by mode and pushes tool names incrementally via the `step()` helper. Expected rows (top-to-bottom, narrowest mode first):
 
-   | Mode | Tools registered | Resource template | Notes |
-   | --- | --- | --- | --- |
-   | `read-minimal` | `getTaskById`, `searchTasks` | _(none)_ | `registerSpaceResources` not called |
-   | `read` | `getTaskById`, `searchTasks`, `searchSpaces`, `getListInfo`, `getTimeEntries`, `readDocument`, `searchDocuments` | `clickup://space/{spaceId}` | adds space/list/time/doc reads |
-   | `write` (default) | above plus `addComment`, `updateTask`, `createTask`, `updateListInfo`, `createTimeEntry`, `updateDocumentPage`, `createDocumentOrPage` | `clickup://space/{spaceId}` | 13 tools total |
+   | Mode              | Tools registered                                                                                                                       | Resource template           | Notes                               |
+   | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- | ----------------------------------- |
+   | `read-minimal`    | `getTaskById`, `searchTasks`                                                                                                           | _(none)_                    | `registerSpaceResources` not called |
+   | `read`            | `getTaskById`, `searchTasks`, `searchSpaces`, `getListInfo`, `getTimeEntries`, `readDocument`, `searchDocuments`                       | `clickup://space/{spaceId}` | adds space/list/time/doc reads      |
+   | `write` (default) | above plus `addComment`, `updateTask`, `createTask`, `updateListInfo`, `createTimeEntry`, `updateDocumentPage`, `createDocumentOrPage` | `clickup://space/{spaceId}` | 13 tools total                      |
 
    One-line note below the table: "`.trim().toLowerCase()` normalization accepts `"  Read  "` as `read`; unknown values fall through to `write` with a `stderr` warning."
 
@@ -92,12 +92,12 @@ so that a new adopter can (a) discover the tool surface without reading the vend
    5.1. **§Upgrade procedure step 4** — the bolded clause above is wrong on two counts: (a) the adapter lives at `src/tools/clickup-adapter.ts`, not in `src/server.ts`; (b) adapter reconciliation was story 1.2's scope, not 1.3's (1.3 is env-var validation). Rewrite to: "If the register-tools surface changed, reconcile the adapter at `src/tools/clickup-adapter.ts` (story 1.2 established the dispatch pattern)."
    5.2. **§Upgrade procedure step 5** — the bolded clause above references `scripts/build-clickup.mjs` (esbuild). Verify against `package.json`'s `build` script: if story 1.2 actually landed with Option A (esbuild), the reference stands. If it landed with Option B (secondary `tsconfig.clickup.json` + `scripts/fix-esm-imports.mjs` codemod), rewrite to cite the actual compile path. Read `package.json` and inspect `scripts/` before editing.
    5.3. **Add a new `### What our adapter does on top`** subsection between §"Upstream runtime dependencies" and §"Upgrade procedure". 4–6 bullets, no more:
-      - Our adapter at `src/tools/clickup-adapter.ts` dynamic-imports the vendored tree only when both env vars are present (avoids upstream's module-eval throw at `src/tools/clickup/src/shared/config.ts:70`).
-      - Upstream's own `initializeServer()` bootstrap in `src/tools/clickup/src/index.ts` is never called — our adapter dispatches the individual `register*Tools` functions directly, respecting `CLICKUP_MCP_MODE`.
-      - The upstream `my-todos` prompt is re-registered by our adapter (lines 108–151) via `server.prompt(...)`; upstream's own `registerPrompt` call is bypassed because `initializeServer()` is bypassed.
-      - Mode-dispatch logic lives in the adapter; upstream's mode dispatch in `src/tools/clickup/src/index.ts:101–128` is dead code in our build.
-      - `userData` and space-index pre-fetch failures are caught and surfaced as `prefetchError` in the `RegisterResult` return value; tool registration proceeds with `undefined` user data rather than crashing startup.
-   5.4. Add a one-line §Usage pointer below the existing sections: `**User-facing setup:** see [README.md §ClickUp Integration](./README.md#clickup-integration).`
+   - Our adapter at `src/tools/clickup-adapter.ts` dynamic-imports the vendored tree only when both env vars are present (avoids upstream's module-eval throw at `src/tools/clickup/src/shared/config.ts:70`).
+   - Upstream's own `initializeServer()` bootstrap in `src/tools/clickup/src/index.ts` is never called — our adapter dispatches the individual `register*Tools` functions directly, respecting `CLICKUP_MCP_MODE`.
+   - The upstream `my-todos` prompt is re-registered by our adapter (lines 108–151) via `server.prompt(...)`; upstream's own `registerPrompt` call is bypassed because `initializeServer()` is bypassed.
+   - Mode-dispatch logic lives in the adapter; upstream's mode dispatch in `src/tools/clickup/src/index.ts:101–128` is dead code in our build.
+   - `userData` and space-index pre-fetch failures are caught and surfaced as `prefetchError` in the `RegisterResult` return value; tool registration proceeds with `undefined` user data rather than crashing startup.
+     5.4. Add a one-line §Usage pointer below the existing sections: `**User-facing setup:** see [README.md §ClickUp Integration](./README.md#clickup-integration).`
 
 6. **`docs/architecture.md` gains a `## ClickUp Adapter Layer` section** at the end of the document (after whatever the current last section is). Required contents:
    - One paragraph: the adapter is a dispatch shim at `src/tools/clickup-adapter.ts` that dynamic-imports the vendored tree when `CLICKUP_API_KEY + CLICKUP_TEAM_ID` are present. Dynamic import is load-bearing because `src/tools/clickup/src/shared/config.ts:70` throws at module-evaluation time when env vars are absent — a static import chain would crash BMAD-only usage.
@@ -203,6 +203,7 @@ so that a new adopter can (a) discover the tool surface without reading the vend
 Four stories are `ready-for-dev` at draft time: 1.3 (env-var validation), 1.4 (space picker), 1.5 (CRUD smoke), 1.6 (cross-list smoke). The README's "Space selection" and "Cross-list parent/subtask" subsections (AC #1.2) and the dev-guide's smoke-test script paths (AC #8) describe behavior those stories will deliver.
 
 Two scenarios:
+
 - **All four are `done` before this story runs.** Task 1 extracts actual behavior from each story's Completion Notes; docs reflect ground truth.
 - **Some are still in-flight.** Task 1 documents observed state today, marks uncertain sections with `<!-- TODO: verify after story X lands -->`, and the user can land this story now with incomplete references or defer it. The prior draft of this story had a hard "STOP and return to backlog" gate on Task 1 — removed, because the user explicitly asked for the story to be drafted now.
 
@@ -217,6 +218,7 @@ AC #11 is load-bearing. Temptation to "quickly fix" a minor naming inconsistency
 - `src/server.ts`, `src/http-server.ts`, `src/core/**`, `src/tools/bmad-unified.ts` — same logic. Docs PR.
 
 If a real bug blocks documenting actual behavior:
+
 1. Document what the code does today (not the intended behavior).
 2. File the bug in `planning-artifacts/deferred-work.md`.
 3. Complete this story.
@@ -224,6 +226,7 @@ If a real bug blocks documenting actual behavior:
 ### VENDOR.md — what's actually there
 
 Current VENDOR.md structure (verified against disk):
+
 - `## clickup-mcp` header block with SHA `c79b21e3f77190a924ef8e2c9ba3dd8088369e17`, branch `main`, date `2026-04-21`, license MIT.
 - `### What was vendored` — three lines (src/, LICENSE, README.md).
 - `### What was deliberately excluded (and why)` — table.
@@ -243,6 +246,7 @@ Docs framing (use this wording): "Our adapter re-registers the upstream `my-todo
 ### README insertion point — verify line numbers
 
 At draft time (post-story-1.2, pre-1.3):
+
 - `## Docker Deployment` starts at ~line 339.
 - `### Resource Discovery Priority` is a subsection of Docker Deployment at ~line 481.
 - `---` separator at ~line 490.
@@ -267,6 +271,7 @@ Supported language codes (per config.ts lines 7–44): `de`, `en`, `fr`, `es`, `
 AC #10's grep is the backstop. If any doc ends up with `createDocument` (wrong — it's `createDocumentOrPage`) or `getTask` (wrong — it's `getTaskById`) or `listSpaces` (wrong — it's `searchSpaces`), the grep catches it. These are the most likely typos because upstream uses slightly non-standard verbs.
 
 Authoritative tool list, verified against `src/tools/clickup-adapter.ts` lines 181–229:
+
 - read-minimal: `getTaskById`, `searchTasks` (2)
 - read adds: `searchSpaces`, `getListInfo`, `getTimeEntries`, `readDocument`, `searchDocuments` (7 total)
 - write adds: `addComment`, `updateTask`, `createTask`, `updateListInfo`, `createTimeEntry`, `updateDocumentPage`, `createDocumentOrPage` (13 total)
@@ -351,8 +356,8 @@ If `git status` shows anything outside the first list, stop and investigate — 
 
 ## Change Log
 
-| Date       | Change                                                                                                                                                                                                                                                                                                                                                                                                   |
+| Date       | Change                                                                                                                                                                                                                                                                                                                                                                                                     |
 | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-04-21 | Story drafted from EPIC-1 §Stories bullet 8 via `bmad-create-story`. Status → ready-for-dev. Task 1 verifies prereq stories 1.3/1.4/1.5/1.6 state at implementation time (soft gate, not hard block).                                                                                                                                                                                                    |
+| 2026-04-21 | Story drafted from EPIC-1 §Stories bullet 8 via `bmad-create-story`. Status → ready-for-dev. Task 1 verifies prereq stories 1.3/1.4/1.5/1.6 state at implementation time (soft gate, not hard block).                                                                                                                                                                                                      |
 | 2026-04-21 | Checklist validation pass: corrected VENDOR.md description (it has `### Upgrade procedure` already, not `## Modifications`); corrected adapter prompt behavior (we re-register via `server.prompt`, not skip); fixed README insertion point (`### Resource Discovery Priority` is a subsection of `## Docker Deployment`, not a sibling); removed hard prerequisite gate; cut AC and Dev Notes redundancy. |
-| 2026-04-21 | Applied remaining validator enhancements/reductions: added Docker env-var pass-through callout to README AC #1.2; quoted the existing 6-step §Upgrade procedure verbatim in AC #5 as diff-target baseline; tightened the mode-table footnote in AC #2; dropped the defensive Out-of-Scope bullet about backporting into `src/tools/clickup/README.md`. |
+| 2026-04-21 | Applied remaining validator enhancements/reductions: added Docker env-var pass-through callout to README AC #1.2; quoted the existing 6-step §Upgrade procedure verbatim in AC #5 as diff-target baseline; tightened the mode-table footnote in AC #2; dropped the defensive Out-of-Scope bullet about backporting into `src/tools/clickup/README.md`.                                                     |

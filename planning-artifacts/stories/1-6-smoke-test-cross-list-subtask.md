@@ -42,20 +42,20 @@ I want a repeatable smoke harness at `scripts/smoke-clickup-cross-list.mjs` that
    f. **`tools/call createTask {list_id: $CLICKUP_SMOKE_BACKLOG_LIST_ID, name: <epicName>, description: "smoke-cross-list epic (parent) from bmad-mcp-server story 1-6", status: <backlogStatus>}`.** Parse the first `/^task_id:\s*(\S+)\s*$/m` match from the response text. Upstream's `formatTaskResponse` at `src/tools/clickup/src/tools/task-write-tools.ts:647-659` emits this line identically for create and read paths (the line immediately after the summary `Task created successfully!` line). Capture as `epicId`. This is the PARENT task.
    g. **`tools/call createTask {list_id: $CLICKUP_SMOKE_SPRINT_LIST_ID, parent_task_id: <epicId>, name: <storyName>, description: "smoke-cross-list story (subtask) from bmad-mcp-server story 1-6", status: <sprintStatus>}`.** Capture `storyId` from the response (same parsing as step f). This is the CHILD task; note the list_id differs from the parent's list_id — this is the cross-list assertion surface. If the response contains the string `Error creating task:` (per `src/tools/clickup/src/tools/task-write-tools.ts:413-414`), fail with `step=g reason="<full-error-line>"` — this is the R1 materialization signal: ClickUp rejected the cross-list parent relationship at the API layer.
    h. **`tools/call getTaskById {task_id: <storyId>}`.** Parse the response text for three fields:
-      - `list: <name> (<id>)` — per upstream `src/tools/clickup/src/tools/task-tools.ts:304`. Capture `<id>` as `reportedStoryListId`. ASSERT `reportedStoryListId === CLICKUP_SMOKE_SPRINT_LIST_ID` (byte-for-byte). This is the KEY R1 verification: did ClickUp honor the requested `list_id`, or did it silently relocate the subtask to the parent's list? A mismatch is a HARD FAIL with `step=h reason="cross-list placement not honored — child is in list <reportedStoryListId>, expected <SPRINT_LIST_ID>"` even if the parent linkage itself works. The PRD §ClickUp-layout design depends on BOTH properties simultaneously.
-      - `parent_task_id: <id>` — per upstream `src/tools/clickup/src/tools/task-tools.ts:351-353`. ASSERT `<id> === epicId` byte-for-byte. Missing line or mismatch → FAIL with `step=h reason="parent linkage not preserved — expected parent_task_id <epicId>, got <observed-or-missing>"`.
-      - `name: <smokeStoryName>` (byte-for-byte sanity check — same as story 1.5 AC #4f). Mismatch → FAIL.
-   i. **`tools/call getTaskById {task_id: <epicId>}`.** Parse the response for `child_task_ids: <id1>, <id2>, ...` (per upstream `src/tools/clickup/src/tools/task-tools.ts:356-358`). ASSERT `storyId` is in the comma-separated list. Missing line or `storyId` absent → FAIL with `step=i reason="parent does not report child — expected storyId <storyId> in child_task_ids, got <observed-or-missing>"`. This is the bidirectional-linkage proof: the relationship is visible from BOTH directions, not just one. ClickUp's API has historically had edge cases where unilateral reads return stale views (per https://clickup.com/api — eventual-consistency notes); if this assertion flakes in real runs, bubble it up to a retry-with-backoff story rather than silently masking it here.
-   j. **Cleanup** (unless `--keep-tasks` is set): direct `fetch` DELETE in order:
-      - First DELETE the child: `fetch('DELETE', \`https://api.clickup.com/api/v2/task/${storyId}\`, { headers: { Authorization: $CLICKUP_API_KEY } })`. On non-2xx, log the response body + set `cleanupChildFailed = true`.
-      - Then DELETE the parent: `fetch('DELETE', \`https://api.clickup.com/api/v2/task/${epicId}\`, ...)`. On non-2xx, log + set `cleanupParentFailed = true`.
-      - Order matters: per ClickUp API behavior observed in production, deleting a parent with live subtasks may orphan the subtasks rather than cascade-delete them. Child-first prevents that ambiguity and keeps the cleanup deterministic.
-      - If either cleanup DELETE fails, the process exit code becomes 3 (AC #6). The PASS line from step i is still printed (round-trip correctness is independent of cleanup success — same rationale as story 1.5 AC #6).
+   - `list: <name> (<id>)` — per upstream `src/tools/clickup/src/tools/task-tools.ts:304`. Capture `<id>` as `reportedStoryListId`. ASSERT `reportedStoryListId === CLICKUP_SMOKE_SPRINT_LIST_ID` (byte-for-byte). This is the KEY R1 verification: did ClickUp honor the requested `list_id`, or did it silently relocate the subtask to the parent's list? A mismatch is a HARD FAIL with `step=h reason="cross-list placement not honored — child is in list <reportedStoryListId>, expected <SPRINT_LIST_ID>"` even if the parent linkage itself works. The PRD §ClickUp-layout design depends on BOTH properties simultaneously.
+   - `parent_task_id: <id>` — per upstream `src/tools/clickup/src/tools/task-tools.ts:351-353`. ASSERT `<id> === epicId` byte-for-byte. Missing line or mismatch → FAIL with `step=h reason="parent linkage not preserved — expected parent_task_id <epicId>, got <observed-or-missing>"`.
+   - `name: <smokeStoryName>` (byte-for-byte sanity check — same as story 1.5 AC #4f). Mismatch → FAIL.
+     i. **`tools/call getTaskById {task_id: <epicId>}`.** Parse the response for `child_task_ids: <id1>, <id2>, ...` (per upstream `src/tools/clickup/src/tools/task-tools.ts:356-358`). ASSERT `storyId` is in the comma-separated list. Missing line or `storyId` absent → FAIL with `step=i reason="parent does not report child — expected storyId <storyId> in child_task_ids, got <observed-or-missing>"`. This is the bidirectional-linkage proof: the relationship is visible from BOTH directions, not just one. ClickUp's API has historically had edge cases where unilateral reads return stale views (per https://clickup.com/api — eventual-consistency notes); if this assertion flakes in real runs, bubble it up to a retry-with-backoff story rather than silently masking it here.
+     j. **Cleanup** (unless `--keep-tasks` is set): direct `fetch` DELETE in order:
+   - First DELETE the child: `fetch('DELETE', \`https://api.clickup.com/api/v2/task/${storyId}\`, { headers: { Authorization: $CLICKUP_API_KEY } })`. On non-2xx, log the response body + set `cleanupChildFailed = true`.
+   - Then DELETE the parent: `fetch('DELETE', \`https://api.clickup.com/api/v2/task/${epicId}\`, ...)`. On non-2xx, log + set `cleanupParentFailed = true`.
+   - Order matters: per ClickUp API behavior observed in production, deleting a parent with live subtasks may orphan the subtasks rather than cascade-delete them. Child-first prevents that ambiguity and keeps the cleanup deterministic.
+   - If either cleanup DELETE fails, the process exit code becomes 3 (AC #6). The PASS line from step i is still printed (round-trip correctness is independent of cleanup success — same rationale as story 1.5 AC #6).
 
 5. Per-step logging to stderr only. Stdout is reserved for JSON-RPC traffic to the stdio subprocess. Every step logs exactly one line of the form `[smoke-x][<step-letter>] <message>` on success — e.g. `[smoke-x][h] story in sprint list (id=<sprint-id>), parent_task_id=<epic-id>, name matches`. The final summary line (on both PASS and FAIL) is a single machine-parseable line:
    - PASS: `SMOKE PASS cross-list epic_id=<id> story_id=<id> backlog_list=<id> sprint_list=<id> elapsed_ms=<n>`
    - FAIL: `SMOKE FAIL cross-list step=<letter> reason="<message>" elapsed_ms=<n>`
-   On FAIL, the failing step's full JSON-RPC request AND response are dumped to stderr (pretty-printed with `JSON.stringify(..., null, 2)`) immediately before the summary line.
+     On FAIL, the failing step's full JSON-RPC request AND response are dumped to stderr (pretty-printed with `JSON.stringify(..., null, 2)`) immediately before the summary line.
 
 6. Exit codes (same shape as story 1.5 AC #6 for operator muscle-memory):
    - `0` — all assertions passed; cleanup succeeded (or was intentionally skipped via `--keep-tasks`).
@@ -74,34 +74,39 @@ I want a repeatable smoke harness at `scripts/smoke-clickup-cross-list.mjs` that
 11. No edits to `src/tools/bmad-unified.ts`, `src/tools/operations/**`, `src/core/**`, `src/cli.ts`, `src/index.ts`, `src/index-http.ts`, or anywhere in `tests/`. `git diff --stat` on those paths prints nothing. This is a script-only + package.json + README story.
 
 12. No new runtime or dev dependencies. The harness uses only:
-   - Node built-ins: `node:child_process` (spawn), `node:readline` (line-delimited JSON-RPC read from stdio subprocess), `node:crypto` (random suffix), `node:process`, `globalThis.fetch` (available in Node 18+ per `.nvmrc` pinning 22.14.0).
-   - NO axios, NO undici, NO chalk, NO dotenv.
+
+- Node built-ins: `node:child_process` (spawn), `node:readline` (line-delimited JSON-RPC read from stdio subprocess), `node:crypto` (random suffix), `node:process`, `globalThis.fetch` (available in Node 18+ per `.nvmrc` pinning 22.14.0).
+- NO axios, NO undici, NO chalk, NO dotenv.
 
 13. Deliberate duplication with story 1.5's harness. The JSON-RPC stdio client in this script is a near-copy of the one inside `scripts/smoke-clickup-crud.mjs` (post-1.5). This is intentional — do NOT extract a shared `scripts/lib/mcp-stdio-client.mjs` module as part of this story. Rationale in Dev Notes §"Deliberate duplication vs sharing with 1.5's harness". If a third harness ever materializes (e.g. a hypothetical story 1.8 sprint-transition smoke), that is the right moment to factor — not now, at N=2.
 
 14. `package.json` gains one new script entry in the `scripts` block, placed adjacent to the existing `smoke:clickup` / `smoke:clickup:http` entries story 1.5 adds (AC #13 of 1.5). Entry:
-   ```json
-   "smoke:clickup:cross-list": "node scripts/smoke-clickup-cross-list.mjs",
-   ```
-   Placement: immediately after `smoke:clickup:http` so the three smoke commands cluster visually. Does NOT depend on `npm run build` — same prereq as story 1.5's harness (operator builds first).
+
+```json
+"smoke:clickup:cross-list": "node scripts/smoke-clickup-cross-list.mjs",
+```
+
+Placement: immediately after `smoke:clickup:http` so the three smoke commands cluster visually. Does NOT depend on `npm run build` — same prereq as story 1.5's harness (operator builds first).
 
 15. `README.md` gains a new subsection §"Running the ClickUp cross-list subtask smoke test" under the existing ClickUp smoke-test area (add it immediately after the §"Running the ClickUp smoke tests" subsection story 1.5 adds via its AC #14). Content (approximate — exact wording at author's discretion):
-   - **Purpose.** One-paragraph explanation: this harness verifies PRD §Risks R1 — whether ClickUp accepts a story as a subtask of an epic when the two tasks live in different lists (story in sprint list, parent in backlog list per PRD §ClickUp-layout). A PASS greenlights the EPIC-2 sprint-layout design; a FAIL means the layout needs redesign before Dev-agent story-creation plumbing depends on it.
-   - **Prerequisites.** Two pre-created lists in the target ClickUp workspace: one backlog list, one sprint list. Each MUST have at least one status. Lists MAY live in the same space or different spaces — the harness is agnostic. A valid `CLICKUP_API_KEY` with permissions to create tasks, set `parent_task_id`, and DELETE tasks in both lists.
-   - **Build prerequisite.** Run `npm run build` first — the harness spawns `build/index.js` as a child process.
-   - **Command.** `CLICKUP_API_KEY=pk_... CLICKUP_TEAM_ID=... CLICKUP_SMOKE_BACKLOG_LIST_ID=... CLICKUP_SMOKE_SPRINT_LIST_ID=... npm run smoke:clickup:cross-list`.
-   - **What it verifies** (bullet list): epic created in backlog list → story created in sprint list with `parent_task_id=<epic-id>` → `getTaskById(story)` reports `list.id == SPRINT_LIST_ID` AND `parent_task_id == EPIC_ID` → `getTaskById(epic)` reports `storyId` in `child_task_ids` → DELETE cleanup (child first, then parent).
-   - **Expected output.** A single `SMOKE PASS cross-list epic_id=<id> story_id=<id> ...` line on stderr with exit code 0. A failing run prints `SMOKE FAIL cross-list step=<letter> reason="..."` + the failing request/response pair.
-   - **Cleanup.** On PASS the harness DELETEs both tasks (unless `--keep-tasks`). On FAIL between steps f and j, one or both tasks may be left behind — search ClickUp for `[bmad-smoke-x]` to audit and hand-delete. Note the prefix differs from story 1.5's `[bmad-smoke]` for exactly this audit purpose.
-   - **Why it's not in CI.** Brief note pointing at story 1.5's README section's "Why it's not in CI" subsection — same three reasons (credentials, rate limits, non-determinism) apply unchanged. Do not duplicate the rationale.
+
+- **Purpose.** One-paragraph explanation: this harness verifies PRD §Risks R1 — whether ClickUp accepts a story as a subtask of an epic when the two tasks live in different lists (story in sprint list, parent in backlog list per PRD §ClickUp-layout). A PASS greenlights the EPIC-2 sprint-layout design; a FAIL means the layout needs redesign before Dev-agent story-creation plumbing depends on it.
+- **Prerequisites.** Two pre-created lists in the target ClickUp workspace: one backlog list, one sprint list. Each MUST have at least one status. Lists MAY live in the same space or different spaces — the harness is agnostic. A valid `CLICKUP_API_KEY` with permissions to create tasks, set `parent_task_id`, and DELETE tasks in both lists.
+- **Build prerequisite.** Run `npm run build` first — the harness spawns `build/index.js` as a child process.
+- **Command.** `CLICKUP_API_KEY=pk_... CLICKUP_TEAM_ID=... CLICKUP_SMOKE_BACKLOG_LIST_ID=... CLICKUP_SMOKE_SPRINT_LIST_ID=... npm run smoke:clickup:cross-list`.
+- **What it verifies** (bullet list): epic created in backlog list → story created in sprint list with `parent_task_id=<epic-id>` → `getTaskById(story)` reports `list.id == SPRINT_LIST_ID` AND `parent_task_id == EPIC_ID` → `getTaskById(epic)` reports `storyId` in `child_task_ids` → DELETE cleanup (child first, then parent).
+- **Expected output.** A single `SMOKE PASS cross-list epic_id=<id> story_id=<id> ...` line on stderr with exit code 0. A failing run prints `SMOKE FAIL cross-list step=<letter> reason="..."` + the failing request/response pair.
+- **Cleanup.** On PASS the harness DELETEs both tasks (unless `--keep-tasks`). On FAIL between steps f and j, one or both tasks may be left behind — search ClickUp for `[bmad-smoke-x]` to audit and hand-delete. Note the prefix differs from story 1.5's `[bmad-smoke]` for exactly this audit purpose.
+- **Why it's not in CI.** Brief note pointing at story 1.5's README section's "Why it's not in CI" subsection — same three reasons (credentials, rate limits, non-determinism) apply unchanged. Do not duplicate the rationale.
 
 16. The harness is NOT added to `.github/workflows/ci.yml`, `release-draft.yml`, `release-publish.yml`, or `pr-title-check.yml`. Same invariant as story 1.5 AC #15. A single `grep -n 'smoke' .github/workflows/*.yml` post-commit MUST return zero matches introduced by this story.
 
 17. The harness invokes MCP tools EXCLUSIVELY via JSON-RPC over stdio. Same black-box invariant as story 1.5 AC #16. It MUST NOT:
-   - Import anything from `src/`.
-   - Reach into the vendored tree directly.
-   - Call `registerClickUpTools` or `BMADServerLiteMultiToolGit` in-process.
-   - Use any MCP SDK helper (`Client.connect`, etc.).
+
+- Import anything from `src/`.
+- Reach into the vendored tree directly.
+- Call `registerClickUpTools` or `BMADServerLiteMultiToolGit` in-process.
+- Use any MCP SDK helper (`Client.connect`, etc.).
 
 18. Idempotency of the harness itself: re-running creates two NEW tasks per run (one epic + one story, both uniquely named per AC #3). Cleanup-on-pass ensures zero accumulation across green runs. Red runs MAY leave orphaned tasks — `[bmad-smoke-x]` prefix makes them discoverable.
 
@@ -197,18 +202,18 @@ I want a repeatable smoke harness at `scripts/smoke-clickup-cross-list.mjs` that
 
 ### Smoke-test flow at a glance
 
-| Step | Tool / Action | Assertion |
-|---|---|---|
-| a | Spawn `node build/index.js` (stdio) | Child process alive |
-| b | JSON-RPC `initialize` | `result.capabilities.tools` present |
-| c | JSON-RPC `tools/list` | Contains at minimum `bmad`, `createTask`, `getTaskById`, `getListInfo` |
-| d | `getListInfo(list_id=$CLICKUP_SMOKE_BACKLOG_LIST_ID)` | ≥1 status parsed; capture `backlogStatus` |
-| e | `getListInfo(list_id=$CLICKUP_SMOKE_SPRINT_LIST_ID)` | ≥1 status parsed; capture `sprintStatus` |
-| f | `createTask(list_id=backlog, name=epicName, status=backlogStatus)` | Response contains task ID; capture `epicId` |
-| g | `createTask(list_id=sprint, parent_task_id=epicId, name=storyName, status=sprintStatus)` | Response does NOT contain `Error creating task:`; capture `storyId` |
-| h | `getTaskById(task_id=storyId)` | `list.id == SPRINT_LIST_ID` AND `parent_task_id == epicId` AND `name == storyName` |
-| i | `getTaskById(task_id=epicId)` | `child_task_ids` contains `storyId` |
-| j | `fetch DELETE` child, then parent (skip if `--keep-tasks`) | Both 2xx |
+| Step | Tool / Action                                                                            | Assertion                                                                          |
+| ---- | ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| a    | Spawn `node build/index.js` (stdio)                                                      | Child process alive                                                                |
+| b    | JSON-RPC `initialize`                                                                    | `result.capabilities.tools` present                                                |
+| c    | JSON-RPC `tools/list`                                                                    | Contains at minimum `bmad`, `createTask`, `getTaskById`, `getListInfo`             |
+| d    | `getListInfo(list_id=$CLICKUP_SMOKE_BACKLOG_LIST_ID)`                                    | ≥1 status parsed; capture `backlogStatus`                                          |
+| e    | `getListInfo(list_id=$CLICKUP_SMOKE_SPRINT_LIST_ID)`                                     | ≥1 status parsed; capture `sprintStatus`                                           |
+| f    | `createTask(list_id=backlog, name=epicName, status=backlogStatus)`                       | Response contains task ID; capture `epicId`                                        |
+| g    | `createTask(list_id=sprint, parent_task_id=epicId, name=storyName, status=sprintStatus)` | Response does NOT contain `Error creating task:`; capture `storyId`                |
+| h    | `getTaskById(task_id=storyId)`                                                           | `list.id == SPRINT_LIST_ID` AND `parent_task_id == epicId` AND `name == storyName` |
+| i    | `getTaskById(task_id=epicId)`                                                            | `child_task_ids` contains `storyId`                                                |
+| j    | `fetch DELETE` child, then parent (skip if `--keep-tasks`)                               | Both 2xx                                                                           |
 
 Ten steps (a–j) — step a boots the server, steps b–i are eight JSON-RPC tool calls, step j performs two DELETE cleanups. The three tools exercised (`getListInfo`, `createTask`, `getTaskById`) are a subset of story 1.5's five — deliberately. This harness is narrow; it proves exactly one ClickUp-API property (cross-list parent_task_id acceptance) and nothing else.
 
@@ -305,17 +310,17 @@ If cascade-on-parent-delete is ever desirable (e.g. a bulk-cleanup script wants 
 
 ### Artifact lifecycle: what the smoke leaves behind
 
-| Outcome | Artifacts in workspace |
-|---|---|
-| `SMOKE PASS` (default, no `--keep-tasks`) | Zero. Both tasks deleted by step j. |
-| `SMOKE PASS` (with `--keep-tasks`) | Two tasks (the epic + the story, linked via parent_task_id), inspectable in UI. |
-| `SMOKE PASS` (exit 3, child cleanup failed) | One task (the child). Operator hand-deletes via `[bmad-smoke-x] story` search. Parent was deleted OK (child-first ordering; but wait — this state is unreachable because if child DELETE returned non-2xx we STILL try parent DELETE, which succeeds — leaving the orphan child. Yes, exactly the "one task" outcome.) |
-| `SMOKE PASS` (exit 3, parent cleanup failed) | One task (the parent). Operator hand-deletes via `[bmad-smoke-x] epic` search. Child was deleted OK. |
-| `SMOKE PASS` (exit 3, both cleanups failed) | Two tasks. Operator hand-deletes both via `[bmad-smoke-x]` search. |
-| `SMOKE FAIL` between steps a–e | Zero (no task was created yet). |
-| `SMOKE FAIL` at step f | Zero (the epic creation itself failed). |
-| `SMOKE FAIL` at step g | One task (the epic). Operator hand-deletes via `[bmad-smoke-x] epic` search. |
-| `SMOKE FAIL` between steps h–i | Two tasks (both created, linked). Operator hand-deletes via `[bmad-smoke-x]` search. |
+| Outcome                                      | Artifacts in workspace                                                                                                                                                                                                                                                                                                 |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SMOKE PASS` (default, no `--keep-tasks`)    | Zero. Both tasks deleted by step j.                                                                                                                                                                                                                                                                                    |
+| `SMOKE PASS` (with `--keep-tasks`)           | Two tasks (the epic + the story, linked via parent_task_id), inspectable in UI.                                                                                                                                                                                                                                        |
+| `SMOKE PASS` (exit 3, child cleanup failed)  | One task (the child). Operator hand-deletes via `[bmad-smoke-x] story` search. Parent was deleted OK (child-first ordering; but wait — this state is unreachable because if child DELETE returned non-2xx we STILL try parent DELETE, which succeeds — leaving the orphan child. Yes, exactly the "one task" outcome.) |
+| `SMOKE PASS` (exit 3, parent cleanup failed) | One task (the parent). Operator hand-deletes via `[bmad-smoke-x] epic` search. Child was deleted OK.                                                                                                                                                                                                                   |
+| `SMOKE PASS` (exit 3, both cleanups failed)  | Two tasks. Operator hand-deletes both via `[bmad-smoke-x]` search.                                                                                                                                                                                                                                                     |
+| `SMOKE FAIL` between steps a–e               | Zero (no task was created yet).                                                                                                                                                                                                                                                                                        |
+| `SMOKE FAIL` at step f                       | Zero (the epic creation itself failed).                                                                                                                                                                                                                                                                                |
+| `SMOKE FAIL` at step g                       | One task (the epic). Operator hand-deletes via `[bmad-smoke-x] epic` search.                                                                                                                                                                                                                                           |
+| `SMOKE FAIL` between steps h–i               | Two tasks (both created, linked). Operator hand-deletes via `[bmad-smoke-x]` search.                                                                                                                                                                                                                                   |
 
 Worst case: two orphaned tasks per failed run. The `[bmad-smoke-x]` prefix + the shared random suffix make them discoverable and correlate-able.
 
@@ -413,7 +418,7 @@ The harness's use of `globalThis.fetch` requires Node 18+. `.nvmrc` pins 22.14.0
 
 ## Change Log
 
-| Date       | Change                                                                                                                              |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-04-21 | Story drafted from EPIC-1 §Stories bullet 7 + PRD §Risks R1 + story 1.5 §Out-of-Scope bullet 2's direct deferral via `bmad-create-story`. Status → ready-for-dev. Stdio-only smoke (Dev Notes §"Why stdio only"); deliberate ~40-LOC duplication of 1.5's JSON-RPC client (Dev Notes §"Deliberate duplication"); distinct `[bmad-smoke-x]` prefix for audit clarity (Dev Notes §"Why a separate prefix"). |
+| Date       | Change                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 2026-04-21 | Story drafted from EPIC-1 §Stories bullet 7 + PRD §Risks R1 + story 1.5 §Out-of-Scope bullet 2's direct deferral via `bmad-create-story`. Status → ready-for-dev. Stdio-only smoke (Dev Notes §"Why stdio only"); deliberate ~40-LOC duplication of 1.5's JSON-RPC client (Dev Notes §"Deliberate duplication"); distinct `[bmad-smoke-x]` prefix for audit clarity (Dev Notes §"Why a separate prefix").                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | 2026-04-21 | Validation pass: (a) normalized step-count wording in AC #4 intro and Dev Notes "flow at a glance" caption to "ten steps (a–j) — step a boots, steps b–i are eight JSON-RPC calls, step j issues two DELETEs" (earlier drafts had arithmetic inconsistent between the intro and the summary); (b) tightened AC #4f task-ID parsing to a single regex instruction referencing `task-write-tools.ts:647-659` (removed the misleading `id:`-vs-`task_id:` alternative); (c) AC #4g line citation sharpened from `:414` to `:413-414` (the `text:` field spans both); (d) AC #3 random-suffix descriptor corrected from "6 base36 chars" to "6 base64url chars" (the encoding used is base64url, not base36); (e) Dev Notes §"Parsing task IDs" expanded with a prominent warning that the create-path's `list_id:` line echoes `params.list_id` (not `task.list.id`) and is NOT R1-authoritative — only step h's `getTaskById` `list: <name> (<id>)` line is authoritative; (f) Task 5 gained an explicit `git diff --stat` no-edit-invariant verification sub-step covering ACs #7–#11 and #16 before staging. |
