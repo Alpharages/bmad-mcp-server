@@ -21,20 +21,20 @@ change. Customization layers live elsewhere (see PRD §Customization boundary).
 
 ### What was deliberately excluded (and why)
 
-| Path / category                                       | Why excluded                                                                                                       |
-| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `.github/`                                            | GitHub Actions picks up any `.github/workflows/*.yml` under the repo root — would trigger phantom CI jobs.         |
-| `package.json`, `package-lock.json`, `yarn.lock`      | Node's nearest-ancestor `package.json` lookup would resolve our server code against upstream's fields silently.    |
-| `tsconfig.json`                                       | Would collide with ours via nearest-config discovery.                                                              |
-| `.eslintrc*`, `.prettierrc*`                          | Same nearest-config collision hazard.                                                                              |
-| `scripts/`, `dist/`, `build/`, `node_modules/`, `.git/` | Build output, deps, and VCS history are not source — no attribution value and would bloat the tree.              |
-| `.mcpbignore`, `.npmignore`, `.gitignore`             | Upstream packaging/VCS metadata — not source, not relevant to our build.                                           |
-| `manifest.json`, `icon-72x72.png`, `CHANGELOG.md`, `CLAUDE.md` | Upstream packaging / repo metadata — not required for the register-tools surface we consume.               |
+| Path / category                                                | Why excluded                                                                                                    |
+| -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `.github/`                                                     | GitHub Actions picks up any `.github/workflows/*.yml` under the repo root — would trigger phantom CI jobs.      |
+| `package.json`, `package-lock.json`, `yarn.lock`               | Node's nearest-ancestor `package.json` lookup would resolve our server code against upstream's fields silently. |
+| `tsconfig.json`                                                | Would collide with ours via nearest-config discovery.                                                           |
+| `.eslintrc*`, `.prettierrc*`                                   | Same nearest-config collision hazard.                                                                           |
+| `scripts/`, `dist/`, `build/`, `node_modules/`, `.git/`        | Build output, deps, and VCS history are not source — no attribution value and would bloat the tree.             |
+| `.mcpbignore`, `.npmignore`, `.gitignore`                      | Upstream packaging/VCS metadata — not source, not relevant to our build.                                        |
+| `manifest.json`, `icon-72x72.png`, `CHANGELOG.md`, `CLAUDE.md` | Upstream packaging / repo metadata — not required for the register-tools surface we consume.                    |
 
 ### Upstream runtime dependencies
 
-Copied verbatim from upstream `package.json` (SHA `c79b21e3`). Story 1.3
-reconciles these against our root `package.json`:
+Copied verbatim from upstream `package.json` (SHA `c79b21e3`). Story 1.2
+reconciled these against our root `package.json`:
 
 ```json
 "dependencies": {
@@ -62,7 +62,11 @@ reconciles these against our root `package.json`:
    confirm nothing regressed. If tsc now errors inside the vendored tree, the
    exclude in `tsconfig.json` already shields it; if the register-tools surface
    changed, reconcile the adapter in `src/server.ts` (Story 1.3's territory).
-5. Commit with `ALLOW_VENDOR_EDIT=1` to bypass the pre-commit guard that
+5. After re-vendoring, re-run `npm run build` to confirm `scripts/build-clickup.mjs`
+   (esbuild bundler) still accepts the new upstream tree. If upstream adds a new
+   `register*Tools` function, wire it into `src/tools/clickup-adapter.ts` per the
+   existing mode-dispatch pattern.
+6. Commit with `ALLOW_VENDOR_EDIT=1` to bypass the pre-commit guard that
    normally blocks edits under `src/tools/clickup/`:
 
    ```bash

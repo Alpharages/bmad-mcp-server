@@ -21,15 +21,19 @@ const SRC_ROOT = join(REPO_ROOT, 'src');
 
 // Vendored third-party trees are read-only and audited at their upstream pin,
 // not against our package.json. See VENDOR.md for the vendoring posture.
-const VENDORED_PATHS = ['src/tools/clickup'];
+const SCAN_EXCLUDED_PATHS = [
+  'src/tools/clickup/src/tests',
+  'src/tools/clickup/src/test-utils.ts',
+  'src/tools/clickup/src/cli.ts',
+];
 
 // Normalize any backslash separators to '/' so prefix matching is portable
 // across OSes and tolerant of mixed separators (e.g. MSYS on Windows).
 const toPosix = (p: string): string => p.replace(/\\/g, '/');
 
-const isVendored = (absPath: string): boolean => {
+const isExcluded = (absPath: string): boolean => {
   const rel = toPosix(relative(REPO_ROOT, absPath));
-  return VENDORED_PATHS.some((v) => rel === v || rel.startsWith(`${v}/`));
+  return SCAN_EXCLUDED_PATHS.some((v) => rel === v || rel.startsWith(`${v}/`));
 };
 
 // Recursively find non-test TypeScript source files under `dir`, skipping
@@ -41,7 +45,7 @@ const findTsFiles = (dir: string): string[] => {
   for (const entry of entries) {
     const fullPath = join(dir, entry.name);
 
-    if (isVendored(fullPath)) {
+    if (isExcluded(fullPath)) {
       continue;
     }
 
@@ -69,16 +73,10 @@ describe('dependency-audit', () => {
       ...Object.keys(packageJson.devDependencies || {}),
     ]);
 
-    // Node.js built-in modules (don't need to be in package.json)
+    // Node.js built-in modules (don't need to be in package.json).
+    // Both `node:`-prefixed and unprefixed forms are listed because TS
+    // resolution accepts either; the vendored tree uses both styles.
     const builtinModules = new Set([
-      'node:fs',
-      'node:path',
-      'node:os',
-      'node:crypto',
-      'node:process',
-      'node:util',
-      'node:url',
-      'node:child_process',
       'fs',
       'path',
       'os',
@@ -87,14 +85,40 @@ describe('dependency-audit', () => {
       'util',
       'url',
       'child_process',
+      'http',
+      'buffer',
+      'assert',
+      'test',
+      'timers',
+      'node:fs',
+      'node:path',
+      'node:os',
+      'node:crypto',
+      'node:process',
+      'node:util',
+      'node:url',
+      'node:child_process',
+      'node:http',
+      'node:buffer',
+      'node:test',
+      'node:assert',
+      'node:assert/strict',
+      'node:timers',
+      'node:timers/promises',
     ]);
 
     const sourceFiles = findTsFiles(SRC_ROOT);
 
     const violations: string[] = [];
 
+    // Strip single-line `//...` and block `/* ... */` comments before scanning
+    // so e.g. `// 'en' from 'en_US.UTF-8'` (appears in vendored config.ts) is
+    // not mistaken for a real import by the package-specifier regex below.
+    const stripComments = (src: string): string =>
+      src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1');
+
     for (const filePath of sourceFiles) {
-      const content = readFileSync(filePath, 'utf-8');
+      const content = stripComments(readFileSync(filePath, 'utf-8'));
 
       // Match both: import ... from 'package' and import('package')
       const importRegex = /(?:from|import\()\s+['"]([^'"./][^'"]*)['"]/g;
@@ -108,7 +132,15 @@ describe('dependency-audit', () => {
           ? importedPackage.split('/').slice(0, 2).join('/')
           : importedPackage.split('/')[0];
 
-        if (builtinModules.has(basePackage) || declaredDeps.has(basePackage)) {
+        // A bare `import from 'X'` is legal when `X` is types-only on npm —
+        // e.g. `mdast` exists only as `@types/mdast`. Accepting either form
+        // of the declared dep keeps these pure-types dependencies from
+        // tripping the audit while still catching genuinely undeclared deps.
+        if (
+          builtinModules.has(basePackage) ||
+          declaredDeps.has(basePackage) ||
+          declaredDeps.has(`@types/${basePackage}`)
+        ) {
           continue;
         }
 
@@ -194,7 +226,7 @@ describe('dependency-audit', () => {
       }
     };
 
-    for (const v of VENDORED_PATHS) {
+    for (const v of ['src/tools/clickup']) {
       const abs = join(REPO_ROOT, v);
       if (existsSync(abs)) {
         scan(abs);

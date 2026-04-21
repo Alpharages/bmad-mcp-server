@@ -366,12 +366,12 @@ The server starts on `http://localhost:3000`. BMAD content is automatically fetc
 
 ### Endpoints
 
-| Endpoint | Auth required | Description |
-|---|---|---|
-| `GET /health` | No | Health check — returns `{"status":"ok","sessions":N}` |
-| `POST /mcp` | Yes | MCP Streamable HTTP transport |
-| `GET /mcp` | Yes | SSE stream for server-to-client notifications |
-| `DELETE /mcp` | Yes | Close MCP session |
+| Endpoint      | Auth required | Description                                           |
+| ------------- | ------------- | ----------------------------------------------------- |
+| `GET /health` | No            | Health check — returns `{"status":"ok","sessions":N}` |
+| `POST /mcp`   | Yes           | MCP Streamable HTTP transport                         |
+| `GET /mcp`    | Yes           | SSE stream for server-to-client notifications         |
+| `DELETE /mcp` | Yes           | Close MCP session                                     |
 
 ### Authentication
 
@@ -390,22 +390,14 @@ If `BMAD_API_KEY` is not set, the server runs in open mode (development only).
 
 Claude Desktop only supports stdio-based servers. Use [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) as a local bridge.
 
-First, install mcp-remote globally with Node 20+:
-
-```bash
-# Find your Node 20+ path (adjust version as needed)
-/Users/<you>/.nvm/versions/node/v22.18.0/bin/npm install -g mcp-remote
-```
-
-Then configure Claude Desktop to call `node` directly (avoids shebang picking up wrong Node version):
-
 ```json
 {
   "mcpServers": {
     "bmad": {
-      "command": "/Users/<you>/.nvm/versions/node/v22.18.0/bin/node",
+      "command": "npx",
       "args": [
-        "/Users/<you>/.nvm/versions/node/v22.18.0/lib/node_modules/mcp-remote/dist/proxy.js",
+        "-y",
+        "mcp-remote",
         "https://your-domain.com/mcp",
         "--header",
         "Authorization: Bearer your-secret-key-here"
@@ -464,19 +456,24 @@ server {
 
 ### Environment Variables
 
-| Variable | Default | Description |
-|---|---|---|
-| `PORT` | `3000` | HTTP port the server listens on |
+| Variable       | Default  | Description                                         |
+| -------------- | -------- | --------------------------------------------------- |
+| `PORT`         | `3000`   | HTTP port the server listens on                     |
 | `BMAD_API_KEY` | _(none)_ | API key for authentication — set this in production |
-| `BMAD_ROOT` | _(auto)_ | Override project root for local BMAD content |
-| `BMAD_DEBUG` | `false` | Enable verbose debug logging |
+| `BMAD_ROOT`    | _(auto)_ | Override project root for local BMAD content        |
+| `BMAD_DEBUG`   | `false`  | Enable verbose debug logging                        |
 
 ### Pinning a BMAD Version
 
 By default the server always pulls the latest BMAD content. To pin a specific version, override the `CMD` in `docker-compose.yml`:
 
 ```yaml
-command: ["node", "build/index-http.js", "git+https://github.com/Alpharages/BMAD-METHOD.git#v6.0.0"]
+command:
+  [
+    'node',
+    'build/index-http.js',
+    'git+https://github.com/Alpharages/BMAD-METHOD.git#v6.0.0',
+  ]
 ```
 
 ---
