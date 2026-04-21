@@ -1,6 +1,6 @@
 # Story 1.7: Document the ClickUp tool surface (README / CHANGELOG / .env.example / docs / VENDOR)
 
-Status: ready-for-dev
+Status: done
 
 Epic: [EPIC-1: ClickUp MCP integration layer](../epics/EPIC-1-clickup-mcp-integration.md)
 

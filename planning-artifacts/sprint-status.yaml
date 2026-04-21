@@ -1,5 +1,5 @@
 # generated: 2026-04-21
-# last_updated: 2026-04-22 (story 1-7-document-tool-surface → review)
+# last_updated: 2026-04-22 (story 1-7-document-tool-surface → done)
 # project: bmad-mcp-server
 # project_key: NOKEY
 # tracking_system: file-system
@@ -64,7 +64,7 @@ development_status:
   1-4-space-picker: done
   1-5-smoke-test-crud: done
   1-6-smoke-test-cross-list-subtask: done
-  1-7-document-tool-surface: review
+  1-7-document-tool-surface: done
   epic-1-retrospective: optional
 
   # EPIC-2: Dev agent story-creation mode → ClickUp (non-destructive)
