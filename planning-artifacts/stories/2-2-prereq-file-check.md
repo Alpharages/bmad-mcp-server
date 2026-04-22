@@ -1,6 +1,6 @@
 # Story 2.2: Implement prereq-file check (PRD.md + architecture.md)
 
-Status: review
+Status: done
 
 Epic: [EPIC-2: Dev agent story-creation mode → ClickUp (non-destructive)](../epics/EPIC-2-dev-story-creation-clickup.md)
 

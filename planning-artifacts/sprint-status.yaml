@@ -49,7 +49,7 @@
 #   So EPIC-1 has 8 bullets but only 7 stories.
 
 generated: 2026-04-21
-last_updated: 2026-04-22 (story 2-1 → done; story 2-2 → review; stories 2-3, 2-4, 2-5, 2-6 → ready-for-dev)
+last_updated: 2026-04-22 (story 2-1 → done; story 2-2 → done; stories 2-3, 2-4, 2-5, 2-6 → ready-for-dev)
 project: bmad-mcp-server
 project_key: NOKEY
 tracking_system: file-system
@@ -70,7 +70,7 @@ development_status:
   # EPIC-2: Dev agent story-creation mode → ClickUp (non-destructive)
   epic-2: in-progress
   2-1-scaffold-clickup-create-story-skill: done
-  2-2-prereq-file-check: review
+  2-2-prereq-file-check: done
   2-3-epic-picker: ready-for-dev
   2-4-sprint-list-picker: ready-for-dev
   2-5-description-composer: ready-for-dev
