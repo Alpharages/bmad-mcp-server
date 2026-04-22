@@ -22,12 +22,7 @@ export type ClickUpEnvResult =
       warnings: readonly string[];
       diagnostic: string;
     }
-  | {
-      kind: 'invalid';
-      reasons: readonly string[];
-      warnings: readonly string[];
-      diagnostic: string;
-    };
+;
 
 /**
  * Validates ClickUp environment variables from an injected env map.

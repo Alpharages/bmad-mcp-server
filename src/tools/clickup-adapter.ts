@@ -3,6 +3,7 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { validateClickUpEnv, type ClickUpMode } from '../utils/clickup-env.js';
 import type { ClickUpSessionState } from './clickup-session.js';
 import { registerSpacePickerTools } from './clickup-space-picker.js';
+import { logger } from '../utils/logger.js';
 
 export type RegisterResult =
   | { disabled: true; reason: string }
@@ -113,7 +114,13 @@ export async function registerClickUpTools(
   // src/tools/clickup/src/index.ts lines 56-99). Uses the high-level
   // `server.prompt()` API, same as BMAD's own prompts elsewhere in server.ts.
   const CONFIG = configModule.CONFIG as { primaryLanguageHint?: string };
-  const lang = CONFIG.primaryLanguageHint === 'de' ? 'de' : 'en';
+  const hint = CONFIG.primaryLanguageHint ?? '';
+  if (hint && hint !== 'de' && hint !== 'en') {
+    logger.warn(
+      `CLICKUP_PRIMARY_LANGUAGE="${hint}" is not supported by the my-todos prompt; falling back to "en"`,
+    );
+  }
+  const lang = hint === 'de' ? 'de' : 'en';
   const myTodosText =
     lang === 'de'
       ? `Kannst du in ClickUp nachsehen, was meine aktuellen TODOs sind? Bitte suche nach allen offenen Aufgaben, die mir zugewiesen sind, analysiere deren Inhalt und kategorisiere sie nach erkennbarer Priorität (dringend, hoch, normal, niedrig). Für jede Kategorie gib eine kurze Zusammenfassung dessen, was getan werden muss und hebe Fälligkeitstermine oder wichtige Details aus den Aufgabenbeschreibungen hervor.
@@ -183,7 +190,7 @@ Use the ClickUp search tools to find tasks assigned to me, and get detailed info
       ['searchTasks'],
     );
     step(() => spaceTools.registerSpaceTools(server), ['searchSpaces']);
-    spaceResources.registerSpaceResources(server);
+    step(() => spaceResources.registerSpaceResources(server), ['clickup-spaces']);
     step(() => listTools.registerListToolsRead(server), ['getListInfo']);
     step(() => timeTools.registerTimeToolsRead(server), ['getTimeEntries']);
     // Upstream at SHA c79b21e3 ships only `readDocument` in the read surface.
@@ -205,7 +212,7 @@ Use the ClickUp search tools to find tasks assigned to me, and get detailed info
       ['searchTasks'],
     );
     step(() => spaceTools.registerSpaceTools(server), ['searchSpaces']);
-    spaceResources.registerSpaceResources(server);
+    step(() => spaceResources.registerSpaceResources(server), ['clickup-spaces']);
     step(() => listTools.registerListToolsRead(server), ['getListInfo']);
     step(() => listTools.registerListToolsWrite(server), ['updateListInfo']);
     step(() => timeTools.registerTimeToolsRead(server), ['getTimeEntries']);

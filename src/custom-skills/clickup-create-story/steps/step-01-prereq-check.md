@@ -17,7 +17,7 @@ Before checking project files, run these two checks in order. If either fails, e
 
 1. **Verify write mode.** Check whether `createTask` is available in the current tool list. If it is absent (mode is `read-minimal` or `read`), emit the mode error block below and stop.
 
-2. **Verify token authentication.** Call `pickSpace` with no arguments. If the response contains an authentication error (response text contains `401`, `Unauthorized`, `invalid token`, or `CLICKUP_API_KEY`, or zero spaces are returned alongside an error indicator), emit the token error block below and stop.
+2. **Verify token authentication.** Call `pickSpace` with no arguments. If the response contains an authentication error (response text contains `401`, `Unauthorized`, or `invalid token`, or zero spaces are returned alongside an error indicator), emit the token error block below and stop.
 
 3. **Confirm success.** If both checks pass, report to the user:
 

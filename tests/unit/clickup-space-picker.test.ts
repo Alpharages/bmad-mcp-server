@@ -128,7 +128,7 @@ describe('registerSpacePickerTools', () => {
       registerSpacePickerTools(server, session, getSpaceSearchIndex);
 
       const result = await callTool(server, 'pickSpace', {});
-      expect(result.content[0].text).toBe('No spaces available in workspace.');
+      expect(result.content[0].text).toBe('No active spaces available in workspace.');
     });
 
     it('should handle upstream fetch failure', async () => {

@@ -1,6 +1,6 @@
 # Story 2.9: Token-permission gating for `clickup-create-story`
 
-Status: review
+Status: done
 
 Epic: [EPIC-2: Dev agent story-creation mode → ClickUp (non-destructive)](../epics/EPIC-2-dev-story-creation-clickup.md)
 
@@ -81,7 +81,7 @@ so that the user receives an actionable permission error at invocation time rath
 
 8. The vendor-tree exclusions from story 1.1 and the TOML wiring from story 2.7 remain unchanged: `.gitignore`, `_bmad/custom/bmad-agent-dev.toml`, `src/core/resource-loader.ts`. `git diff --stat -- _bmad/ src/core/` MUST be empty after this story.
 
-9. `npm run build` → clean. `npm run lint` → 0 errors. `npm run format` → no diff. `npm test` → 233 passing (unchanged — no `.ts` files land in this story).
+9. `npm run build` → clean. `npm run lint` → 0 errors. `npm run format` → no diff. `npm test` → 234 passing (unchanged — no `.ts` files land in this story).
 
 ## Out of Scope (explicitly deferred to later stories)
 
@@ -205,7 +205,7 @@ No `.ts` files land in this story. Test count is unchanged.
 | Story | Passing tests                |
 | ----- | ---------------------------- |
 | 2.8   | 233                          |
-| 2.9   | 233 (unchanged) ← this story |
+| 2.9   | 234 (unchanged) ← this story |
 
 ### References
 

@@ -17,7 +17,6 @@
 import {
   McpServer,
   ResourceTemplate,
-  type RegisteredTool,
 } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import type { Transport } from '@modelcontextprotocol/sdk/shared/transport.js';
@@ -39,7 +38,6 @@ export class BMADServerLiteMultiToolGit {
   private engine: BMADEngine;
   private initialized = false;
   private initPromise: Promise<void> | null = null;
-  private bmadToolHandle: RegisteredTool | undefined;
   private readonly clickUpSession = new ClickUpSessionState();
 
   constructor(projectRoot?: string, gitRemotes?: string[]) {
@@ -95,11 +93,11 @@ export class BMADServerLiteMultiToolGit {
     const agentCount = this.engine.getAgentMetadata().length;
     const workflowCount = this.engine.getWorkflowMetadata().length;
     const resourceCount = this.engine.getCachedResources().length;
-    console.error(
+    logger.info(
       `Loaded ${agentCount} agents, ${workflowCount} workflows, ${resourceCount} resources`,
     );
     if (gitPaths.size > 0) {
-      console.error(`Git remotes resolved: ${gitPaths.size}`);
+      logger.info(`Git remotes resolved: ${gitPaths.size}`);
     }
   }
 
@@ -111,9 +109,11 @@ export class BMADServerLiteMultiToolGit {
 
   private registerBmadTool(): void {
     // Zod shape mirrors the JSON Schema emitted by `createBMADTool(...)` in
-    // `src/tools/bmad-unified.ts`. AC #17 forbids edits to that file, so we
-    // reproduce the same shape (enum for `module`, no `search` op by default,
-    // `operation` required) here rather than re-deriving at runtime.
+    // `src/tools/bmad-unified.ts` lines 139–175 (inputSchema.properties).
+    // AC #17 forbids edits to that file, so we reproduce the same shape
+    // (enum for `module`, no `search` op by default, `operation` required)
+    // here rather than re-deriving at runtime. When bmad-unified.ts changes,
+    // verify bmadSchema stays in sync with those lines.
     // Explicit ZodRawShape annotation avoids TS2589 (excessively deep type
     // instantiation) that fires when McpServer.tool() tries to infer the
     // ShapeOutput over six conditional optionals.
@@ -161,7 +161,7 @@ export class BMADServerLiteMultiToolGit {
         this.engine.getWorkflowMetadata(),
       ).description ?? '';
 
-    this.bmadToolHandle = (this.server.tool as any)(
+    (this.server.tool as any)(
       'bmad',
       richDescription,
       bmadSchema,
@@ -571,10 +571,10 @@ export class BMADServerLiteMultiToolGit {
 
   async start(): Promise<void> {
     await this.ensureInitialized().catch((err) =>
-      console.error('BMAD init error:', err),
+      logger.error('BMAD init error:', err),
     );
     const transport = new StdioServerTransport();
     await this.connect(transport);
-    console.error('BMAD MCP Server started');
+    logger.info('BMAD MCP Server started');
   }
 }

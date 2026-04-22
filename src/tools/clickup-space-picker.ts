@@ -91,7 +91,12 @@ export function registerSpacePickerTools(
 
       // Mode 3: List all non-archived spaces.
       if (nonArchivedSpaces.length === 0) {
-        return text('No spaces available in workspace.');
+        const archivedCount = allSpaces.length - nonArchivedSpaces.length;
+        const archivedNote =
+          archivedCount > 0
+            ? ` (${archivedCount} archived space(s) exist but are excluded)`
+            : '';
+        return text(`No active spaces available in workspace.${archivedNote}`);
       }
 
       const count = nonArchivedSpaces.length;
