@@ -14,34 +14,22 @@ architecture_content: ''
 
 1. **Resolve the project root.** Determine `{project-root}` from the current working directory.
 
-2. **Check for `planning-artifacts/PRD.md`.** Verify the file exists at `{project-root}/planning-artifacts/PRD.md`.
+2. **Check both required files simultaneously.** Verify whether each of the following paths exists:
 
-   If the file is missing, emit the following error block verbatim and stop:
+   - `{project-root}/planning-artifacts/PRD.md`
+   - `{project-root}/planning-artifacts/architecture.md`
 
-   ```
-   ❌ **Prereq check failed — missing required file**
+   Set `{prd_present}` = `present` or `**MISSING**` and `{arch_present}` = `present` or `**MISSING**` accordingly.
 
-   The `clickup-create-story` skill requires both of the following files to exist in the project root before it can proceed:
-
-   - `planning-artifacts/PRD.md` — **MISSING**
-   - `planning-artifacts/architecture.md` — present
-
-   **Why:** Story descriptions are composed from PRD and architecture context (story 2.5). Without these files the description would be empty or fabricated.
-
-   **What to do:** Add the missing file(s) to your project's `planning-artifacts/` directory, then re-invoke the Dev agent in story-creation mode.
-   ```
-
-3. **Check for `planning-artifacts/architecture.md`.** Verify the file exists at `{project-root}/planning-artifacts/architecture.md`.
-
-   If the file is missing, emit the following error block verbatim and stop:
+3. **If either file is missing, emit the following error block (substituting the correct status values) and stop:**
 
    ```
    ❌ **Prereq check failed — missing required file**
 
    The `clickup-create-story` skill requires both of the following files to exist in the project root before it can proceed:
 
-   - `planning-artifacts/PRD.md` — present
-   - `planning-artifacts/architecture.md` — **MISSING**
+   - `planning-artifacts/PRD.md` — {prd_present}
+   - `planning-artifacts/architecture.md` — {arch_present}
 
    **Why:** Story descriptions are composed from PRD and architecture context (story 2.5). Without these files the description would be empty or fabricated.
 
@@ -54,4 +42,4 @@ architecture_content: ''
 
 ## NEXT
 
-Read fully and follow `./step-02-epic-picker.md`
+Steps 2–5 (epic picker, sprint-list picker, description composer, task creation) are not yet implemented. Inform the user that the `clickup-create-story` skill is still in progress and stop here.
