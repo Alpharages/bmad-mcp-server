@@ -8,6 +8,8 @@ epic_name: ''
 
 # Step 2: Task Fetch
 
+> **Inherited context:** `{task_id}` is declared in `step-01-task-id-parser.md`'s frontmatter and is available to all downstream steps — it is not re-declared here. The five frontmatter keys above (`task_name`, `task_status`, `task_url`, `epic_task_id`, `epic_name`) are the new variables this step populates.
+
 ## RULES
 
 1. **Read-only:** This step calls `getTaskById` at most twice (once for the task, once for the parent epic). No ClickUp writes are made in this step.

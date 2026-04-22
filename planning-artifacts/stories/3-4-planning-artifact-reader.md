@@ -201,15 +201,15 @@ In the `bmad-mcp-server` project (where this skill is developed), `planning-arti
 
 ### Step file naming convention for EPIC-3 (reminder)
 
-| Step file | Created by story | Execution order |
-| --------- | ---------------- | --------------- |
-| `step-01-task-id-parser.md` | 3.2 | 1 |
-| `step-02-task-fetch.md` | 3.3 | 2 |
-| **`step-03-planning-artifact-reader.md`** | **3.4 (this)** | **3** |
-| `step-04-progress-comment-poster.md` | 3.5 | 4 |
-| `step-05-status-transition.md` | 3.6 | 5 |
-| `step-06-assumptions.md` | 3.7 | 6 |
-| `step-07-dev-clarification.md` | 3.8 | 7 |
+| Step file                                 | Created by story | Execution order |
+| ----------------------------------------- | ---------------- | --------------- |
+| `step-01-task-id-parser.md`               | 3.2              | 1               |
+| `step-02-task-fetch.md`                   | 3.3              | 2               |
+| **`step-03-planning-artifact-reader.md`** | **3.4 (this)**   | **3**           |
+| `step-04-progress-comment-poster.md`      | 3.5              | 4               |
+| `step-05-status-transition.md`            | 3.6              | 5               |
+| `step-06-assumptions.md`                  | 3.7              | 6               |
+| `step-07-dev-clarification.md`            | 3.8              | 7               |
 
 Story 3.5 MUST add `step-04-progress-comment-poster.md`.
 
@@ -270,6 +270,6 @@ This step makes no ClickUp API calls — it uses IDE file tools only. `CLICKUP_M
 
 ## Change Log
 
-| Date       | Change                                                                                        |
-| ---------- | --------------------------------------------------------------------------------------------- |
+| Date       | Change                                                                                       |
+| ---------- | -------------------------------------------------------------------------------------------- |
 | 2026-04-22 | Story drafted from EPIC-3 bullet 4 via `bmad-create-story` workflow. Status → ready-for-dev. |

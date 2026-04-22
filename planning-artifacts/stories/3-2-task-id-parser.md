@@ -221,11 +221,11 @@ Steps 4–7 are sub-flows invoked from within the implementation loop rather tha
 
 ### Review Findings
 
-| ID | Category | Finding | Resolution |
-|----|----------|---------|------------|
+| ID   | Category | Finding                                                                                                                                                                                                                                                 | Resolution                                                                                                        |
+| ---- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | BS-1 | bad_spec | URL query strings and fragments not handled — `https://app.clickup.com/t/86abc123?comment=99abc` would extract `86abc123?comment=99abc`, failing alphanumeric validation. ClickUp "Copy link" and Slack notifications produce URLs with `?comment=...`. | Fixed: step-01 instruction 2 now strips `?` and `#` before path extraction. AC #1 and Dev Notes updated to match. |
-| P-1 | patch | `{raw_input}` used in the error block but not declared in YAML frontmatter. LLM could emit the literal placeholder instead of the actual input. | Fixed: `raw_input: ''` added to frontmatter; instruction 1 now explicitly records `{raw_input}`. |
-| D-1 | defer | Ambiguous scope of "the input" in step 3 for a URL path that ends in `CU-...`. ClickUp never emits CU- in URL paths; no practical impact. | No action taken. |
+| P-1  | patch    | `{raw_input}` used in the error block but not declared in YAML frontmatter. LLM could emit the literal placeholder instead of the actual input.                                                                                                         | Fixed: `raw_input: ''` added to frontmatter; instruction 1 now explicitly records `{raw_input}`.                  |
+| D-1  | defer    | Ambiguous scope of "the input" in step 3 for a URL path that ends in `CU-...`. ClickUp never emits CU- in URL paths; no practical impact.                                                                                                               | No action taken.                                                                                                  |
 
 ## Change Log
 
