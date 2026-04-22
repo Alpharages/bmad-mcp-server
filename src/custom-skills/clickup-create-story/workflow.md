@@ -22,7 +22,11 @@ See: [./steps/step-02-epic-picker.md](./steps/step-02-epic-picker.md)
 
 ### Sprint-list picker
 
-<!-- story 2-4 will implement -->
+Discovers the sprint folder in the selected space, lists all non-archived sprint lists within it, presents the choices to the user with an active-sprint hint, and stores the selected list as `{sprint_list_id}` and `{sprint_list_name}`.
+
+See: [./steps/step-03-sprint-list-picker.md](./steps/step-03-sprint-list-picker.md)
+
+Step 3 MUST complete with a non-empty `{sprint_list_id}` before the workflow proceeds to step 4.
 
 ## Description Composer
 
