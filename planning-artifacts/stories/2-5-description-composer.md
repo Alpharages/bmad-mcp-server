@@ -1,6 +1,6 @@
 # Story 2.5: Implement description composer (PRD + architecture + epic context → task description)
 
-Status: review
+Status: done
 
 Epic: [EPIC-2: Dev agent story-creation mode → ClickUp (non-destructive)](../epics/EPIC-2-dev-story-creation-clickup.md)
 
@@ -177,10 +177,10 @@ so that story 2.6 (task creation) can pass a ready-to-use, PRD+architecture-deri
   - [x] `npm run format` → no diff in `src/custom-skills/`. Re-run before commit to accept any prettier reformat of the new markdown.
   - [x] `npm test` → passing count unchanged from story 2.4 merge baseline. Since no `.ts` lands, the test count must not change.
 
-- [ ] **Task 4 — Commit (AC: all)**
-  - [ ] Stage in this order: `src/custom-skills/clickup-create-story/workflow.md`, `src/custom-skills/clickup-create-story/steps/step-04-description-composer.md`.
-  - [ ] Commit message: `feat(custom-skills): implement description composer in clickup-create-story`
-  - [ ] Body:
+- [x] **Task 4 — Commit (AC: all)**
+  - [x] Stage in this order: `src/custom-skills/clickup-create-story/workflow.md`, `src/custom-skills/clickup-create-story/steps/step-04-description-composer.md`.
+  - [x] Commit message: `feat(custom-skills): implement description composer in clickup-create-story`
+  - [x] Body:
 
     ```
     Add step-04-description-composer.md to the clickup-create-story skill. The
