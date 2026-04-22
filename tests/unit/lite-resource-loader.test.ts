@@ -95,4 +95,55 @@ describe('ResourceLoader (Lite)', () => {
     expect(resource.content).toContain('My Custom Skill');
     expect(resource.source).toBe('project');
   });
+
+  it('should resolve upstream skill from git source when project has only src/custom-skills', async () => {
+    // arrange
+    const projectDir = join(tmpdir(), `bmad-regression-project-${Date.now()}`);
+    const gitCacheDir = join(tmpdir(), `bmad-regression-git-${Date.now()}`);
+    const customSkillDir = join(
+      projectDir,
+      'src',
+      'custom-skills',
+      'clickup-create-story',
+    );
+    mkdirSync(customSkillDir, { recursive: true });
+    writeFileSync(
+      join(customSkillDir, 'SKILL.md'),
+      '---\nname: clickup-create-story\n---\n# ClickUp Create Story',
+    );
+    const upstreamSkillDir = join(
+      gitCacheDir,
+      'src',
+      'bmm-skills',
+      'bmad-create-story',
+    );
+    mkdirSync(upstreamSkillDir, { recursive: true });
+    writeFileSync(
+      join(upstreamSkillDir, 'SKILL.md'),
+      '---\nname: bmad-create-story\n---\n# BMAD Create Story',
+    );
+    const regressionLoader = new ResourceLoaderGit(projectDir);
+    type LoaderInternals = {
+      resolvedGitPaths: Map<string, string>;
+      paths: { userBmad: string };
+    };
+    const internals = regressionLoader as unknown as LoaderInternals;
+    // Redirect user bmad to a nonexistent path so Stage 1 + Stage 2 user lookups are skipped
+    internals.paths.userBmad = join(tmpdir(), 'bmad-nonexistent-user');
+    // Pre-populate the git cache map with the real BMAD-METHOD URL so resolveGitRemotes()
+    // skips the network fetch (it checks .has(url) before cloning)
+    internals.resolvedGitPaths.set(
+      'git+https://github.com/Alpharages/BMAD-METHOD.git',
+      gitCacheDir,
+    );
+    // act
+    const resource = await regressionLoader.loadWorkflow('bmad-create-story');
+    // assert
+    expect(resource.name).toBe('bmad-create-story');
+    expect(resource.content).toContain('BMAD Create Story');
+    expect(resource.source).toBe('git');
+    // cleanup
+    rmSync(projectDir, { recursive: true, force: true });
+    rmSync(gitCacheDir, { recursive: true, force: true });
+  });
 });
