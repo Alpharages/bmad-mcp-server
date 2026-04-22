@@ -1,6 +1,6 @@
 # Story 3.5: Implement progress-comment poster
 
-Status: ready-for-dev
+Status: review
 
 Epic: [EPIC-3: Dev agent implementation mode → ClickUp (non-destructive)](../epics/EPIC-3-dev-agent-clickup.md)
 
