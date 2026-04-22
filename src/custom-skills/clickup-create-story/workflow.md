@@ -6,7 +6,9 @@
 
 ## Prerequisites
 
-<!-- story 2-2 will implement -->
+Before proceeding, the skill verifies that `planning-artifacts/PRD.md` and `planning-artifacts/architecture.md` exist in the target project's working directory. Both files must be present. The skill aborts with an error if either is missing.
+
+See: [./steps/step-01-prereq-check.md](./steps/step-01-prereq-check.md)
 
 ## Pickers
 
