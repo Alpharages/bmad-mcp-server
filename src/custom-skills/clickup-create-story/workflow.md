@@ -14,7 +14,11 @@ See: [./steps/step-01-prereq-check.md](./steps/step-01-prereq-check.md)
 
 ### Epic picker
 
-<!-- story 2-3 will implement -->
+Presents the user with their ClickUp spaces and the tasks (epics) in the selected space's Backlog list so they can choose an epic interactively.
+
+See: [./steps/step-02-epic-picker.md](./steps/step-02-epic-picker.md)
+
+`{epic_id}` and `{epic_name}` are available to downstream steps after this step completes.
 
 ### Sprint-list picker
 
