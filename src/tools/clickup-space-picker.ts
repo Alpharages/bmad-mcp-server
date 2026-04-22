@@ -23,7 +23,10 @@ export function registerSpacePickerTools(
     'Selects a ClickUp space for the current session. You can specify a spaceId for an exact match, a query for a fuzzy match, or provide no arguments to list available spaces. The selected space persists for the remainder of this MCP session and can be read back via getCurrentSpace.',
     {
       spaceId: z.string().optional().describe('Exact ClickUp space ID'),
-      query: z.string().optional().describe('Fuzzy search query for space name'),
+      query: z
+        .string()
+        .optional()
+        .describe('Fuzzy search query for space name'),
     },
     { readOnlyHint: false },
     async (args: { spaceId?: string; query?: string }) => {
@@ -101,7 +104,9 @@ export function registerSpacePickerTools(
           ? `\n…and ${count - 30} more. Narrow your selection with pickSpace(query=...)`
           : '';
 
-      return text(`${count} space(s) available in workspace:\n${list}${footer}`);
+      return text(
+        `${count} space(s) available in workspace:\n${list}${footer}`,
+      );
     },
   );
 

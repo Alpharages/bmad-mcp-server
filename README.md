@@ -586,11 +586,11 @@ ClickUp tools are additive — the unified `bmad` tool continues to work as befo
 
 ### Mode → Tool Matrix
 
-| Mode              | Tools registered                                                                                                                       | Resource template           | Notes                                    |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- | ---------------------------------------- |
-| `read-minimal`    | `getTaskById`, `searchTasks`                                                                                                           | _(none)_                    | `registerSpaceResources` not called      |
+| Mode              | Tools registered                                                                                                                       | Resource template           | Notes                                     |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- | ----------------------------------------- |
+| `read-minimal`    | `getTaskById`, `searchTasks`                                                                                                           | _(none)_                    | `registerSpaceResources` not called       |
 | `read`            | above plus `searchSpaces`, `getListInfo`, `getTimeEntries`, `readDocument`                                                             | `clickup://space/{spaceId}` | 6 tools total; `searchDocuments` pending† |
-| `write` (default) | above plus `addComment`, `updateTask`, `createTask`, `updateListInfo`, `createTimeEntry`, `updateDocumentPage`, `createDocumentOrPage` | `clickup://space/{spaceId}` | 13 tools total                           |
+| `write` (default) | above plus `addComment`, `updateTask`, `createTask`, `updateListInfo`, `createTimeEntry`, `updateDocumentPage`, `createDocumentOrPage` | `clickup://space/{spaceId}` | 13 tools total                            |
 
 † `searchDocuments` is not registered at vendored SHA `c79b21e3` (upstream placeholder — will activate automatically on re-vendor when upstream ships it).
 

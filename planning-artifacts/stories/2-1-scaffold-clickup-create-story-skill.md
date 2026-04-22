@@ -201,6 +201,19 @@ Antigravity (Amelia persona)
 
 - (none expected)
 
+### Review Findings
+
+- [ ] [Review][Decision] Stories 2-3/2-4/2-5 marked `ready-for-dev` despite documented sequential deps — story 2-3 states do not start until 2.1 and 2.2 are merged; marking all four simultaneously may signal parallel starts are valid [planning-artifacts/sprint-status.yaml]
+- [x] [Review][Patch] Duplicate `last_updated` key in data section — false positive; single key confirmed. [planning-artifacts/sprint-status.yaml]
+- [x] [Review][Patch] `last_updated` comment inconsistent — header comment lists "stories 2-3, 2-4, 2-5" and data-section comment says "story 2-5 → ready-for-dev"; story 2-2 omitted from both; neither matches the full set of changes [planning-artifacts/sprint-status.yaml] — fixed: both updated to include story 2-1 → done and stories 2-2 through 2-6 → ready-for-dev
+- [x] [Review][Patch] `steps/.gitkeep` is non-empty — contains `# gitkeep`; convention is zero-byte [src/custom-skills/clickup-create-story/steps/.gitkeep] — fixed: truncated to zero bytes
+- [x] [Review][Patch] Dot vs dash notation in breadcrumb comments — `workflow.md` uses `story 2.2`, `story 2.3` etc.; project convention is `2-2`, `2-3` [src/custom-skills/clickup-create-story/workflow.md] — fixed: all breadcrumbs updated to dash notation
+- [x] [Review][Patch] `**Goal:**` is a paraphrase, not verbatim — AC3 requires text copied from EPIC-2 Goal section [src/custom-skills/clickup-create-story/workflow.md] — fixed: replaced with verbatim EPIC-2 goal
+- [x] [Review][Patch] README missing `§` in section reference — AC5 requires "PRD §Customization boundary verbatim pointer" [src/custom-skills/README.md] — fixed: added `§` and WHY explanation
+- [x] [Review][Defer] `src/custom-skills/` not on BMAD discovery path in `resource-loader.ts` — deferred, pre-existing; explicitly in story 2.7 scope
+- [x] [Review][Defer] `loadBmmSkillContent` does not surface `steps/*.md` — deferred, pre-existing; story 2.7 investigation scope
+- [x] [Review][Defer] SKILL.md description line exceeds 80-char Prettier width — deferred, pre-existing; Prettier does not reformat YAML frontmatter in `.md` files
+
 ## Change Log
 
 | Date       | Change                                                                                       |
