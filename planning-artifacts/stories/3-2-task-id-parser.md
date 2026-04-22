@@ -1,6 +1,6 @@
 # Story 3.2: Implement task-ID parser step
 
-Status: ready-for-dev
+Status: review
 
 Epic: [EPIC-3: Dev agent implementation mode → ClickUp (non-destructive)](../epics/EPIC-3-dev-agent-clickup.md)
 
