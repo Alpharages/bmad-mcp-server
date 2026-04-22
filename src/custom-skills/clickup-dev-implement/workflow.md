@@ -30,7 +30,11 @@ See: [./steps/step-03-planning-artifact-reader.md](./steps/step-03-planning-arti
 
 ## Progress Comments
 
-<!-- story 3-5 will implement: append-only, markdown-formatted comment poster via addComment -->
+Invoked at M1 (immediately after steps 1–3 complete) and M2 (after all implementation changes are committed), and optionally at M3+ decision points; posts markdown-formatted, append-only comments via `addComment`; non-blocking if write mode (`CLICKUP_MCP_MODE=write`) is unavailable or `addComment` fails.
+
+See: [./steps/step-04-progress-comment-poster.md](./steps/step-04-progress-comment-poster.md)
+
+`{comment_count}` and `{last_comment_id}` are available to downstream steps after this step's first invocation. `{comment_count}` is `'0'` if write mode was unavailable; `''` (empty) if write mode was active but no comment was successfully posted.
 
 ## Status Transitions
 
