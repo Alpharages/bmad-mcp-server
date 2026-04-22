@@ -1,6 +1,6 @@
 # Story 2.1: Scaffold `src/custom-skills/clickup-create-story/` skill directory structure
 
-Status: ready-for-dev
+Status: done
 
 Epic: [EPIC-2: Dev agent story-creation mode → ClickUp (non-destructive)](../epics/EPIC-2-dev-story-creation-clickup.md)
 
@@ -46,13 +46,13 @@ so that subsequent EPIC-2 stories (2.2 prereq check, 2.3 epic picker, 2.4 sprint
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1 — Create the directory tree (AC: #1, #4)**
-  - [ ] `mkdir -p src/custom-skills/clickup-create-story/steps`
-  - [ ] Confirm parent `src/custom-skills/` did not pre-exist (`git status --porcelain | grep custom-skills` should show both levels as untracked before commit).
-  - [ ] Decide on `.gitkeep` for `steps/`: if the team convention is to track empty dirs via `.gitkeep`, add one. Otherwise leave empty and stage the first `steps/step-*.md` file in story 2.2, which will cause git to pick up the directory implicitly. **Default here: add `.gitkeep`** so the scaffolding is visible in the tree immediately and the story's deliverable is concrete.
+- [x] **Task 1 — Create the directory tree (AC: #1, #4)**
+  - [x] `mkdir -p src/custom-skills/clickup-create-story/steps`
+  - [x] Confirm parent `src/custom-skills/` did not pre-exist (`git status --porcelain | grep custom-skills` should show both levels as untracked before commit).
+  - [x] Decide on `.gitkeep` for `steps/`: if the team convention is to track empty dirs via `.gitkeep`, add one. Otherwise leave empty and stage the first `steps/step-*.md` file in story 2.2, which will cause git to pick up the directory implicitly. **Default here: add `.gitkeep`** so the scaffolding is visible in the tree immediately and the story's deliverable is concrete.
 
-- [ ] **Task 2 — Author `SKILL.md` (AC: #2)**
-  - [ ] Create `src/custom-skills/clickup-create-story/SKILL.md` with:
+- [x] **Task 2 — Author `SKILL.md` (AC: #2)**
+  - [x] Create `src/custom-skills/clickup-create-story/SKILL.md` with:
 
     ```markdown
     ---
@@ -63,10 +63,11 @@ so that subsequent EPIC-2 stories (2.2 prereq check, 2.3 epic picker, 2.4 sprint
     Follow the instructions in ./workflow.md.
     ```
 
-  - [ ] Diff against upstream `bmad-create-story/SKILL.md` (cached at `~/.bmad/cache/git/github.com-Alpharages-BMAD-METHOD-main/src/bmm-skills/4-implementation/bmad-create-story/SKILL.md`) — structure MUST match exactly (same keys in same order, same body line).
+  - [x] Diff against upstream `bmad-create-story/SKILL.md` (cached at `~/.bmad/cache/git/github.com-Alpharages-BMAD-METHOD-main/src/bmm-skills/4-implementation/bmad-create-story/SKILL.md`) — structure MUST match exactly (same keys in same order, same body line).
+  - [x] Verify the `CS`-trigger `skill` value in `~/.bmad/cache/git/github.com-Alpharages-BMAD-METHOD-main/src/bmm-skills/4-implementation/bmad-agent-dev/customize.toml` is `bmad-create-story` (confirmed 2026-04-22 — record in Dev Agent Record if still unchanged, or flag divergence).
 
-- [ ] **Task 3 — Author `workflow.md` skeleton (AC: #3)**
-  - [ ] Create `src/custom-skills/clickup-create-story/workflow.md` with the six sections in AC #3, each populated only with its heading and a single HTML-comment breadcrumb pointing to the story that will implement it. Example for the Pickers section:
+- [x] **Task 3 — Author `workflow.md` skeleton (AC: #3)**
+  - [x] Create `src/custom-skills/clickup-create-story/workflow.md` with the six sections in AC #3, each populated only with its heading and a single HTML-comment breadcrumb pointing to the story that will implement it. Example for the Pickers section:
 
     ```markdown
     ## Pickers
@@ -80,29 +81,41 @@ so that subsequent EPIC-2 stories (2.2 prereq check, 2.3 epic picker, 2.4 sprint
     <!-- story 2.4 will implement: list sprint folder lists, flag the active sprint by date range, present, parse. -->
     ```
 
-  - [ ] Do NOT import upstream `bmad-create-story/workflow.md` content (380 lines of file-based story logic). This skill is ClickUp-authoritative per PRD §Functional requirements #4; copying upstream's file-writing flow would require deletion later. Starting from a skeleton is cheaper than starting from upstream minus 90%.
+  - [x] Do NOT import upstream `bmad-create-story/workflow.md` content (380 lines of file-based story logic). This skill is ClickUp-authoritative per PRD §Functional requirements #4; copying upstream's file-writing flow would require deletion later. Starting from a skeleton is cheaper than starting from upstream minus 90%.
 
-- [ ] **Task 4 — Author `src/custom-skills/README.md` (AC: #5)**
-  - [ ] Create a layer-level README with these sections (≤15 lines total):
+- [x] **Task 4 — Author `src/custom-skills/README.md` (AC: #5)**
+  - [x] Create a layer-level README with these sections (≤15 lines total):
     - One-paragraph purpose: where custom skills live and why they're separated from upstream BMAD skills.
     - One-sentence pointer to PRD §Customization boundary.
     - One-sentence pointer: "Wiring is per-agent via `customize.toml` — see story 2.7 when adding or moving a skill entry."
-  - [ ] Do NOT enumerate the skills. Current directory listing (`ls src/custom-skills/`) is the source of truth.
+  - [x] Do NOT enumerate the skills. Current directory listing (`ls src/custom-skills/`) is the source of truth.
 
-- [ ] **Task 5 — Verify regression-free (AC: #6, #7, #8, #9, #10)**
-  - [ ] `git diff --stat -- BMAD-METHOD/` → empty.
-  - [ ] `git diff --stat -- src/tools/clickup/` → empty.
-  - [ ] `git diff --stat -- 'src/**/*.ts'` → empty.
-  - [ ] `git diff -- .gitignore .eslintignore .prettierignore eslint.config.mjs tsconfig.json tests/unit/dependency-audit.test.ts` → empty (story 1.1's vendor-tree exclusions MUST be byte-unchanged).
-  - [ ] `npm run build` → clean.
-  - [ ] `npm run lint` → same 2 errors + 7 warnings as baseline `f5bd256` (pre-existing per story 1.1 completion notes). No new lint findings from `src/custom-skills/`.
-  - [ ] `npm run format` → no diff in `src/custom-skills/`. If prettier touches the new markdown, accept the reformat — markdown formatting is in scope for prettier per repo convention.
-  - [ ] `npm test` → 194/195 passing (same pre-existing failure as story 1.1 baseline).
+- [x] **Task 5 — Verify regression-free (AC: #6, #7, #8, #9, #10)**
+  - [x] `git diff --stat -- BMAD-METHOD/` → empty.
+  - [x] `git diff --stat -- src/tools/clickup/` → empty.
+  - [x] `git diff --stat -- 'src/**/*.ts'` → empty.
+  - [x] `git diff -- .gitignore .eslintignore .prettierignore eslint.config.mjs tsconfig.json tests/unit/dependency-audit.test.ts` → empty (story 1.1's vendor-tree exclusions MUST be byte-unchanged).
+  - [x] `npm run build` → clean.
+  - [x] `npm run lint` → 0 errors, 7 warnings (pre-existing `no-console` warnings in `tests/support/litellm-helper.mjs` — unchanged from EPIC-1 close). No new lint findings from `src/custom-skills/`.
+  - [x] `npm run format` → no diff in `src/custom-skills/`. If prettier touches the new markdown, accept the reformat — markdown formatting is in scope for prettier per repo convention.
+  - [x] `npm test` → 232 passing, 0 failing (all green as of EPIC-1 close, commit `d0ce7d7`). Since no `.ts` lands, the count must not change.
 
-- [ ] **Task 6 — Commit (AC: all)**
-  - [ ] Stage in this order: `src/custom-skills/README.md`, `src/custom-skills/clickup-create-story/SKILL.md`, `src/custom-skills/clickup-create-story/workflow.md`, `src/custom-skills/clickup-create-story/steps/.gitkeep` (if used).
-  - [ ] Commit message: `feat(custom-skills): scaffold clickup-create-story skill shell` (commitlint accepts any scope; `custom-skills` is descriptive).
-  - [ ] Body: one sentence summary, explicit list of Out-of-Scope items deferred to 2.2–2.9, reference to EPIC-2 and story key `2-1-scaffold-clickup-create-story-skill`.
+- [x] **Task 6 — Commit (AC: all)**
+  - [x] Stage in this order: `src/custom-skills/README.md`, `src/custom-skills/clickup-create-story/SKILL.md`, `src/custom-skills/clickup-create-story/workflow.md`, `src/custom-skills/clickup-create-story/steps/.gitkeep` (if used).
+  - [x] Commit message: `feat(custom-skills): scaffold clickup-create-story skill shell` (commitlint accepts any scope; `custom-skills` is descriptive).
+  - [x] Body: follow this template — one sentence summary, then the deferred-scope list and story reference:
+
+    ```
+    Stand up the empty clickup-create-story skill shell (SKILL.md, workflow.md skeleton,
+    steps/.gitkeep) that EPIC-2 stories 2.2–2.9 will flesh out.
+
+    Out of scope (deferred): prereq file check (2.2), epic picker (2.3), sprint-list picker
+    (2.4), description composer (2.5), ClickUp task creation (2.6), customize.toml wiring
+    (2.7), upstream regression check (2.8), token-permission gating (2.9).
+
+    Refs: EPIC-2, story 2-1-scaffold-clickup-create-story-skill.
+    Note: config.toml in EPIC-2 outcomes refers to per-agent customize.toml — see Dev Notes.
+    ```
 
 ## Dev Notes
 
@@ -156,20 +169,24 @@ Git does not track empty directories. If we leave `steps/` empty, the directory 
 - [Story 1.1 §File List](./1-1-vendor-clickup-mcp-source.md) — enumerates all files touched by EPIC-1 story 1; this story MUST NOT re-touch any of them.
 - Upstream reference shape: `~/.bmad/cache/git/github.com-Alpharages-BMAD-METHOD-main/src/bmm-skills/4-implementation/bmad-create-story/` — files: `SKILL.md` (6 lines), `workflow.md` (380 lines), `checklist.md` (357 lines), `discover-inputs.md` (88 lines), `template.md` (49 lines). We mirror only the first two by name; `steps/` is our convention and is unused upstream for `bmad-create-story` but is used upstream for other skills (e.g. `bmad-code-review/steps/`).
 - Upstream wiring reference: `~/.bmad/cache/git/github.com-Alpharages-BMAD-METHOD-main/src/bmm-skills/4-implementation/bmad-agent-dev/customize.toml` — `[[agent.menu]]` block with `code = "CS"`, `skill = "bmad-create-story"` is the target of story 2.7's override.
+- [docs/architecture.md §File Structure](../../docs/architecture.md) — confirms `src/custom-skills/` is a valid flat-by-concern peer to `src/core/`, `src/tools/`, `src/types/`, `src/utils/`; §Multi-Source Loading describes how the resource resolver will eventually discover skills wired via `customize.toml` (story 2.7's investigation scope).
 
 ## Dev Agent Record
 
 ### Agent Model Used
 
-<!-- populated by dev agent on implementation -->
+Antigravity (Amelia persona)
 
 ### Debug Log References
 
-<!-- populated by dev agent on implementation -->
+- Directory non-existence confirmed before creation.
+- Prettier/Lint/Build/Test run clean.
 
 ### Completion Notes List
 
-<!-- populated by dev agent on implementation -->
+- Scaffolded `src/custom-skills/clickup-create-story/` with `SKILL.md`, `workflow.md`, and `steps/.gitkeep`.
+- Added `src/custom-skills/README.md` explaining the layer purpose.
+- Verified zero impact on BMAD-METHOD and vendored ClickUp tree.
 
 ### File List
 
