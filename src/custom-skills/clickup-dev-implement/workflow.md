@@ -14,7 +14,11 @@ See: [./steps/step-01-task-id-parser.md](./steps/step-01-task-id-parser.md)
 
 ## Fetch
 
-<!-- story 3-3 will implement: task fetch + parent-epic context via getTaskById -->
+Calls `getTaskById` for the task and its parent epic, extracts task name, status, URL, and epic context.
+
+See: [./steps/step-02-task-fetch.md](./steps/step-02-task-fetch.md)
+
+`{task_name}`, `{task_status}`, `{task_url}`, `{epic_task_id}`, and `{epic_name}` are available to all downstream steps after this step completes. `{epic_task_id}` and `{epic_name}` are empty strings if the task has no parent epic or the parent fetch failed.
 
 ## Planning Artifacts
 
