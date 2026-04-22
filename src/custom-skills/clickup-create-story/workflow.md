@@ -8,6 +8,8 @@
 
 Before proceeding, the skill verifies that `planning-artifacts/PRD.md` and `planning-artifacts/architecture.md` exist in the target project's working directory. Both files must be present. The skill aborts with an error if either is missing.
 
+Before checking project files, step 1 verifies that `CLICKUP_MCP_MODE=write` (so `createTask` is registered) and that the `CLICKUP_API_KEY` token authenticates against the ClickUp API; the skill aborts with an actionable error if either check fails.
+
 See: [./steps/step-01-prereq-check.md](./steps/step-01-prereq-check.md)
 
 ## Pickers
