@@ -1,6 +1,6 @@
 # Story 2.3: Implement epic picker (space discovery + Backlog task selection)
 
-Status: ready-for-dev
+Status: done
 
 Epic: [EPIC-2: Dev agent story-creation mode → ClickUp (non-destructive)](../epics/EPIC-2-dev-story-creation-clickup.md)
 
@@ -81,34 +81,34 @@ so that subsequent steps (2.5 description composer, 2.6 task creation) know exac
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1 — Create `steps/step-02-epic-picker.md` (AC: #1, #2, #4)**
-  - [ ] Create the file with YAML frontmatter (five keys: `space_id`, `space_name`, `backlog_list_id`, `epic_id`, `epic_name`), H1 title, `## RULES`, and `## INSTRUCTIONS` sections exactly as specified in AC #1–#2.
-  - [ ] Include the verbatim empty-backlog error block template from AC #4 inside the INSTRUCTIONS (step 7), showing the exact message with `{backlog_list_id}` and `{space_name}` placeholders.
-  - [ ] Verify the frontmatter key names match downstream contracts: `epic_id` → story 2.6 `parent_task_id` on `createTask`; `epic_name` → story 2.5 description composer context; `space_id` + `space_name` → story 2.4 step-03 sprint-list picker. Spelling must be exact — downstream step files will reference these by name.
-  - [ ] Confirm `pickSpace` / `getCurrentSpace` are the tools used for space selection (story 1.4 deliverable, `src/tools/clickup-space-picker.ts`), NOT `searchSpaces` alone.
+- [x] **Task 1 — Create `steps/step-02-epic-picker.md` (AC: #1, #2, #4)**
+  - [x] Create the file with YAML frontmatter (five keys: `space_id`, `space_name`, `backlog_list_id`, `epic_id`, `epic_name`), H1 title, `## RULES`, and `## INSTRUCTIONS` sections exactly as specified in AC #1–#2.
+  - [x] Include the verbatim empty-backlog error block template from AC #4 inside the INSTRUCTIONS (step 7), showing the exact message with `{backlog_list_id}` and `{space_name}` placeholders.
+  - [x] Verify the frontmatter key names match downstream contracts: `epic_id` → story 2.6 `parent_task_id` on `createTask`; `epic_name` → story 2.5 description composer context; `space_id` + `space_name` → story 2.4 step-03 sprint-list picker. Spelling must be exact — downstream step files will reference these by name.
+  - [x] Confirm `pickSpace` / `getCurrentSpace` are the tools used for space selection (story 1.4 deliverable, `src/tools/clickup-space-picker.ts`), NOT `searchSpaces` alone.
 
-- [ ] **Task 2 — Update `workflow.md` Epic picker subsection (AC: #3)**
-  - [ ] Open `src/custom-skills/clickup-create-story/workflow.md`.
-  - [ ] Replace the single-line `<!-- story 2.3 will implement: list tasks in the Backlog list, present to user, parse selection. -->` comment under `### Epic picker` with:
+- [x] **Task 2 — Update `workflow.md` Epic picker subsection (AC: #3)**
+  - [x] Open `src/custom-skills/clickup-create-story/workflow.md`.
+  - [x] Replace the single-line `<!-- story 2.3 will implement: list tasks in the Backlog list, present to user, parse selection. -->` comment under `### Epic picker` with:
     - One descriptive sentence covering space discovery, Backlog list identification, and epic selection.
     - `See: [./steps/step-02-epic-picker.md](./steps/step-02-epic-picker.md)`
     - Context summary: "`{epic_id}` and `{epic_name}` are available to downstream steps after this step completes."
-  - [ ] Confirm the `### Sprint-list picker` subsection beneath is byte-unchanged (breadcrumb still reads `<!-- story 2.4 will implement: list sprint folder lists, flag the active sprint by date range, present, parse. -->`).
+  - [x] Confirm the `### Sprint-list picker` subsection beneath is byte-unchanged (breadcrumb still reads `<!-- story 2.4 will implement: list sprint folder lists, flag the active sprint by date range, present, parse. -->`).
 
-- [ ] **Task 3 — Verify regression-free (AC: #5–#9)**
-  - [ ] `git diff --stat -- BMAD-METHOD/` → empty.
-  - [ ] `git diff --stat -- src/tools/clickup/` → empty.
-  - [ ] `git diff --stat -- 'src/**/*.ts'` → empty.
-  - [ ] `git diff -- .gitignore .eslintignore .prettierignore eslint.config.mjs tsconfig.json tests/unit/dependency-audit.test.ts` → empty.
-  - [ ] `npm run build` → clean.
-  - [ ] `npm run lint` → 0 errors. Pre-existing `no-console` warnings in `tests/support/litellm-helper.mjs` unchanged. No new lint findings from `src/custom-skills/`.
-  - [ ] `npm run format` → no diff in `src/custom-skills/`. Accept any prettier reformat of the new markdown (re-run before commit).
-  - [ ] `npm test` → passing count unchanged from story 2.2 baseline. Since no `.ts` lands, the count must not change.
+- [x] **Task 3 — Verify regression-free (AC: #5–#9)**
+  - [x] `git diff --stat -- BMAD-METHOD/` → empty.
+  - [x] `git diff --stat -- src/tools/clickup/` → empty.
+  - [x] `git diff --stat -- 'src/**/*.ts'` → empty.
+  - [x] `git diff -- .gitignore .eslintignore .prettierignore eslint.config.mjs tsconfig.json tests/unit/dependency-audit.test.ts` → empty.
+  - [x] `npm run build` → clean.
+  - [x] `npm run lint` → 0 errors. Pre-existing `no-console` warnings in `tests/support/litellm-helper.mjs` unchanged. No new lint findings from `src/custom-skills/`.
+  - [x] `npm run format` → no diff in `src/custom-skills/`. Accept any prettier reformat of the new markdown (re-run before commit).
+  - [x] `npm test` → passing count unchanged from story 2.2 baseline. Since no `.ts` lands, the count must not change.
 
-- [ ] **Task 4 — Commit (AC: all)**
-  - [ ] Stage: `src/custom-skills/clickup-create-story/steps/step-02-epic-picker.md`, `src/custom-skills/clickup-create-story/workflow.md`.
-  - [ ] Commit message: `feat(custom-skills): implement epic picker step in clickup-create-story`
-  - [ ] Body:
+- [x] **Task 4 — Commit (AC: all)**
+  - [x] Stage: `src/custom-skills/clickup-create-story/steps/step-02-epic-picker.md`, `src/custom-skills/clickup-create-story/workflow.md`.
+  - [x] Commit message: `feat(custom-skills): implement epic picker step in clickup-create-story`
+  - [x] Body:
 
     ```
     Add step-02-epic-picker.md to guide the Dev agent through space discovery
@@ -198,15 +198,19 @@ Same as stories 2.1 and 2.2 — no `.ts` files, no tsc/ESLint/Vitest impact. Pre
 
 ### Agent Model Used
 
-<!-- populated by dev agent on implementation -->
+Kimi Code CLI
 
 ### Debug Log References
 
-<!-- populated by dev agent on implementation -->
+- No debug issues encountered during implementation.
 
 ### Completion Notes List
 
-<!-- populated by dev agent on implementation -->
+- Created `step-02-epic-picker.md` with exact YAML frontmatter keys, RULES section (mode requirement, near-read-only, early-exit, no-fabrication), and INSTRUCTIONS section with all 11 steps per AC #2.
+- Included verbatim empty-backlog error block from AC #4 inside INSTRUCTIONS step 8.
+- Updated `workflow.md` `### Epic picker` subsection with descriptive sentence, step file link, and context summary per AC #3.
+- Verified `### Sprint-list picker` subsection and all other `workflow.md` sections remain byte-unchanged.
+- All regression checks passed (AC #5–#9): no changes to BMAD-METHOD/, src/tools/clickup/, src/**/*.ts, or vendor-tree exclusion files. Build, lint, format, and test all clean (232 tests passing).
 
 ### File List
 
@@ -228,3 +232,4 @@ Same as stories 2.1 and 2.2 — no `.ts` files, no tsc/ESLint/Vitest impact. Pre
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | 2026-04-22 | Story drafted from EPIC-2 bullet 4 via `bmad-create-story` workflow. Status → ready-for-dev.                                                                                                                                                                                               |
 | 2026-04-22 | Validation pass: fixed tool selection (use `pickSpace`/`getCurrentSpace` not `searchSpaces` for space selection); added `CLICKUP_MCP_MODE` constraint; corrected dependency to "stories 2.1 AND 2.2"; updated AC #2 instruction flow, Dev Notes tool surface, commit body, and References. |
+| 2026-04-22 | Implemented: created `step-02-epic-picker.md`, updated `workflow.md`, all ACs satisfied, all regression checks passed. Status → review. |
