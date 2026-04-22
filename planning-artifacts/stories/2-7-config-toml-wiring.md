@@ -1,6 +1,6 @@
 # Story 2.7: Wire `_bmad/custom/bmad-agent-dev.toml` to route Dev agent's `CS` trigger to `clickup-create-story`
 
-Status: code-review
+Status: done
 
 Epic: [EPIC-2: Dev agent story-creation mode → ClickUp (non-destructive)](../epics/EPIC-2-dev-story-creation-clickup.md)
 

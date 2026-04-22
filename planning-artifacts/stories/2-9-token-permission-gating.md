@@ -21,13 +21,13 @@ so that the user receives an actionable permission error at invocation time rath
 
 ## Acceptance Criteria
 
-1. `src/custom-skills/clickup-create-story/steps/step-01-prereq-check.md` is enhanced with a **`## Permission Gate`** section that appears as the FIRST section (before `## File Check`). The section MUST:
+1. `src/custom-skills/clickup-create-story/steps/step-01-prereq-check.md` is enhanced with a **`## Permission Gate`** section inserted between `## RULES` and the existing `## INSTRUCTIONS` section. The section MUST:
 
    (a) State the mode requirement: `CLICKUP_MCP_MODE` MUST be `write`. Verify by checking whether `createTask` is available in the current tool list. If it is absent (mode is `read-minimal` or `read`), emit the mode error block (AC #2) and stop the entire skill run immediately.
 
    (b) Verify the token by calling `pickSpace` with no arguments. If the response contains an authentication error (response text contains `401`, `Unauthorized`, `invalid token`, or `CLICKUP_API_KEY`, or zero spaces are returned alongside an error indicator), emit the token error block (AC #3) and stop immediately.
 
-   (c) If both checks pass, confirm to the user: "✅ Permission gate passed — write mode active, token authenticated." and continue to `## File Check`.
+   (c) If both checks pass, confirm to the user: "✅ Permission gate passed — write mode active, token authenticated." and continue to `## INSTRUCTIONS`.
 
 2. The mode error block (AC #1a) MUST follow this exact template (verbatim in the step file):
 
@@ -95,14 +95,14 @@ so that the user receives an actionable permission error at invocation time rath
 
 - [ ] **Task 1 — Add `## Permission Gate` section to step-01 (AC: #1–#4)**
   - [ ] Open `src/custom-skills/clickup-create-story/steps/step-01-prereq-check.md`.
-  - [ ] Rename the existing `## RULES` and main body into `## File Check` by introducing a new H2 heading so the file becomes: YAML frontmatter → `## RULES` (updated) → `## Permission Gate` → `## File Check` → `## NEXT`.
+  - [ ] Insert a new `## Permission Gate` H2 section between `## RULES` and the existing `## INSTRUCTIONS` section. Do NOT rename `## INSTRUCTIONS` — keep the heading unchanged to match the convention in step-02 and step-03. The resulting file structure is: YAML frontmatter → `## RULES` (updated) → `## Permission Gate` (new) → `## INSTRUCTIONS` (unchanged heading, existing file-check steps 1–5) → `## NEXT`.
   - [ ] Update `## RULES` per AC #4: remove "no ClickUp API calls" prohibition; add `pickSpace`-only rule and `createTask`-availability rule.
   - [ ] Add `## Permission Gate` with instructions (a), (b), (c) as described in AC #1:
     - Step (a): "Verify `createTask` is in the available tool list. If absent, emit the mode error block verbatim and stop."
     - Step (b): "Call `pickSpace` (no arguments). If the response contains `401`, `Unauthorized`, `invalid token`, or `CLICKUP_API_KEY`, or returns zero spaces with an error indicator, emit the token error block verbatim and stop."
-    - Step (c): "Emit `✅ Permission gate passed — write mode active, token authenticated.` and continue to `## File Check`."
+    - Step (c): "Emit `✅ Permission gate passed — write mode active, token authenticated.` and continue to `## INSTRUCTIONS`."
   - [ ] Embed the mode error block (AC #2) and the token error block (AC #3) verbatim inside the Permission Gate section (use blockquote `>` format to avoid triple-backtick nesting — the agent will strip `>` markers and emit the block contents).
-  - [ ] Retain the existing `## File Check` content (steps 1–5 from story 2.2) without modification.
+  - [ ] Retain the existing `## INSTRUCTIONS` content (steps 1–5 from story 2.2) without modification — do not rename the section.
 
 - [ ] **Task 2 — Update `workflow.md` Prerequisites section (AC: #6)**
   - [ ] Open `src/custom-skills/clickup-create-story/workflow.md`.
@@ -185,9 +185,9 @@ architecture_content: ''
 
 [steps a, b, c from AC #1 with verbatim error blocks]
 
-## File Check
+## INSTRUCTIONS
 
-[existing steps 1–5 from story 2.2, unchanged]
+[existing steps 1–5 from story 2.2, unchanged — heading NOT renamed]
 
 ## NEXT
 
@@ -238,7 +238,7 @@ No `.ts` files land in this story. Test count is unchanged.
 
 **Modified**
 
-- `src/custom-skills/clickup-create-story/steps/step-01-prereq-check.md` — `## RULES` updated; new `## Permission Gate` section added before `## File Check` (AC #1–#4)
+- `src/custom-skills/clickup-create-story/steps/step-01-prereq-check.md` — `## RULES` updated; new `## Permission Gate` section inserted between `## RULES` and `## INSTRUCTIONS` (AC #1–#4)
 - `src/custom-skills/clickup-create-story/workflow.md` — `## Prerequisites` section updated with one sentence (AC #6)
 
 **Deleted**
