@@ -1,6 +1,6 @@
 # Story 3.4: Implement planning-artifact reader
 
-Status: ready-for-dev
+Status: done
 
 Epic: [EPIC-3: Dev agent implementation mode → ClickUp (non-destructive)](../epics/EPIC-3-dev-agent-clickup.md)
 

@@ -31,11 +31,11 @@ so that ClickUp reflects real-time implementation progress and humans can track 
      - (e) **Variable contract:** `{comment_count}` is incremented by 1 after each successful `addComment` call. `{last_comment_id}` is set to the `comment_id` returned by the most recent successful call. Both values persist across all invocations of this step within a session.
    - Include a `## WHEN TO POST` section with a table of milestones:
 
-     | # | Milestone | Template |
-     |---|-----------|----------|
-     | M1 | Immediately after steps 1–3 complete, before any code is written | Template A — Implementation Start |
-     | M2 | After all implementation changes are committed and ready for review | Template B — Implementation Complete |
-     | M3+ | At significant decision points or blockers during implementation (agent's discretion) | Template C — Discretionary |
+     | #   | Milestone                                                                             | Template                             |
+     | --- | ------------------------------------------------------------------------------------- | ------------------------------------ |
+     | M1  | Immediately after steps 1–3 complete, before any code is written                      | Template A — Implementation Start    |
+     | M2  | After all implementation changes are committed and ready for review                   | Template B — Implementation Complete |
+     | M3+ | At significant decision points or blockers during implementation (agent's discretion) | Template C — Discretionary           |
 
    - Include a `## COMMENT TEMPLATES` section with the three verbatim templates specified in AC #5, #6, and #7 below.
    - Include an `## INSTRUCTIONS` section with numbered steps exactly as specified in AC #8 below.
@@ -43,7 +43,7 @@ so that ClickUp reflects real-time implementation progress and humans can track 
 2. `src/custom-skills/clickup-dev-implement/workflow.md` — the `## Progress Comments` section is updated to replace the `<!-- story 3-5 will implement: append-only, markdown-formatted comment poster via addComment -->` breadcrumb with:
    - A one-line description of what the progress-comment poster does (invoked at M1 and M2 milestones, and optionally at M3+ decision points; posts markdown comments via `addComment`; non-blocking if write mode is unavailable or `addComment` fails).
    - `See: [./steps/step-04-progress-comment-poster.md](./steps/step-04-progress-comment-poster.md)`
-   - An inline statement: "`{comment_count}` and `{last_comment_id}` are available to downstream steps after this step's first invocation. `{comment_count}` is `'0'` if write mode was unavailable or no comment was successfully posted."
+   - An inline statement: "`{comment_count}` and `{last_comment_id}` are available to downstream steps after this step's first invocation. `{comment_count}` is `'0'` if write mode was unavailable; `''` (empty) if write mode was active but no comment was successfully posted."
 
    No other sections in `workflow.md` change. The `## Input` section (from story 3.2), `## Fetch` section (from story 3.3), `## Planning Artifacts` section (from story 3.4), and breadcrumbs for stories 3.6–3.8 MUST remain intact.
 
@@ -71,7 +71,7 @@ so that ClickUp reflects real-time implementation progress and humans can track 
    **What to do (optional):** Verify that `CLICKUP_API_KEY` has permission to comment on this task, then manually post the missed comment in ClickUp if needed.
    ```
 
-5. Template A — Implementation Start (milestone M1) MUST be quoted verbatim in the step file:
+5. Template A — Implementation Start (milestone M1) MUST be quoted verbatim in the step file (conditionals replaced with prose instructions per Dev Notes § Template A and the tech-spec conditional):
 
    ```
    ## 🚀 Implementation Started
@@ -209,12 +209,19 @@ The `clickup-create-story` skill (story 2.2) uses a hard gate for write mode bec
 ### `addComment` API contract
 
 The `addComment` tool (registered in `src/tools/clickup/src/tools/task-write-tools.ts`) accepts:
-- `task_id`: 6–9 character alphanumeric string (the bare normalised ID from step 1).
-- `comment`: markdown string — the tool calls `convertMarkdownToClickUpBlocks()` internally.
+
+- `task_id`: **6–9 character alphanumeric string** (Zod schema: `z.string().min(6).max(9)`). Step 1 validates alphanumeric format but does not enforce length. If a task ID falls outside 6–9 characters, the Zod schema rejects it at invocation and `addComment` returns an error — rule (d)'s non-blocking path handles this. The step file should note this constraint so end-users know why a comment failed for an unusual task ID.
+- `comment`: markdown string — the tool calls `convertMarkdownToClickUpBlocks()` internally. Do not pre-render to HTML or ClickUp block syntax; pass plain markdown.
 
 It posts to `POST /api/v2/task/{task_id}/comment` with `notify_all: true`. A successful response includes `id` (comment ID), `user.username`, and `date` (Unix ms timestamp). Use `id` as `{last_comment_id}`.
 
-Markdown formatting that `convertMarkdownToClickUpBlocks` handles: `**bold**`, `*italic*`, `` `code` ``. Do not use HTML tags or ClickUp-specific block syntax in the `comment` string — pass plain markdown only.
+`convertMarkdownToClickUpBlocks` supports the full markdown feature set confirmed by `tests/unit/formatted-comments.test.ts` (note: these are vendored tests at `src/tools/clickup/src/tests/formatted-comments.test.ts`):
+
+- **Inline:** `**bold**`, `*italic*`, `` `code` ``, `***bold+italic***`, `[link](url)`
+- **Block:** `# H1`, `## H2`, `### H3`, `> blockquote`, ` ``` ` fenced code blocks
+- **Lists:** `- bullet`, `1. ordered`, `- [ ] unchecked checkbox`, `- [x] checked checkbox`, nested lists with indent levels
+
+The Templates A, B, and C use H2 headers and bullet lists — both are fully supported. Do not use HTML tags or ClickUp-specific block format strings in the `comment` string.
 
 ### Template A and the tech-spec conditional
 
@@ -236,15 +243,15 @@ Step 3's success summary block says "Proceeding to step 4 (progress-comment post
 
 ### Step file naming convention for EPIC-3 (reminder)
 
-| Step file | Created by story | Execution order |
-| --------- | ---------------- | --------------- |
-| `step-01-task-id-parser.md` | 3.2 | 1 |
-| `step-02-task-fetch.md` | 3.3 | 2 |
-| `step-03-planning-artifact-reader.md` | 3.4 | 3 |
-| **`step-04-progress-comment-poster.md`** | **3.5 (this)** | **4 (M1, M2, M3+)** |
-| `step-05-status-transition.md` | 3.6 | 5 |
-| `step-06-assumptions.md` | 3.7 | 6 |
-| `step-07-dev-clarification.md` | 3.8 | 7 |
+| Step file                                | Created by story | Execution order     |
+| ---------------------------------------- | ---------------- | ------------------- |
+| `step-01-task-id-parser.md`              | 3.2              | 1                   |
+| `step-02-task-fetch.md`                  | 3.3              | 2                   |
+| `step-03-planning-artifact-reader.md`    | 3.4              | 3                   |
+| **`step-04-progress-comment-poster.md`** | **3.5 (this)**   | **4 (M1, M2, M3+)** |
+| `step-05-status-transition.md`           | 3.6              | 5                   |
+| `step-06-assumptions.md`                 | 3.7              | 6                   |
+| `step-07-dev-clarification.md`           | 3.8              | 7                   |
 
 Story 3.6 MUST add `step-05-status-transition.md`.
 
@@ -272,6 +279,7 @@ Story 3.6 MUST add `step-05-status-transition.md`.
 - [Story 3.4 §Dev Notes: Content in conversation context](./3-4-planning-artifact-reader.md) — `{prd_loaded}`, `{architecture_loaded}`, `{tech_spec_loaded}` origin; "Proceeding to step 4 (progress-comment poster)" in the step 3 success summary is the M1 trigger.
 - [`src/tools/clickup/src/tools/task-write-tools.ts`](../../src/tools/clickup/src/tools/task-write-tools.ts) — `addComment` registration, schema, and `convertMarkdownToClickUpBlocks` call.
 - [`src/tools/clickup/src/tests/addComment.test.ts`](../../src/tools/clickup/src/tests/addComment.test.ts) — `addComment` test confirming markdown→block conversion and `notify_all: true`.
+- [`src/tools/clickup/src/tests/formatted-comments.test.ts`](../../src/tools/clickup/src/tests/formatted-comments.test.ts) — full coverage of `convertMarkdownToClickUpBlocks`: headers, blockquotes, bullet/ordered/checkbox lists, fenced code blocks, inline bold/italic/code/links, nested lists, and bold+italic combined.
 
 ## Dev Agent Record
 
@@ -307,6 +315,6 @@ Story 3.6 MUST add `step-05-status-transition.md`.
 
 ## Change Log
 
-| Date       | Change                                                                                        |
-| ---------- | --------------------------------------------------------------------------------------------- |
+| Date       | Change                                                                                       |
+| ---------- | -------------------------------------------------------------------------------------------- |
 | 2026-04-22 | Story drafted from EPIC-3 bullet 5 via `bmad-create-story` workflow. Status → ready-for-dev. |
