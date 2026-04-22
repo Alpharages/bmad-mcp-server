@@ -1,6 +1,6 @@
 # Story 2.9: Token-permission gating for `clickup-create-story`
 
-Status: ready-for-dev
+Status: review
 
 Epic: [EPIC-2: Dev agent story-creation mode → ClickUp (non-destructive)](../epics/EPIC-2-dev-story-creation-clickup.md)
 
