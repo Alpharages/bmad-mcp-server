@@ -38,4 +38,8 @@ Step 4 MUST complete with a non-empty `{task_description}` before the workflow p
 
 ## Task Creation
 
-<!-- story 2-6 will implement -->
+Validates all required context from steps 01–04, calls `searchTasks` to check for duplicate task names in the target sprint list, presents a pre-creation summary for user confirmation, calls `createTask({ list_id: {sprint_list_id}, name: {story_title}, description: {task_description}, parent_task_id: {epic_id} })`, and stores the created task's `{created_task_id}` and `{created_task_url}`.
+
+See: [./steps/step-05-create-task.md](./steps/step-05-create-task.md)
+
+Step 5 is the terminal step of the skill. If `createTask` returns an error, the step surfaces it and stops — it does not retry silently.
