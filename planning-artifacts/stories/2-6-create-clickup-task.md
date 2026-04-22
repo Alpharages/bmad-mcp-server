@@ -48,6 +48,7 @@ so that the `clickup-create-story` skill completes end-to-end story creation in 
         - `parent_task_id: "{epic_id}"`
 
         Do NOT pass `status`, `priority`, `assignees`, `due_date`, `start_date`, `time_estimate`, or `tags` — let ClickUp apply list defaults so the team lead can configure them in the UI after creation.
+
      6. Parse the `createTask` response text:
         - Extract the value after `task_id:` as `{created_task_id}`.
         - Extract the value after `url:` as `{created_task_url}`.
@@ -148,7 +149,7 @@ so that the `clickup-create-story` skill completes end-to-end story creation in 
    - A one-line description of what step 5 does (validate context → check for duplicates via `searchTasks` → confirm with user → call `createTask` → store `{created_task_id}` and `{created_task_url}`).
    - A `See: [./steps/step-05-create-task.md](./steps/step-05-create-task.md)` pointer.
    - An inline rule: "Step 5 is the terminal step of the skill. If `createTask` returns an error, the step surfaces it and stops — it does not retry silently."
-   No other sections in `workflow.md` change.
+     No other sections in `workflow.md` change.
 
 8. No files under `BMAD-METHOD/` are created, modified, or deleted. `git diff --stat -- BMAD-METHOD/` MUST be empty.
 9. No files under `src/tools/clickup/` are created, modified, or deleted. `git diff --stat -- src/tools/clickup/` MUST be empty.
@@ -236,15 +237,15 @@ so that the `clickup-create-story` skill completes end-to-end story creation in 
 
 ### Variables consumed from previous steps / provided to downstream
 
-| Key | Direction | Source / Consumer |
-|---|---|---|
-| `{sprint_list_id}` | **consumed** | Set by step-03 (sprint-list picker, story 2.4) — `createTask` `list_id` |
-| `{sprint_list_name}` | **consumed** | Set by step-03 (sprint-list picker, story 2.4) — confirmation display |
-| `{epic_id}` | **consumed** | Set by step-02 (epic picker, story 2.3) — `createTask` `parent_task_id` |
-| `{epic_name}` | **consumed** | Set by step-02 (epic picker, story 2.3) — confirmation display |
-| `{story_title}` | **consumed** | Set by step-04 (description composer, story 2.5) — `createTask` `name` |
+| Key                  | Direction    | Source / Consumer                                                             |
+| -------------------- | ------------ | ----------------------------------------------------------------------------- |
+| `{sprint_list_id}`   | **consumed** | Set by step-03 (sprint-list picker, story 2.4) — `createTask` `list_id`       |
+| `{sprint_list_name}` | **consumed** | Set by step-03 (sprint-list picker, story 2.4) — confirmation display         |
+| `{epic_id}`          | **consumed** | Set by step-02 (epic picker, story 2.3) — `createTask` `parent_task_id`       |
+| `{epic_name}`        | **consumed** | Set by step-02 (epic picker, story 2.3) — confirmation display                |
+| `{story_title}`      | **consumed** | Set by step-04 (description composer, story 2.5) — `createTask` `name`        |
 | `{task_description}` | **consumed** | Set by step-04 (description composer, story 2.5) — `createTask` `description` |
-| `{created_task_id}` | **produced** | Parsed from `createTask` response; available to downstream steps |
+| `{created_task_id}`  | **produced** | Parsed from `createTask` response; available to downstream steps              |
 | `{created_task_url}` | **produced** | Parsed from `createTask` response; presented to user and available downstream |
 
 ### `createTask` tool usage and response format
@@ -316,13 +317,13 @@ When story 2.6 is implemented, `workflow.md` will have been updated by stories 2
 
 ### Step file naming convention
 
-| Step file | Created by story | Execution order |
-|---|---|---|
-| `step-01-prereq-check.md` | 2.2 | 1 |
-| `step-02-epic-picker.md` | 2.3 | 2 |
-| `step-03-sprint-list-picker.md` | 2.4 | 3 |
-| `step-04-description-composer.md` | 2.5 | 4 |
-| `step-05-create-task.md` | **2.6** | 5 (terminal) |
+| Step file                         | Created by story | Execution order |
+| --------------------------------- | ---------------- | --------------- |
+| `step-01-prereq-check.md`         | 2.2              | 1               |
+| `step-02-epic-picker.md`          | 2.3              | 2               |
+| `step-03-sprint-list-picker.md`   | 2.4              | 3               |
+| `step-04-description-composer.md` | 2.5              | 4               |
+| `step-05-create-task.md`          | **2.6**          | 5 (terminal)    |
 
 ### Tooling interaction
 
@@ -372,6 +373,6 @@ When story 2.6 is implemented, `workflow.md` will have been updated by stories 2
 
 ## Change Log
 
-| Date       | Change                                                                                |
-| ---------- | ------------------------------------------------------------------------------------- |
+| Date       | Change                                                                                       |
+| ---------- | -------------------------------------------------------------------------------------------- |
 | 2026-04-22 | Story drafted from EPIC-2 bullet 7 via `bmad-create-story` workflow. Status → ready-for-dev. |

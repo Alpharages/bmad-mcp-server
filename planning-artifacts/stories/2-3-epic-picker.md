@@ -210,7 +210,7 @@ Kimi Code CLI
 - Included verbatim empty-backlog error block from AC #4 inside INSTRUCTIONS step 8.
 - Updated `workflow.md` `### Epic picker` subsection with descriptive sentence, step file link, and context summary per AC #3.
 - Verified `### Sprint-list picker` subsection and all other `workflow.md` sections remain byte-unchanged.
-- All regression checks passed (AC #5–#9): no changes to BMAD-METHOD/, src/tools/clickup/, src/**/*.ts, or vendor-tree exclusion files. Build, lint, format, and test all clean (232 tests passing).
+- All regression checks passed (AC #5–#9): no changes to BMAD-METHOD/, src/tools/clickup/, src/\*_/_.ts, or vendor-tree exclusion files. Build, lint, format, and test all clean (232 tests passing).
 
 ### File List
 
@@ -232,4 +232,4 @@ Kimi Code CLI
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | 2026-04-22 | Story drafted from EPIC-2 bullet 4 via `bmad-create-story` workflow. Status → ready-for-dev.                                                                                                                                                                                               |
 | 2026-04-22 | Validation pass: fixed tool selection (use `pickSpace`/`getCurrentSpace` not `searchSpaces` for space selection); added `CLICKUP_MCP_MODE` constraint; corrected dependency to "stories 2.1 AND 2.2"; updated AC #2 instruction flow, Dev Notes tool surface, commit body, and References. |
-| 2026-04-22 | Implemented: created `step-02-epic-picker.md`, updated `workflow.md`, all ACs satisfied, all regression checks passed. Status → review. |
+| 2026-04-22 | Implemented: created `step-02-epic-picker.md`, updated `workflow.md`, all ACs satisfied, all regression checks passed. Status → review.                                                                                                                                                    |

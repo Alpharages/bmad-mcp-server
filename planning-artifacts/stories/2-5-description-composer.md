@@ -51,7 +51,8 @@ so that story 2.6 (task creation) can pass a ready-to-use, PRD+architecture-deri
         - Include `{scope_notes}` under a "Scope Notes" section if non-empty; omit the section entirely if empty.
         - Keep each section focused: synthesize and reference, do not paste entire documents verbatim.
      8. Present the composed description to the user:
-        ````
+
+        ```
         📝 **Proposed task description for "{story_title}":**
 
         ---
@@ -59,10 +60,12 @@ so that story 2.6 (task creation) can pass a ready-to-use, PRD+architecture-deri
         ---
 
         Does this description look correct? [Y/n/edit]
-        ````
+        ```
+
         - If user replies `Y` or presses Enter: proceed.
         - If user replies `n`: ask "What would you like to change?" and accept free-text edit instructions. Regenerate the description applying the requested changes. Re-present and ask again. Repeat until confirmed.
         - If user replies `edit`: instruct the user to paste the full revised description, terminated by a line containing only `---END---`. Parse the pasted text as the new `{task_description}` and confirm it back to the user before proceeding.
+
      9. Confirm the finalized description: emit `✅ Description set for story "{story_title}". Continuing to task creation…` and proceed to step 5.
 
 2. The `{task_description}` composed in AC #1 step 7 MUST follow this template structure (each section is optional if its source data is absent — omit silently rather than rendering an empty section heading):
@@ -214,16 +217,16 @@ so that story 2.6 (task creation) can pass a ready-to-use, PRD+architecture-deri
 
 ### Variables consumed from previous steps / provided to downstream
 
-| Key | Direction | Source / Consumer |
-|---|---|---|
-| `{prd_content}` | **consumed** | Set by step-01 (prereq check, story 2.2) |
-| `{architecture_content}` | **consumed** | Set by step-01 (prereq check, story 2.2) |
-| `{epic_id}` | **consumed** | Set by step-02 (epic picker, story 2.3) — `getTaskById` input |
-| `{epic_name}` | **consumed** | Set by step-02 (epic picker, story 2.3) — description heading |
-| `{sprint_list_name}` | **consumed** | Set by step-03 (sprint-list picker, story 2.4) — description footer |
-| `{epic_description}` | **produced** | Set during this step from `getTaskById` response; kept for reference |
-| `{story_title}` | **produced** | Set from user input; consumed by step-05 (story 2.6) as `createTask` `name` field |
-| `{task_description}` | **produced** | Consumed by step-05 (story 2.6) as `createTask` `description` field |
+| Key                      | Direction    | Source / Consumer                                                                 |
+| ------------------------ | ------------ | --------------------------------------------------------------------------------- |
+| `{prd_content}`          | **consumed** | Set by step-01 (prereq check, story 2.2)                                          |
+| `{architecture_content}` | **consumed** | Set by step-01 (prereq check, story 2.2)                                          |
+| `{epic_id}`              | **consumed** | Set by step-02 (epic picker, story 2.3) — `getTaskById` input                     |
+| `{epic_name}`            | **consumed** | Set by step-02 (epic picker, story 2.3) — description heading                     |
+| `{sprint_list_name}`     | **consumed** | Set by step-03 (sprint-list picker, story 2.4) — description footer               |
+| `{epic_description}`     | **produced** | Set during this step from `getTaskById` response; kept for reference              |
+| `{story_title}`          | **produced** | Set from user input; consumed by step-05 (story 2.6) as `createTask` `name` field |
+| `{task_description}`     | **produced** | Consumed by step-05 (story 2.6) as `createTask` `description` field               |
 
 ### `getTaskById` tool usage and response structure
 
@@ -236,6 +239,7 @@ getTaskById({ id: "{epic_id}" })
 The `id` parameter must be a 6–9 character alphanumeric bare ClickUp task ID (no `#`, `CU-`, or URL prefix). `{epic_id}` was set by step-02 via `searchTasks` response parsing, which returns bare task IDs in the correct format.
 
 The response layout (from `src/tools/clickup/src/tools/task-tools.ts`):
+
 1. **Task metadata block** — name, status, assignees, dates (from `generateTaskMetadata`)
 2. **Task description blocks** — the task's own markdown description (from `loadTaskContent`)
 3. **Comments** — each prefixed with `Comment by {username} on {date}:` (from `loadTaskComments`, chronologically sorted)
@@ -247,10 +251,10 @@ Step-04 MUST extract only sections 1–2 (metadata + description) as `{epic_desc
 
 Confirmed from `src/tools/clickup/src/tools/task-write-tools.ts` line 348–356:
 
-| Step-04 frontmatter key | `createTask` parameter | Notes |
-|---|---|---|
-| `{story_title}` | `name` | Required — task title |
-| `{task_description}` | `description` | Optional — markdown body; the tool internally maps this to `markdown_description` in the ClickUp API request (line 376); this is transparent to the step |
+| Step-04 frontmatter key | `createTask` parameter | Notes                                                                                                                                                    |
+| ----------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `{story_title}`         | `name`                 | Required — task title                                                                                                                                    |
+| `{task_description}`    | `description`          | Optional — markdown body; the tool internally maps this to `markdown_description` in the ClickUp API request (line 376); this is transparent to the step |
 
 The `parent_task_id` (`{epic_id}`) and `list_id` (`{sprint_list_id}`) parameters come from steps 02 and 03 respectively and are consumed directly by step-05; step-04 does not need to re-declare them.
 
@@ -302,6 +306,7 @@ Per the Out of Scope section, `ux-design.md` and `tech-spec.md` are not synthesi
 ### Mode constraint: write mode
 
 Although `getTaskById` is available in all modes, the full skill requires `CLICKUP_MCP_MODE=write` because:
+
 - Step-02 (`searchSpaces`) and step-03 (`searchSpaces`) are not available in `read-minimal`.
 - Step-05 (`createTask`) requires `write` mode.
 
@@ -313,13 +318,13 @@ ClickUp task descriptions accept Markdown. The template in AC #2 uses standard M
 
 ### Step file naming convention
 
-| Step file | Created by story | Execution order |
-|---|---|---|
-| `step-01-prereq-check.md` | 2.2 | 1 |
-| `step-02-epic-picker.md` | 2.3 | 2 |
-| `step-03-sprint-list-picker.md` | 2.4 | 3 |
-| `step-04-description-composer.md` | **2.5** | 4 |
-| `step-05-create-task.md` | 2.6 | 5 |
+| Step file                         | Created by story | Execution order |
+| --------------------------------- | ---------------- | --------------- |
+| `step-01-prereq-check.md`         | 2.2              | 1               |
+| `step-02-epic-picker.md`          | 2.3              | 2               |
+| `step-03-sprint-list-picker.md`   | 2.4              | 3               |
+| `step-04-description-composer.md` | **2.5**          | 4               |
+| `step-05-create-task.md`          | 2.6              | 5               |
 
 ### Workflow.md breadcrumb contract
 
@@ -373,7 +378,7 @@ At the time story 2.5 is implemented, `workflow.md` will have been updated by st
 
 ## Change Log
 
-| Date       | Change                                                                                |
-| ---------- | ------------------------------------------------------------------------------------- |
-| 2026-04-22 | Story drafted from EPIC-2 bullet 6 via `bmad-create-story` workflow. Status → ready-for-dev. |
+| Date       | Change                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 2026-04-22 | Story drafted from EPIC-2 bullet 6 via `bmad-create-story` workflow. Status → ready-for-dev.                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | 2026-04-22 | Validation pass: clarified `getTaskById` response parsing (stop at first `Comment by` line to exclude comments from `{epic_description}`); confirmed `createTask` parameter names from source (`name`, `description`, `parent_task_id`); added `createTask` parameter mapping table and response structure to Dev Notes; noted description-template nesting concern for step file authoring; made `{scope_notes}` non-frontmatter status explicit in Task 1; simplified `{N}/{M} chars` to `loaded ✓` in context-confirmation block. |

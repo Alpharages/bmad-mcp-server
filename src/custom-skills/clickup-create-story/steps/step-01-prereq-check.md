@@ -15,7 +15,6 @@ architecture_content: ''
 1. **Resolve the project root.** Determine `{project-root}` from the current working directory.
 
 2. **Check both required files simultaneously.** Verify whether each of the following paths exists:
-
    - `{project-root}/planning-artifacts/PRD.md`
    - `{project-root}/planning-artifacts/architecture.md`
 
