@@ -1,6 +1,6 @@
 # Story 3.3: Implement task fetch including parent-epic context
 
-Status: ready-for-dev
+Status: review
 
 Epic: [EPIC-3: Dev agent implementation mode → ClickUp (non-destructive)](../epics/EPIC-3-dev-agent-clickup.md)
 
