@@ -6,7 +6,11 @@
 
 ## Input
 
-<!-- story 3-2 will implement: accept raw ID, URL, or CU-prefixed form; normalise to bare task ID -->
+Accepts a ClickUp task identifier in bare ID, full app URL, or `CU-`-prefixed form and normalises it to a bare alphanumeric task ID. If parsing fails, the skill emits a standard error block and stops.
+
+See: [./steps/step-01-task-id-parser.md](./steps/step-01-task-id-parser.md)
+
+`{task_id}` (normalised bare ClickUp task ID) is available to all downstream steps after this step completes.
 
 ## Fetch
 
