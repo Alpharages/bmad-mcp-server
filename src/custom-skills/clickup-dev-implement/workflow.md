@@ -22,7 +22,11 @@ See: [./steps/step-02-task-fetch.md](./steps/step-02-task-fetch.md)
 
 ## Planning Artifacts
 
-<!-- story 3-4 will implement: loads planning-artifacts/PRD.md, architecture.md, optional tech-spec.md -->
+Uses the IDE Read file tool to load `planning-artifacts/PRD.md` and `planning-artifacts/architecture.md`, with optional `planning-artifacts/tech-spec.md`; stops with a fatal error if either required file is absent.
+
+See: [./steps/step-03-planning-artifact-reader.md](./steps/step-03-planning-artifact-reader.md)
+
+`{prd_loaded}` and `{architecture_loaded}` are `'true'` after this step completes. `{tech_spec_loaded}` is `'true'` if `planning-artifacts/tech-spec.md` was found, `'false'` otherwise. PRD, architecture, and (when present) tech-spec content are available in conversation context to all downstream steps after this step completes.
 
 ## Progress Comments
 
