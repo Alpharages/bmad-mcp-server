@@ -1,6 +1,6 @@
 # Story 2.6: Create ClickUp task (subtask of epic in selected sprint list)
 
-Status: ready-for-dev
+Status: done
 
 Epic: [EPIC-2: Dev agent story-creation mode → ClickUp (non-destructive)](../epics/EPIC-2-dev-story-creation-clickup.md)
 

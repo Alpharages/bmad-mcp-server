@@ -1,5 +1,5 @@
 # generated: 2026-04-21
-# last_updated: 2026-04-22 (epic-1 → done, retrospective completed; story 2-1 → done; stories 2-2, 2-3, 2-4, 2-5, 2-6 → ready-for-dev)
+# last_updated: 2026-04-22 (epic-1 → done, retrospective completed; story 2-1 → done; stories 2-2, 2-3, 2-4, 2-5, 2-6 → ready-for-dev; 2-6 → done after code review)
 # project: bmad-mcp-server
 # project_key: NOKEY
 # tracking_system: file-system
@@ -49,7 +49,7 @@
 #   So EPIC-1 has 8 bullets but only 7 stories.
 
 generated: 2026-04-21
-last_updated: 2026-04-22 (story 2-1 → done; story 2-2 → done; story 2-3 → done; story 2-4 → done; story 2-5 → done; story 2-6 → ready-for-dev; story 2-7 → done; stories 2-8, 2-9 → ready-for-dev)
+last_updated: 2026-04-22 (story 2-1 → done; story 2-2 → done; story 2-3 → done; story 2-4 → done; story 2-5 → done; story 2-6 → done; story 2-7 → done; stories 2-8, 2-9 → ready-for-dev; epic-3 → in-progress; story 3-1 → ready-for-dev)
 project: bmad-mcp-server
 project_key: NOKEY
 tracking_system: file-system
@@ -74,15 +74,15 @@ development_status:
   2-3-epic-picker: done
   2-4-sprint-list-picker: done
   2-5-description-composer: done
-  2-6-create-clickup-task: ready-for-dev
+  2-6-create-clickup-task: done
   2-7-config-toml-wiring: done
   2-8-upstream-regression-check: ready-for-dev
   2-9-token-permission-gating: ready-for-dev
   epic-2-retrospective: optional
 
   # EPIC-3: Dev agent implementation mode → ClickUp (non-destructive)
-  epic-3: backlog
-  3-1-scaffold-clickup-dev-implement-skill: backlog
+  epic-3: in-progress
+  3-1-scaffold-clickup-dev-implement-skill: ready-for-dev
   3-2-task-id-parser: backlog
   3-3-task-fetch-with-epic-context: backlog
   3-4-planning-artifact-reader: backlog

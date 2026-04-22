@@ -31,12 +31,12 @@ created_task_url: ''
    >
    > The `clickup-create-story` skill requires the following variables to be set before the task can be created:
    >
-   > - `{sprint_list_id}` — {MISSING or present} (set by step 3: sprint-list picker)
-   > - `{sprint_list_name}` — {MISSING or present} (set by step 3: sprint-list picker)
-   > - `{epic_id}` — {MISSING or present} (set by step 2: epic picker)
-   > - `{epic_name}` — {MISSING or present} (set by step 2: epic picker)
-   > - `{story_title}` — {MISSING or present} (set by step 4: description composer)
-   > - `{task_description}` — {MISSING or present} (set by step 4: description composer)
+   > - `{sprint_list_id}` — {MISSING or present}  (set by step 3: sprint-list picker)
+   > - `{sprint_list_name}` — {MISSING or present}  (set by step 3: sprint-list picker)
+   > - `{epic_id}` — {MISSING or present}  (set by step 2: epic picker)
+   > - `{epic_name}` — {MISSING or present}  (set by step 2: epic picker)
+   > - `{story_title}` — {MISSING or present}  (set by step 4: description composer)
+   > - `{task_description}` — {MISSING or present}  (set by step 4: description composer)
    >
    > **Why:** All six variables are required parameters for `createTask`. Without them, the task cannot be created or will be created with incomplete data.
    >
