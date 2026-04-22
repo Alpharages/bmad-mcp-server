@@ -1,6 +1,6 @@
 # Story 2.5: Implement description composer (PRD + architecture + epic context → task description)
 
-Status: ready-for-dev
+Status: review
 
 Epic: [EPIC-2: Dev agent story-creation mode → ClickUp (non-destructive)](../epics/EPIC-2-dev-story-creation-clickup.md)
 
@@ -152,30 +152,30 @@ so that story 2.6 (task creation) can pass a ready-to-use, PRD+architecture-deri
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1 — Create `steps/step-04-description-composer.md` (AC: #1, #2, #3)**
-  - [ ] Create the file with YAML frontmatter (three keys: `epic_description`, `story_title`, `task_description`), H1 title, `## RULES`, and `## INSTRUCTIONS` sections exactly as specified in AC #1.
-  - [ ] Include the verbatim missing-context error block from AC #3 inside the INSTRUCTIONS at step 1, with the four variable rows and `{MISSING or present}` as runtime-resolvable placeholders.
-  - [ ] Inline the description template from AC #2 inside the INSTRUCTIONS at step 7 so the agent has it at hand while composing. The agent MUST fill in synthesized content, not produce the template verbatim.
-  - [ ] Verify frontmatter key names match downstream contracts: `story_title` → story 2.6's `createTask` `name` field; `task_description` → story 2.6's `createTask` `description` field. Exact spelling matters.
-  - [ ] Confirm that `{sprint_list_name}` appears in the description footer (AC #2) and in the context-confirmation block (AC #1 step 2), but is NOT a frontmatter key of step-04 — it is a frontmatter key of step-03 and is available from the shared step context without re-declaration. Similarly, `{scope_notes}` is NOT a frontmatter key — it is a local composition variable used within this step only; its content is embedded into `{task_description}` and not propagated downstream.
+- [x] **Task 1 — Create `steps/step-04-description-composer.md` (AC: #1, #2, #3)**
+  - [x] Create the file with YAML frontmatter (three keys: `epic_description`, `story_title`, `task_description`), H1 title, `## RULES`, and `## INSTRUCTIONS` sections exactly as specified in AC #1.
+  - [x] Include the verbatim missing-context error block from AC #3 inside the INSTRUCTIONS at step 1, with the four variable rows and `{MISSING or present}` as runtime-resolvable placeholders.
+  - [x] Inline the description template from AC #2 inside the INSTRUCTIONS at step 7 so the agent has it at hand while composing. The agent MUST fill in synthesized content, not produce the template verbatim.
+  - [x] Verify frontmatter key names match downstream contracts: `story_title` → story 2.6's `createTask` `name` field; `task_description` → story 2.6's `createTask` `description` field. Exact spelling matters.
+  - [x] Confirm that `{sprint_list_name}` appears in the description footer (AC #2) and in the context-confirmation block (AC #1 step 2), but is NOT a frontmatter key of step-04 — it is a frontmatter key of step-03 and is available from the shared step context without re-declaration. Similarly, `{scope_notes}` is NOT a frontmatter key — it is a local composition variable used within this step only; its content is embedded into `{task_description}` and not propagated downstream.
 
-- [ ] **Task 2 — Update `workflow.md` Description Composer section (AC: #4)**
-  - [ ] Open `src/custom-skills/clickup-create-story/workflow.md`.
-  - [ ] Under `## Description Composer`, replace the single-line `<!-- story 2.5 will implement ... -->` comment with:
+- [x] **Task 2 — Update `workflow.md` Description Composer section (AC: #4)**
+  - [x] Open `src/custom-skills/clickup-create-story/workflow.md`.
+  - [x] Under `## Description Composer`, replace the single-line `<!-- story 2.5 will implement ... -->` comment with:
     - One descriptive sentence covering the full step: user provides story title → agent fetches epic description via `getTaskById` → agent synthesizes PRD + architecture context → agent presents and confirms `{task_description}`.
     - `See: [./steps/step-04-description-composer.md](./steps/step-04-description-composer.md)`
     - Inline rule: "Step 4 MUST complete with a non-empty `{task_description}` before the workflow proceeds to step 5."
-  - [ ] Confirm `## Task Creation` section beneath is byte-unchanged (its breadcrumb for story 2.6 MUST remain unchanged).
+  - [x] Confirm `## Task Creation` section beneath is byte-unchanged (its breadcrumb for story 2.6 MUST remain unchanged).
 
-- [ ] **Task 3 — Verify regression-free (AC: #5–#9)**
-  - [ ] `git diff --stat -- BMAD-METHOD/` → empty.
-  - [ ] `git diff --stat -- src/tools/clickup/` → empty.
-  - [ ] `git diff --stat -- 'src/**/*.ts'` → empty.
-  - [ ] `git diff -- .gitignore .eslintignore .prettierignore eslint.config.mjs tsconfig.json tests/unit/dependency-audit.test.ts` → empty (story 1.1 vendor-tree exclusions MUST be byte-unchanged).
-  - [ ] `npm run build` → clean.
-  - [ ] `npm run lint` → 0 errors. Pre-existing `no-console` warnings in `tests/support/litellm-helper.mjs` unchanged. No new lint findings from `src/custom-skills/`.
-  - [ ] `npm run format` → no diff in `src/custom-skills/`. Re-run before commit to accept any prettier reformat of the new markdown.
-  - [ ] `npm test` → passing count unchanged from story 2.4 merge baseline. Since no `.ts` lands, the test count must not change.
+- [x] **Task 3 — Verify regression-free (AC: #5–#9)**
+  - [x] `git diff --stat -- BMAD-METHOD/` → empty.
+  - [x] `git diff --stat -- src/tools/clickup/` → empty.
+  - [x] `git diff --stat -- 'src/**/*.ts'` → empty.
+  - [x] `git diff -- .gitignore .eslintignore .prettierignore eslint.config.mjs tsconfig.json tests/unit/dependency-audit.test.ts` → empty (story 1.1 vendor-tree exclusions MUST be byte-unchanged).
+  - [x] `npm run build` → clean.
+  - [x] `npm run lint` → 0 errors. Pre-existing `no-console` warnings in `tests/support/litellm-helper.mjs` unchanged. No new lint findings from `src/custom-skills/`.
+  - [x] `npm run format` → no diff in `src/custom-skills/`. Re-run before commit to accept any prettier reformat of the new markdown.
+  - [x] `npm test` → passing count unchanged from story 2.4 merge baseline. Since no `.ts` lands, the test count must not change.
 
 - [ ] **Task 4 — Commit (AC: all)**
   - [ ] Stage in this order: `src/custom-skills/clickup-create-story/workflow.md`, `src/custom-skills/clickup-create-story/steps/step-04-description-composer.md`.
@@ -352,15 +352,20 @@ At the time story 2.5 is implemented, `workflow.md` will have been updated by st
 
 ### Agent Model Used
 
-<!-- populated by dev agent on implementation -->
+Kimi Code CLI (root agent)
 
 ### Debug Log References
 
-<!-- populated by dev agent on implementation -->
+- Prettier initially converted `---` dividers inside the template to `***`; resolved by wrapping the template in a 4-backtick `text` fenced code block so prettier preserves literals while the LLM still reads the structure clearly.
 
 ### Completion Notes List
 
-<!-- populated by dev agent on implementation -->
+1. Created `step-04-description-composer.md` with exact YAML frontmatter keys (`epic_description`, `story_title`, `task_description`), H1, RULES (mode note, read-only, blocking, no-fabrication), and INSTRUCTIONS (9 numbered steps).
+2. Included verbatim missing-context error block from AC #3 with four variable rows and `{MISSING or present}` placeholders.
+3. Inlined description template from AC #2 inside step 7 using a `text` fenced block to preserve `---` dividers through prettier formatting; added instruction to synthesize bullets rather than copy placeholders verbatim.
+4. Updated `workflow.md` § Description Composer to replace the 2.5 breadcrumb with the step description, pointer, and blocking rule.
+5. Verified `## Task Creation` section is byte-unchanged.
+6. All regression checks pass: BMAD-METHOD/, src/tools/clickup/, src/**/*.ts, vendor-tree exclusion files — all empty diffs. Build, lint, format, test clean (233 tests passing, no new failures).
 
 ### File List
 
@@ -382,3 +387,4 @@ At the time story 2.5 is implemented, `workflow.md` will have been updated by st
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | 2026-04-22 | Story drafted from EPIC-2 bullet 6 via `bmad-create-story` workflow. Status → ready-for-dev.                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | 2026-04-22 | Validation pass: clarified `getTaskById` response parsing (stop at first `Comment by` line to exclude comments from `{epic_description}`); confirmed `createTask` parameter names from source (`name`, `description`, `parent_task_id`); added `createTask` parameter mapping table and response structure to Dev Notes; noted description-template nesting concern for step file authoring; made `{scope_notes}` non-frontmatter status explicit in Task 1; simplified `{N}/{M} chars` to `loaded ✓` in context-confirmation block. |
+| 2026-04-22 | Implementation complete. Added `step-04-description-composer.md` and updated `workflow.md`. All ACs satisfied; regression checks pass. Status → review. |

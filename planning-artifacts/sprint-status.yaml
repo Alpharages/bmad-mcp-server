@@ -49,7 +49,7 @@
 #   So EPIC-1 has 8 bullets but only 7 stories.
 
 generated: 2026-04-21
-last_updated: 2026-04-22 (story 2-1 → done; story 2-2 → done; story 2-3 → done; story 2-4 → done; stories 2-5, 2-6 → ready-for-dev; story 2-7 → review; stories 2-8, 2-9 → ready-for-dev)
+last_updated: 2026-04-22 (story 2-1 → done; story 2-2 → done; story 2-3 → done; story 2-4 → done; stories 2-5, 2-6 → ready-for-dev; story 2-7 → done; stories 2-8, 2-9 → ready-for-dev)
 project: bmad-mcp-server
 project_key: NOKEY
 tracking_system: file-system
@@ -73,9 +73,9 @@ development_status:
   2-2-prereq-file-check: done
   2-3-epic-picker: done
   2-4-sprint-list-picker: done
-  2-5-description-composer: ready-for-dev
+  2-5-description-composer: review
   2-6-create-clickup-task: ready-for-dev
-  2-7-config-toml-wiring: review
+  2-7-config-toml-wiring: done
   2-8-upstream-regression-check: ready-for-dev
   2-9-token-permission-gating: ready-for-dev
   epic-2-retrospective: optional

@@ -30,7 +30,11 @@ Step 3 MUST complete with a non-empty `{sprint_list_id}` before the workflow pro
 
 ## Description Composer
 
-<!-- story 2-5 will implement -->
+Collects a story title from the user, fetches the selected epic's ClickUp description via `getTaskById`, synthesizes PRD + architecture context into a structured Markdown description, presents it for user review (Y/n/edit), and stores the confirmed text in `{task_description}` and `{story_title}` for the task-creation step.
+
+See: [./steps/step-04-description-composer.md](./steps/step-04-description-composer.md)
+
+Step 4 MUST complete with a non-empty `{task_description}` before the workflow proceeds to step 5.
 
 ## Task Creation
 
