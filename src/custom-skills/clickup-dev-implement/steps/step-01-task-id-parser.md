@@ -1,5 +1,6 @@
 ---
 task_id: ''
+raw_input: ''
 ---
 
 # Step 1: Task-ID Parser
@@ -12,10 +13,12 @@ task_id: ''
 
 ## INSTRUCTIONS
 
-1. Read the raw task-identifier string supplied by the user.
-2. Detect and handle **URL form** — if the input contains `app.clickup.com`, extract the last non-empty path segment after splitting the URL path on `/`.
+1. Read the raw task-identifier string supplied by the user and record it as `{raw_input}`.
+2. Detect and handle **URL form** — if the input contains `app.clickup.com`, strip any query string (from the first `?` onward) and any fragment (from the first `#` onward), then extract the last non-empty path segment after splitting the URL path on `/`.
    - Example: `https://app.clickup.com/t/86abc123` → `86abc123`
    - Example: `https://app.clickup.com/9012345678/v/t/86abc123` → `86abc123`
+   - Example: `https://app.clickup.com/t/86abc123?comment=99abc` → `86abc123`
+   - Example: `https://app.clickup.com/t/86abc123#overview` → `86abc123`
 3. Detect and handle **`CU-` prefix form** — if the input starts with `CU-` (case-insensitive), strip the prefix.
    - Example: `CU-86abc123` → `86abc123`
    - Example: `cu-86abc123` → `86abc123`

@@ -21,8 +21,7 @@ export type ClickUpEnvResult =
       missing: readonly ('CLICKUP_API_KEY' | 'CLICKUP_TEAM_ID')[];
       warnings: readonly string[];
       diagnostic: string;
-    }
-;
+    };
 
 /**
  * Validates ClickUp environment variables from an injected env map.

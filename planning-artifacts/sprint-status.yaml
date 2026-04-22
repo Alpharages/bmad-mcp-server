@@ -1,5 +1,5 @@
 # generated: 2026-04-21
-# last_updated: 2026-04-22 (story 3-2 → review)
+# last_updated: 2026-04-22 (story 3-2 → done)
 # project: bmad-mcp-server
 # project_key: NOKEY
 # tracking_system: file-system
@@ -83,7 +83,7 @@ development_status:
   # EPIC-3: Dev agent implementation mode → ClickUp (non-destructive)
   epic-3: in-progress
   3-1-scaffold-clickup-dev-implement-skill: done
-  3-2-task-id-parser: review
+  3-2-task-id-parser: done
   3-3-task-fetch-with-epic-context: ready-for-dev
   3-4-planning-artifact-reader: ready-for-dev
   3-5-progress-comment-poster: backlog

@@ -34,6 +34,7 @@ so that downstream steps (3.4 planning-artifact reader, 3.5 progress-comment pos
    - Include an `## INSTRUCTIONS` section with numbered steps:
      1. Call `getTaskById` with `{task_id}` (the normalised bare ID from step 1).
      2. From the response metadata block, extract and store: `{task_name}` ← `name` field, `{task_status}` ← `status` field, `{task_url}` ← `task_url` field. If the call failed (API error block returned), emit the task-not-found error block and stop.
+        2b. Note: the `getTaskById` response also includes the task description (rendered markdown) and all task comments in conversation context — no additional extraction is needed. Downstream steps (planning-artifact reader, implementation loop) may reference this content directly from the response.
      3. Check whether `parent_task_id` appears in the metadata block. If absent, emit the epic-context-unavailable warning, leave `{epic_task_id}` and `{epic_name}` as empty strings, and skip to instruction step 6.
      4. Call `getTaskById` with the value of `parent_task_id` to fetch the parent epic.
      5. From the epic response metadata block, extract and store: `{epic_task_id}` ← `task_id` field, `{epic_name}` ← `name` field. If the call failed, emit the epic-context-unavailable warning, leave `{epic_task_id}` and `{epic_name}` as empty strings, and continue to step 6.
@@ -167,7 +168,7 @@ so that downstream steps (3.4 planning-artifact reader, 3.5 progress-comment pos
 In the EPIC-3 model, a "story" is a ClickUp subtask of an "epic" task. The `getTaskById` response includes `parent_task_id` in its metadata block when the task has a parent (`src/tools/clickup/src/tools/task-tools.ts:351–353`):
 
 ```ts
-if (typeof task.parent === "string") {
+if (typeof task.parent === 'string') {
   metadataLines.push(`parent_task_id: ${task.parent}`);
 }
 ```
@@ -193,6 +194,7 @@ PRD §FR #5 frames the fetch as "fetches description + comments + status + paren
 ### Step-context variable contract for downstream steps
 
 After step 2 completes successfully, downstream steps can rely on:
+
 - `{task_name}` — non-empty string (e.g. `"Implement task fetch"`)
 - `{task_status}` — non-empty string (e.g. `"in progress"`)
 - `{task_url}` — non-empty URL string (e.g. `"https://app.clickup.com/t/86abc123"`)
@@ -200,6 +202,8 @@ After step 2 completes successfully, downstream steps can rely on:
 - `{epic_name}` — string, or empty string if no parent
 
 Steps 3–8 must handle empty `{epic_task_id}` and `{epic_name}` gracefully. The story-3.4 author will document how the planning-artifact reader behaves when these are absent.
+
+`epic_description_markdown` is intentionally not a frontmatter variable — the full epic `getTaskById` response (including its description) is in conversation context and downstream steps may read it directly. Storing large markdown content in a frontmatter variable is impractical and redundant.
 
 ### Step file naming convention for EPIC-3 (reminder from story 3.1)
 
@@ -268,6 +272,6 @@ Story 3.4 MUST add `step-03-planning-artifact-reader.md`.
 
 ## Change Log
 
-| Date       | Change                                                                                         |
-| ---------- | ---------------------------------------------------------------------------------------------- |
-| 2026-04-22 | Story drafted from EPIC-3 bullet 3 via `bmad-create-story` workflow. Status → ready-for-dev.  |
+| Date       | Change                                                                                       |
+| ---------- | -------------------------------------------------------------------------------------------- |
+| 2026-04-22 | Story drafted from EPIC-3 bullet 3 via `bmad-create-story` workflow. Status → ready-for-dev. |

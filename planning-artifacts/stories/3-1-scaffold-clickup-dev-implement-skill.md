@@ -267,20 +267,20 @@ Reviewer: claude-sonnet-4-6 | Date: 2026-04-22 | Commit reviewed: `317b90f` (ame
 
 #### AC Validation (evidence by AC number)
 
-| AC | Result | Evidence |
-|----|--------|---------|
-| #1 | ✅ PASS | `src/custom-skills/clickup-dev-implement/` exists (`ls` confirmed) |
-| #2 | ✅ PASS | `SKILL.md:1-6` — two frontmatter keys, correct name, description matches spec verbatim including trigger phrase and "code, comments, status" coverage |
-| #3 | ✅ PASS | `workflow.md:1-34` — all 9 sections present in order; H1 title ✅; `**Goal:**` verbatim from EPIC-3:9 ✅; `**Your Role:**` ✅; breadcrumbs 3-2→3-8 ✅ |
-| #4 | ✅ PASS | `steps/.gitkeep` — 0 bytes confirmed; no other files in `steps/` |
-| #5 | ✅ PASS | `git diff 317b90f^..317b90f -- BMAD-METHOD/` → empty |
-| #6 | ✅ PASS | `git diff 317b90f^..317b90f -- src/tools/clickup/` → empty |
-| #7 | ✅ PASS | `git diff 317b90f^..317b90f -- 'src/**/*.ts'` → empty; commit shows only 3 `.md`/`.gitkeep` files |
-| #8 | ✅ PASS | No `.ts` landed → zero delta to build, lint, or test suite; not run live at `ab68311` (checking out would disturb active branch) |
-| #9 | ✅ PASS | `git diff 317b90f^..317b90f -- .gitignore .eslintignore .prettierignore eslint.config.mjs tsconfig.json tests/unit/dependency-audit.test.ts` → empty |
-| #10 | ✅ PASS | `git diff 317b90f^..317b90f -- src/custom-skills/clickup-create-story/` → empty |
-| #11 | ✅ PASS | `git diff 317b90f^..317b90f -- src/custom-skills/README.md` → empty |
-| #12 | ✅ PASS | `git diff 317b90f^..317b90f -- _bmad/custom/bmad-agent-dev.toml` → empty |
+| AC  | Result  | Evidence                                                                                                                                              |
+| --- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| #1  | ✅ PASS | `src/custom-skills/clickup-dev-implement/` exists (`ls` confirmed)                                                                                    |
+| #2  | ✅ PASS | `SKILL.md:1-6` — two frontmatter keys, correct name, description matches spec verbatim including trigger phrase and "code, comments, status" coverage |
+| #3  | ✅ PASS | `workflow.md:1-34` — all 9 sections present in order; H1 title ✅; `**Goal:**` verbatim from EPIC-3:9 ✅; `**Your Role:**` ✅; breadcrumbs 3-2→3-8 ✅ |
+| #4  | ✅ PASS | `steps/.gitkeep` — 0 bytes confirmed; no other files in `steps/`                                                                                      |
+| #5  | ✅ PASS | `git diff 317b90f^..317b90f -- BMAD-METHOD/` → empty                                                                                                  |
+| #6  | ✅ PASS | `git diff 317b90f^..317b90f -- src/tools/clickup/` → empty                                                                                            |
+| #7  | ✅ PASS | `git diff 317b90f^..317b90f -- 'src/**/*.ts'` → empty; commit shows only 3 `.md`/`.gitkeep` files                                                     |
+| #8  | ✅ PASS | No `.ts` landed → zero delta to build, lint, or test suite; not run live at `ab68311` (checking out would disturb active branch)                      |
+| #9  | ✅ PASS | `git diff 317b90f^..317b90f -- .gitignore .eslintignore .prettierignore eslint.config.mjs tsconfig.json tests/unit/dependency-audit.test.ts` → empty  |
+| #10 | ✅ PASS | `git diff 317b90f^..317b90f -- src/custom-skills/clickup-create-story/` → empty                                                                       |
+| #11 | ✅ PASS | `git diff 317b90f^..317b90f -- src/custom-skills/README.md` → empty                                                                                   |
+| #12 | ✅ PASS | `git diff 317b90f^..317b90f -- _bmad/custom/bmad-agent-dev.toml` → empty                                                                              |
 
 ---
 
@@ -300,8 +300,8 @@ All five task checkboxes were `- [ ]` when the story arrived in review. The stor
 
 ## Change Log
 
-| Date       | Change                                                                                       |
-| ---------- | -------------------------------------------------------------------------------------------- |
-| 2026-04-22 | Story drafted from EPIC-3 bullet 1 via `bmad-create-story` workflow. Status → ready-for-dev. |
-| 2026-04-22 | Implemented by dev agent (commit `ab68311`, amended to `317b90f` during review). Status → review. |
+| Date       | Change                                                                                                                                                                                           |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 2026-04-22 | Story drafted from EPIC-3 bullet 1 via `bmad-create-story` workflow. Status → ready-for-dev.                                                                                                     |
+| 2026-04-22 | Implemented by dev agent (commit `ab68311`, amended to `317b90f` during review). Status → review.                                                                                                |
 | 2026-04-22 | Senior Developer Review (AI) — all 12 ACs pass. 3 LOW findings (commit body, unchecked tasks, empty dev record) — all resolved (commit amended to `317b90f`, story file updated). Status → done. |

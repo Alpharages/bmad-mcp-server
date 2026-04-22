@@ -190,7 +190,10 @@ Use the ClickUp search tools to find tasks assigned to me, and get detailed info
       ['searchTasks'],
     );
     step(() => spaceTools.registerSpaceTools(server), ['searchSpaces']);
-    step(() => spaceResources.registerSpaceResources(server), ['clickup-spaces']);
+    step(
+      () => spaceResources.registerSpaceResources(server),
+      ['clickup-spaces'],
+    );
     step(() => listTools.registerListToolsRead(server), ['getListInfo']);
     step(() => timeTools.registerTimeToolsRead(server), ['getTimeEntries']);
     // Upstream at SHA c79b21e3 ships only `readDocument` in the read surface.
@@ -212,7 +215,10 @@ Use the ClickUp search tools to find tasks assigned to me, and get detailed info
       ['searchTasks'],
     );
     step(() => spaceTools.registerSpaceTools(server), ['searchSpaces']);
-    step(() => spaceResources.registerSpaceResources(server), ['clickup-spaces']);
+    step(
+      () => spaceResources.registerSpaceResources(server),
+      ['clickup-spaces'],
+    );
     step(() => listTools.registerListToolsRead(server), ['getListInfo']);
     step(() => listTools.registerListToolsWrite(server), ['updateListInfo']);
     step(() => timeTools.registerTimeToolsRead(server), ['getTimeEntries']);

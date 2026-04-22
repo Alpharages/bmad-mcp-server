@@ -1,6 +1,6 @@
 # Story 3.2: Implement task-ID parser step
 
-Status: review
+Status: done
 
 Epic: [EPIC-3: Dev agent implementation mode → ClickUp (non-destructive)](../epics/EPIC-3-dev-agent-clickup.md)
 
@@ -20,7 +20,7 @@ so that subsequent steps (3.3 task fetch and beyond) can call `getTaskById` with
    - Have YAML frontmatter with exactly one runtime-population key: `task_id: ''` (empty string; set during execution when input is successfully parsed).
    - Include a `# Step 1: Task-ID Parser` H1 title.
    - Include a `## RULES` section with: (a) a read-only rule (this step does not write files or call ClickUp APIs — pure parsing only), (b) a must-complete rule (if parsing fails with an unrecognisable input, emit the standard error block (see AC #3) and stop — do not proceed to step 2), (c) a normalisation contract rule (`{task_id}` MUST be a non-empty alphanumeric string by the time this step completes; the bare ID is passed verbatim to `getTaskById` in step 2).
-   - Include an `## INSTRUCTIONS` section with numbered steps that: (1) read the raw task-identifier string supplied by the user; (2) detect and handle **URL form** — if the input contains `app.clickup.com` extract the last non-empty path segment (e.g. `https://app.clickup.com/t/86abc123` → `86abc123`); (3) detect and handle **`CU-` prefix form** — if the input starts with `CU-` (case-insensitive) strip the prefix (e.g. `CU-86abc123` → `86abc123`); (4) otherwise treat the input as a **bare ID** and use it as-is; (5) validate the result is a non-empty alphanumeric string (letters and digits only, no spaces or special characters); if the result fails validation, emit the standard error block and stop; (6) store the normalised bare ID in `{task_id}`; (7) confirm `✅ Task ID parsed: \`{task_id}\`` and continue to step 2.
+   - Include an `## INSTRUCTIONS` section with numbered steps that: (1) read the raw task-identifier string supplied by the user and record it as `{raw_input}`; (2) detect and handle **URL form** — if the input contains `app.clickup.com`, strip any query string (from the first `?` onward) and any fragment (from the first `#` onward), then extract the last non-empty path segment (e.g. `https://app.clickup.com/t/86abc123` → `86abc123`, `https://app.clickup.com/t/86abc123?comment=99abc` → `86abc123`); (3) detect and handle **`CU-` prefix form** — if the input starts with `CU-` (case-insensitive) strip the prefix (e.g. `CU-86abc123` → `86abc123`); (4) otherwise treat the input as a **bare ID** and use it as-is; (5) validate the result is a non-empty alphanumeric string (letters and digits only, no spaces or special characters); if the result fails validation, emit the standard error block and stop; (6) store the normalised bare ID in `{task_id}`; (7) confirm `✅ Task ID parsed: \`{task_id}\`` and continue to step 2.
 
 2. `src/custom-skills/clickup-dev-implement/workflow.md` — the `## Input` section is updated to replace the `<!-- story 3-2 will implement -->` breadcrumb with: a one-line description of what the input step does, a `See: ./steps/step-01-task-id-parser.md` pointer, and an inline statement that `{task_id}` is available to all downstream steps after this step completes. No other sections in `workflow.md` change.
 
@@ -77,7 +77,7 @@ so that subsequent steps (3.3 task fetch and beyond) can call `getTaskById` with
   - [ ] Create the file with YAML frontmatter (`task_id: ''`), `# Step 1: Task-ID Parser` H1, `## RULES`, and `## INSTRUCTIONS` sections exactly as specified in AC #1.
   - [ ] Include the verbatim error block template from AC #3 inside the INSTRUCTIONS, with `{raw_input}` as the placeholder for the input that failed validation.
   - [ ] Verify the frontmatter key name `task_id` matches the downstream contract: story 3.3 will read `{task_id}` by this exact name to call `getTaskById`. The key name is a shared contract across EPIC-3 steps — do not rename.
-  - [ ] Verify all three input forms are covered: URL (containing `app.clickup.com`), `CU-`-prefixed (case-insensitive strip), and bare ID (pass-through). The URL extraction rule is: take the last non-empty path segment of the URL.
+  - [ ] Verify all three input forms are covered: URL (containing `app.clickup.com`), `CU-`-prefixed (case-insensitive strip), and bare ID (pass-through). The URL extraction rule is: strip any query string and fragment first, then take the last non-empty path segment.
 
 - [ ] **Task 2 — Update `workflow.md` Input section (AC: #2)**
   - [ ] Open `src/custom-skills/clickup-dev-implement/workflow.md`.
@@ -144,6 +144,8 @@ ClickUp task URLs come in at least two forms observed in the wild:
 Using "last non-empty path segment after splitting on `/`" handles both forms without enumerating every URL shape. If ClickUp adds new URL patterns in the future, the rule continues to work as long as the task ID remains the terminal path component — which is consistent with REST URL design.
 
 A trailing slash edge case (`https://app.clickup.com/t/86abc123/`) is handled correctly by "last **non-empty** segment" (skip empty strings after split).
+
+A query-string edge case (`https://app.clickup.com/t/86abc123?comment=99abc`) and a fragment edge case (`https://app.clickup.com/t/86abc123#overview`) are both handled by stripping everything from the first `?` or `#` before splitting on `/`. ClickUp's "Copy link" button and Slack notifications commonly produce URLs with `?comment=...` appended, making this a first-day usage scenario.
 
 ### `CU-` prefix — case-insensitive strip
 
@@ -219,7 +221,11 @@ Steps 4–7 are sub-flows invoked from within the implementation loop rather tha
 
 ### Review Findings
 
-(to be filled during code review)
+| ID | Category | Finding | Resolution |
+|----|----------|---------|------------|
+| BS-1 | bad_spec | URL query strings and fragments not handled — `https://app.clickup.com/t/86abc123?comment=99abc` would extract `86abc123?comment=99abc`, failing alphanumeric validation. ClickUp "Copy link" and Slack notifications produce URLs with `?comment=...`. | Fixed: step-01 instruction 2 now strips `?` and `#` before path extraction. AC #1 and Dev Notes updated to match. |
+| P-1 | patch | `{raw_input}` used in the error block but not declared in YAML frontmatter. LLM could emit the literal placeholder instead of the actual input. | Fixed: `raw_input: ''` added to frontmatter; instruction 1 now explicitly records `{raw_input}`. |
+| D-1 | defer | Ambiguous scope of "the input" in step 3 for a URL path that ends in `CU-...`. ClickUp never emits CU- in URL paths; no practical impact. | No action taken. |
 
 ## Change Log
 
