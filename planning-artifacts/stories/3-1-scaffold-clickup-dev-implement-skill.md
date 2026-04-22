@@ -155,6 +155,7 @@ BMAD's merge rule for `[[agent.menu]]` (arrays-of-tables keyed by `code`): match
 Upstream `bmad-dev-story/workflow.md` drives the file-based story implementation loop: reads `sprint-status.yaml`, loads a story file from `implementation-artifacts/stories/`, iterates over checklist items, updates story status. This assumes the "agile-in-the-repo" model that PRD §Problem explicitly rejects and PRD §Repo layout excludes (`implementation-artifacts/` does not exist in the target project layout).
 
 The implementation skill is ClickUp-authoritative:
+
 - Does NOT read `sprint-status.yaml` (not present in target project).
 - Does NOT load local story files (stories live in ClickUp, not the repo).
 - Does NOT write local status files (ClickUp task status transitions replace file edits).
@@ -167,20 +168,21 @@ Story 2.7 extended `findBmmSkillsRoot` in `src/core/resource-loader.ts` to scan 
 
 ### Implementation mode vs. story-creation mode — write surface comparison
 
-| Concern | `clickup-create-story` (EPIC-2) | `clickup-dev-implement` (EPIC-3) |
-|---|---|---|
-| Input | Interactive pickers (space → epic → sprint list → title) | ClickUp task ID (provided by user) |
-| ClickUp reads | `searchSpaces`, `searchTasks`, `getTaskById` | `getTaskById` (task + parent epic) |
-| ClickUp writes | `createTask` (once, at task creation) | `addComment` + status transitions |
-| Repo reads | `PRD.md`, `architecture.md` | `PRD.md`, `architecture.md`, optional `tech-spec.md` |
-| Repo writes | None | Code implementation via IDE file tools |
-| Config trigger | `CS` → `clickup-create-story` | `DS` → `clickup-dev-implement` (story 3.9) |
+| Concern        | `clickup-create-story` (EPIC-2)                          | `clickup-dev-implement` (EPIC-3)                     |
+| -------------- | -------------------------------------------------------- | ---------------------------------------------------- |
+| Input          | Interactive pickers (space → epic → sprint list → title) | ClickUp task ID (provided by user)                   |
+| ClickUp reads  | `searchSpaces`, `searchTasks`, `getTaskById`             | `getTaskById` (task + parent epic)                   |
+| ClickUp writes | `createTask` (once, at task creation)                    | `addComment` + status transitions                    |
+| Repo reads     | `PRD.md`, `architecture.md`                              | `PRD.md`, `architecture.md`, optional `tech-spec.md` |
+| Repo writes    | None                                                     | Code implementation via IDE file tools               |
+| Config trigger | `CS` → `clickup-create-story`                            | `DS` → `clickup-dev-implement` (story 3.9)           |
 
 Neither skill writes to `planning-artifacts/stories/` or `sprint-status.yaml`.
 
 ### `CLICKUP_MCP_MODE` requirements
 
 The full implementation skill requires `CLICKUP_MCP_MODE=write`:
+
 - `getTaskById` — available in all modes (read-minimal, read, write).
 - `addComment` — requires `write` mode (`src/tools/clickup-adapter.ts:200–201`: registered via `registerTaskToolsWrite`).
 - Status transitions (`updateTask`) — requires `write` mode (same `registerTaskToolsWrite` call).
@@ -191,15 +193,15 @@ Story 3.9 may want to gate on `write` mode or defer to the status-transition hel
 
 The step files added by stories 3.2–3.8 should follow the same zero-padded `step-NN-name.md` convention as EPIC-2, with execution order matching story number minus 1:
 
-| Step file | Created by story | Execution order |
-|---|---|---|
-| `step-01-task-id-parser.md` | 3.2 | 1 |
-| `step-02-task-fetch.md` | 3.3 | 2 |
-| `step-03-planning-artifact-reader.md` | 3.4 | 3 |
-| `step-04-progress-comment-poster.md` | 3.5 | 4 (sub-flow during impl) |
-| `step-05-status-transition.md` | 3.6 | 5 (sub-flow during impl) |
-| `step-06-assumptions.md` | 3.7 | 6 (sub-flow during impl) |
-| `step-07-dev-clarification.md` | 3.8 | 7 (sub-flow during impl) |
+| Step file                             | Created by story | Execution order          |
+| ------------------------------------- | ---------------- | ------------------------ |
+| `step-01-task-id-parser.md`           | 3.2              | 1                        |
+| `step-02-task-fetch.md`               | 3.3              | 2                        |
+| `step-03-planning-artifact-reader.md` | 3.4              | 3                        |
+| `step-04-progress-comment-poster.md`  | 3.5              | 4 (sub-flow during impl) |
+| `step-05-status-transition.md`        | 3.6              | 5 (sub-flow during impl) |
+| `step-06-assumptions.md`              | 3.7              | 6 (sub-flow during impl) |
+| `step-07-dev-clarification.md`        | 3.8              | 7 (sub-flow during impl) |
 
 Steps 4–7 are sub-flows invoked from within the core implementation loop rather than strict sequential phases; the EPIC-3 workflow may refine the structural approach. Story 3.1 establishes this convention — story 3.2 MUST follow it when adding the first step file.
 
@@ -256,6 +258,6 @@ Steps 4–7 are sub-flows invoked from within the core implementation loop rathe
 
 ## Change Log
 
-| Date       | Change                                                                                         |
-| ---------- | ---------------------------------------------------------------------------------------------- |
-| 2026-04-22 | Story drafted from EPIC-3 bullet 1 via `bmad-create-story` workflow. Status → ready-for-dev.  |
+| Date       | Change                                                                                       |
+| ---------- | -------------------------------------------------------------------------------------------- |
+| 2026-04-22 | Story drafted from EPIC-3 bullet 1 via `bmad-create-story` workflow. Status → ready-for-dev. |

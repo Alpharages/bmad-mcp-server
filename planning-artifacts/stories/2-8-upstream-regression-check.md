@@ -1,6 +1,6 @@
 # Story 2.8: Verify upstream `bmad-create-story` still resolves after `findBmmSkillsRoot` extension
 
-Status: ready-for-dev
+Status: done
 
 Epic: [EPIC-2: Dev agent story-creation mode → ClickUp (non-destructive)](../epics/EPIC-2-dev-story-creation-clickup.md)
 
