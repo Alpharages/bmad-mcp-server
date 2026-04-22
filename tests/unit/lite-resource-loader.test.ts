@@ -76,9 +76,17 @@ describe('ResourceLoader (Lite)', () => {
 
   it('should load a workflow from src/custom-skills layout', async () => {
     // arrange
-    const customSkillDir = join(testDir, 'src', 'custom-skills', 'my-custom-skill');
+    const customSkillDir = join(
+      testDir,
+      'src',
+      'custom-skills',
+      'my-custom-skill',
+    );
     mkdirSync(customSkillDir, { recursive: true });
-    writeFileSync(join(customSkillDir, 'SKILL.md'), '---\nname: my-custom-skill\n---\n# My Custom Skill');
+    writeFileSync(
+      join(customSkillDir, 'SKILL.md'),
+      '---\nname: my-custom-skill\n---\n# My Custom Skill',
+    );
     const customLoader = new ResourceLoaderGit(testDir);
     // act
     const resource = await customLoader.loadWorkflow('my-custom-skill');

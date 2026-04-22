@@ -369,7 +369,12 @@ export class ResourceLoaderGit {
    * Checks src/bmm-skills first, then bmm-skills at root level.
    */
   private findBmmSkillsRoot(basePath: string): string | null {
-    for (const rel of ['src/bmm-skills', 'bmm-skills', 'src/custom-skills', 'custom-skills']) {
+    for (const rel of [
+      'src/bmm-skills',
+      'bmm-skills',
+      'src/custom-skills',
+      'custom-skills',
+    ]) {
       const candidate = join(basePath, rel);
       if (existsSync(candidate)) return candidate;
     }
