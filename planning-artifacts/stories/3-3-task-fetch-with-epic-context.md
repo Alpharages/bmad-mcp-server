@@ -268,7 +268,9 @@ Story 3.4 MUST add `step-03-planning-artifact-reader.md`.
 
 ### Review Findings
 
-(to be filled during code review)
+| ID   | Category | Finding                                                                                                                                                                                                | Resolution                                                                                                                |
+| ---- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| R3-1 | patch    | `step-02-task-fetch.md` was missing an "Inherited context" note explaining that `{task_id}` is declared in step-01's frontmatter and not re-declared here; downstream authors had no explicit pointer. | Fixed: added `> **Inherited context:** ...` note in commit `00e352d` during story 3-5 work. No functional change to step. |
 
 ## Change Log
 

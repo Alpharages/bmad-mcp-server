@@ -1,6 +1,6 @@
 # Story 3.5: Implement progress-comment poster
 
-Status: review
+Status: done
 
 Epic: [EPIC-3: Dev agent implementation mode → ClickUp (non-destructive)](../epics/EPIC-3-dev-agent-clickup.md)
 
@@ -285,15 +285,17 @@ Story 3.6 MUST add `step-05-status-transition.md`.
 
 ### Agent Model Used
 
-(to be filled by implementing agent)
+claude-sonnet-4-6
 
 ### Debug Log References
 
-(to be filled by implementing agent)
+N/A — pure markdown story, no TypeScript execution paths.
 
 ### Completion Notes List
 
-(to be filled by implementing agent)
+- step-04-progress-comment-poster.md created in `df05376`; earlier attempt `00e352d` was superseded (see R5-2).
+- Template A epic line fixed during code review (R5-1): changed pseudo-conditional to inline omit instruction.
+- step-02-task-fetch.md "Inherited context" note (from `00e352d`) accepted as additive improvement; documented in R5-3 and story 3-3 R3-1.
 
 ### File List
 
@@ -311,10 +313,15 @@ Story 3.6 MUST add `step-05-status-transition.md`.
 
 ### Review Findings
 
-(to be filled during code review)
+| ID   | Category     | Finding                                                                                                                                                                                                                   | Resolution                                                                                                                             |
+| ---- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| R5-1 | patch        | Template A epic line showed `'none'` as the else branch (`{epic_name non-empty ? ... : 'none'}`), contradicting the substitution note ("omit it entirely"). An agent reading only the template could emit `- Epic: none`. | Fixed: epic line in Template A updated to `← omit this line entirely if {epic_task_id} is empty`. Substitution note unchanged.         |
+| R5-2 | process      | Commit `00e352d` carries the story 3-5 message but was an earlier incomplete attempt that also touched out-of-scope files (step-02, story artifact table reformats, sprint-status). Creates `git log` ambiguity.          | Accepted — final deliverable is `df05376` (clean, 2 files only). `00e352d` remains in history; scope documented here for traceability. |
+| R5-3 | out-of-scope | `00e352d` modified `step-02-task-fetch.md` (added "Inherited context" note), violating AC #9. The change is additive and correct documentation.                                                                           | Accepted. Retrospective finding logged in story 3-3 Review Findings (R3-1).                                                            |
 
 ## Change Log
 
 | Date       | Change                                                                                       |
 | ---------- | -------------------------------------------------------------------------------------------- |
 | 2026-04-22 | Story drafted from EPIC-3 bullet 5 via `bmad-create-story` workflow. Status → ready-for-dev. |
+| 2026-04-23 | Code review complete. Review findings R5-1 (fixed), R5-2, R5-3 logged. Status → done.        |

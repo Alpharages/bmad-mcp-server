@@ -36,7 +36,7 @@ last_comment_id: ''
 - PRD: `planning-artifacts/PRD.md` — loaded
 - Architecture: `planning-artifacts/architecture.md` — loaded
 - Tech spec: `planning-artifacts/tech-spec.md` — {tech_spec_loaded == 'true' ? 'loaded' : 'not found, skipped'}
-- Epic: {epic_name non-empty ? '{epic_name} (`{epic_task_id}`)' : 'none'}
+- Epic: {epic_name} (`{epic_task_id}`) ← omit this line entirely if {epic_task_id} is empty
 
 Starting implementation now.
 ```
