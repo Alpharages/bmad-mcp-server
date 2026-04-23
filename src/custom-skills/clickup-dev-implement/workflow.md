@@ -54,4 +54,8 @@ See: [./steps/step-06-assumptions.md](./steps/step-06-assumptions.md)
 
 ## Dev Clarification
 
-<!-- story 3-8 will implement: asks the dev, never the PM, when blocked -->
+Invoked at the agent's discretion during implementation, zero or more times; posts a markdown "Dev Clarification Needed" comment via `addComment`; **halts implementation** until the dev replies in the active conversation; asks the dev, never the PM; blocking contract preserved even when write mode is unavailable or `addComment` fails.
+
+See: [./steps/step-07-dev-clarification.md](./steps/step-07-dev-clarification.md)
+
+`{clarification_count}`, `{last_clarification_comment_id}`, and `{pending_clarification}` are available to downstream steps after this step's first invocation. `{clarification_count}` is `'0'` if write mode was unavailable; `''` (empty) if write mode was active but no clarification was successfully posted in this session. `{pending_clarification}` is `'true'` whenever the agent is awaiting a dev reply. These counters are independent of `{comment_count}` / `{last_comment_id}` (step 4) and `{assumption_count}` / `{last_assumption_comment_id}` (step 6).
