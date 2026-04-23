@@ -45,14 +45,6 @@ transition_target: ''
 
 6. **Transition the task.** Call `updateTask` with `task_id` = `{task_id}` and `status` = `{transition_target}`. If `updateTask` returns successfully, emit the success block below and continue to the next workflow step. If `updateTask` returns an error, emit the transition-failed warning block below and continue to the next workflow step — do not halt.
 
-   > ⚠️ **Status transition failed — continuing without updating task status**
-   >
-   > The `clickup-dev-implement` skill called `updateTask` for task `{task_id}` with status `{transition_target}` but received an error.
-   >
-   > **Impact:** Task `{task_id}` ({task_name}) remains in its current status (`{task_status}`). Implementation is complete; please manually transition the task to "in review" in ClickUp.
-   >
-   > **What to do (optional):** Verify that `CLICKUP_API_KEY` has permission to update this task, then manually set the status to `{transition_target}` in ClickUp if needed.
-
    > ✅ **Status transition complete**
    >
    > - **Task:** {task_name} (`{task_id}`)
@@ -61,3 +53,11 @@ transition_target: ''
    > - **URL:** {task_url}
    >
    > Task is now in review. Implementation session complete.
+
+   > ⚠️ **Status transition failed — continuing without updating task status**
+   >
+   > The `clickup-dev-implement` skill called `updateTask` for task `{task_id}` with status `{transition_target}` but received an error.
+   >
+   > **Impact:** Task `{task_id}` ({task_name}) remains in its current status (`{task_status}`). Implementation is complete; please manually transition the task to "in review" in ClickUp.
+   >
+   > **What to do (optional):** Verify that `CLICKUP_API_KEY` has permission to update this task, then manually set the status to `{transition_target}` in ClickUp if needed.
