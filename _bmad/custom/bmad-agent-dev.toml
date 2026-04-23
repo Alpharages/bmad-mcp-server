@@ -1,10 +1,17 @@
 # Project-local Dev agent override.
-# Routes the CS (story-creation) trigger to the custom ClickUp skill.
+# Routes the CS (story-creation) and DS (implementation) triggers to
+# custom ClickUp skills.
 # Merge rule (BMAD): [[agent.menu]] entries keyed by `code` replace
 # matching upstream entries and new codes append.
 # See: src/custom-skills/clickup-create-story/
+# See: src/custom-skills/clickup-dev-implement/
 
 [[agent.menu]]
 code = "CS"
 description = "Create a ClickUp story as a subtask of a chosen epic in the active sprint list"
 skill = "clickup-create-story"
+
+[[agent.menu]]
+code = "DS"
+description = "Implement a ClickUp task end-to-end — fetch task + parent-epic context, read planning artifacts, implement code, post progress comments, transition status"
+skill = "clickup-dev-implement"
