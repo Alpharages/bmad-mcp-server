@@ -1,6 +1,6 @@
 # Story 3.7: Implement non-blocking assumption pattern
 
-Status: review
+Status: done
 
 Epic: [EPIC-3: Dev agent implementation mode → ClickUp (non-destructive)](../epics/EPIC-3-dev-agent-clickup.md)
 
@@ -319,7 +319,30 @@ Claude Opus 4.7 (`claude-opus-4-7[1m]`) via Claude Code, executing the `bmad-dev
 
 ### Review Findings
 
-(to be filled during code review)
+_Run date: 2026-04-23 via `bmad-code-review`. Review target: commit `3a19ff0`. Reviewers: Blind Hunter, Edge Case Hunter, Acceptance Auditor. Triage: 0 decision-needed, 1 patch, 6 defer, 12 dismissed as noise / false positive / spec-mandated. All 15 ACs SATISFIED per the Acceptance Auditor._
+
+- [x] [Review][Patch] Add `task_id` length advisory note for consistency with sibling step 4 [src/custom-skills/clickup-dev-implement/steps/step-06-assumptions.md:17 (between rule (f) and `## WHEN TO POST`)] — applied 2026-04-23 via `bmad-code-review` step 4. Inserted the identical blockquote (`> **Note on task_id length:** addComment accepts a task_id of 6–9 alphanumeric characters (Zod schema: z.string().min(6).max(9)). If a task ID falls outside this range, the schema rejects it and addComment returns an error — rule (d)'s non-blocking path handles this.`) in the same structural position as step 4 line 16. Rule (f) grep-isolation invariant re-verified post-edit (0 matches). Prettier clean.
+- [x] [Review][Defer] Counter type ambiguity: `{assumption_count}` stored as quoted string (`'0'`, `''`) but rule (f) / instruction 5 say "increment by 1" (numeric) [src/custom-skills/clickup-dev-implement/steps/step-06-assumptions.md:3,15] — deferred, pre-existing (systemic: step 4's `{comment_count}` has the identical shape).
+- [x] [Review][Defer] `comment_id` extraction requires regex-parsing `addComment`'s text response; if `commentData.id` is `undefined` upstream, the extracted value is the literal `"N/A"` sentinel and `{last_assumption_comment_id}` is set to `"N/A"` while the count still increments [src/custom-skills/clickup-dev-implement/steps/step-06-assumptions.md:~75 (instruction 5)] — deferred, pre-existing (same gap in step 4).
+- [x] [Review][Defer] Failure-detection protocol underspecified: `addComment`'s tool wrapper swallows exceptions and returns a success-shaped response whose text begins with `"Error adding comment:"`; the agent must string-match, with no canonical protocol spelled out [src/custom-skills/clickup-dev-implement/steps/step-06-assumptions.md:~77 (instruction 6)] — deferred, pre-existing (systemic across steps 4/5/6).
+- [x] [Review][Defer] Instruction 2 "Pre-3.8 fallback" HALT path contradicts rule (a)'s non-blocking contract for the 3-7 / 3-8 merge window [src/custom-skills/clickup-dev-implement/steps/step-06-assumptions.md:~69] — deferred, transitional; resolves automatically when story 3.8 lands and the fallback clause is removed.
+- [x] [Review][Defer] Post-M2 / pre-step-5 assumption invocation is permitted by the "WHEN TO POST" section but will not appear in the M2 summary — rule (f) implicitly assumes all assumptions precede M2 [src/custom-skills/clickup-dev-implement/steps/step-06-assumptions.md:19,15] — deferred, edge case; out of scope for story 3-7.
+- [x] [Review][Defer] Frontmatter default `{assumption_count}: ''` overlaps with the "write mode was active but no successful post" state defined in `workflow.md`, making "step 6 never invoked" (normal for a discretionary step) indistinguishable from "step 6 invoked and every post failed" (abnormal) for any downstream reader [src/custom-skills/clickup-dev-implement/workflow.md:53, src/custom-skills/clickup-dev-implement/steps/step-06-assumptions.md:2] — deferred, no current downstream step reads these variables.
+
+#### Dismissed (not surfaced above; recorded here for traceability)
+
+- Self-referential grep in rule (f) — false positive. The pattern `\{(comment_count|last_comment_id)\}` uses escaped braces; the file's literal text (the regex source) does not contain `{comment_count}` or `{last_comment_id}` as runnable matches. Verified: `grep -E '\{(comment_count|last_comment_id)\}' step-06-assumptions.md` → exit 1 (0 matches).
+- Template D "reply on the PR" dangling reference — spec-mandated verbatim at AC #5.
+- Confidence field case inconsistency ("Low" vs "medium", "high" in the gloss) — spec-mandated verbatim at AC #5.
+- `{where_applied}` has no "not-yet-applied" placeholder — spec-level gap; out of scope of the story.
+- Rule (c) resets `{assumption_count}` to `'0'` on write-mode-unavailable skip — `CLICKUP_MCP_MODE` is session-constant, so the "clobber prior count" scenario does not arise in practice.
+- Pre-M1 ordering rule "cannot be enforced by step 6 alone" — workflow.md enforces step ordering at the parent level; step 6 documents the rule for agent awareness.
+- Decision-matrix abort (step-7-class ambiguity) counter-semantics silence — abort happens pre-counter-touch; the counters are untouched by design.
+- Emoji in H2 headers / `convertMarkdownToClickUpBlocks` coverage — pattern is already in production via step 4's Templates A/B/C; not introduced by this story.
+- `workflow.md` `## Assumptions` one-liner omits the soft-gate path — intentional brevity; the `See:` link and the variable-availability sentence below cover the full semantics.
+- No CI hook enforces the rule (f) grep — meta-constraint by design; future drift is a documentation/process concern, not a behavioral defect.
+- M1 soft-gate under `read`-mode defeats the Pre-M1 ordering intent — `read`-mode is explicitly a degraded state; the warning-block signal is the expected UX.
+- Task name containing markdown-breaking chars renders warning blocks malformed — systemic across all `{task_name}`-consuming steps (4/5/6); not introduced here.
 
 ## Change Log
 
@@ -328,3 +351,4 @@ Claude Opus 4.7 (`claude-opus-4-7[1m]`) via Claude Code, executing the `bmad-dev
 | 2026-04-23 | Story drafted from EPIC-3 bullet 7 via `bmad-create-story` workflow. Status → ready-for-dev.                                                                                                                                                                                                                                                                                                                                      |
 | 2026-04-23 | Validation pass (`bmad-create-story` checklist): fixed upstream variable-contract dependency claim (C1); strengthened rule (f) with MUST-NOT clause + grep verification (C2); added pre-3.8 fallback to Instructions step 2 (C3); replaced cache-path references with portable upstream references (E1); added pre-M1 ordering rule and tightened WHEN TO POST wording (E2+O1); added `**Confidence:**` field to Template D (O2).                                                                                           |
 | 2026-04-23 | Implementation complete via `bmad-dev-story`: created `steps/step-06-assumptions.md` and updated `workflow.md` `## Assumptions` section. Build, lint, prettier, and test gates all green (234 passing, 0 failing — baseline preserved). Status → review.                                                                                                                                                                                                                                                                  |
+| 2026-04-23 | Code review via `bmad-code-review`: all 15 ACs SATISFIED per Acceptance Auditor. Triage: 0 decision-needed, 1 patch (task_id length advisory added for consistency with step 4), 6 defer (systemic or transitional, logged in `planning-artifacts/deferred-work.md`), 12 dismissed. Rule (f) grep-isolation invariant re-verified post-patch (0 matches). Status → done.                                                                                                                                                   |
