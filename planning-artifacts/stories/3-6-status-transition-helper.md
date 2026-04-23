@@ -1,6 +1,6 @@
 # Story 3.6: Implement status-transition helper
 
-Status: review
+Status: done
 
 Epic: [EPIC-3: Dev agent implementation mode → ClickUp (non-destructive)](../epics/EPIC-3-dev-agent-clickup.md)
 
