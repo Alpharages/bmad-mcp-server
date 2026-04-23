@@ -46,7 +46,11 @@ See: [./steps/step-05-status-transition.md](./steps/step-05-status-transition.md
 
 ## Assumptions
 
-<!-- story 3-7 will implement: non-blocking assumption comment pattern -->
+Invoked at the agent's discretion during implementation, zero or more times; posts a markdown "Assumption Made" comment via `addComment`; non-blocking if write mode is unavailable or `addComment` fails; does NOT wait for a human response; escalates to step 7 when the ambiguity exceeds the decision-matrix threshold.
+
+See: [./steps/step-06-assumptions.md](./steps/step-06-assumptions.md)
+
+`{assumption_count}` and `{last_assumption_comment_id}` are available to downstream steps after this step's first invocation. `{assumption_count}` is `'0'` if write mode was unavailable; `''` (empty) if write mode was active but no assumption was successfully posted in this session. These counters are independent of `{comment_count}` / `{last_comment_id}` from step 4.
 
 ## Dev Clarification
 
