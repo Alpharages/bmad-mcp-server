@@ -1,6 +1,6 @@
 # Story 3.8: Define dev-facing clarification prompt
 
-Status: ready-for-dev
+Status: review
 
 Epic: [EPIC-3: Dev agent implementation mode → ClickUp (non-destructive)](../epics/EPIC-3-dev-agent-clickup.md)
 
@@ -41,6 +41,7 @@ so that scope-changing, AC-contradicting, cross-story-breaking, or materially-ri
      - The agent cannot find a reasonable default and any guess has material risk of rework
 
      Follow the bullet list with this sentence (verbatim): "If an ambiguity matches none of these rows, use step 6 (assumption pattern) instead — this step is for ambiguities where no reasonable default exists."
+
    - Include a `## COMMENT TEMPLATES` section with Template E (request) and Template F (resolution), both quoted verbatim (see AC #5 and AC #6).
    - Include an `## INSTRUCTIONS` section with numbered steps exactly as specified in AC #7.
    - Include a `## RESUME` section summarising the resume contract from rule (f) in prose: the agent halts after step (5) of INSTRUCTIONS; resumes only on a dev reply in the active conversation; records resolution via Template F only if the original request was successfully posted; then continues implementation with the resolution applied.
@@ -120,6 +121,7 @@ so that scope-changing, AC-contradicting, cross-story-breaking, or materially-ri
       - **If Template E was skipped (write mode absent) or failed**: emit the full Template-E content verbatim in the active conversation, because no ticket record exists for the dev to refer back to.
 
       In both branches: do NOT proceed to any other workflow step, do NOT invoke step 5 (status transition), do NOT invoke step 6 (assumption), and do NOT fabricate a dev response.
+
    6. **Handle `addComment` success.** If step (4) executed and `addComment` returned successfully: increment `{clarification_count}` by 1, set `{last_clarification_comment_id}` to the `comment_id` from the response, and confirm `✅ Clarification request posted (comment_id: {last_clarification_comment_id})`. Then proceed to step (5) (halt). If step (4) returned an error: emit the clarification-failed warning block below, do NOT increment `{clarification_count}` or update `{last_clarification_comment_id}`, set `{pending_clarification}` = `'true'`, and proceed to step (5) (still halt).
    7. **Resume on dev reply.** When the dev replies in the active conversation: (a) if `{last_clarification_comment_id}` is non-empty (Template E was successfully posted), compose Template F substituting `{last_clarification_comment_id}` literally and filling `{dev_resolution}` and `{applied_to}` from the reply; call `addComment` with the Template-F markdown (non-blocking on failure — if this `addComment` call errors, emit a short warning and continue); (b) if `{last_clarification_comment_id}` is empty (Template E was never posted), skip the Template-F `addComment` call entirely and summarise the resolution in the active conversation only. In both branches, set `{pending_clarification}` = `'false'` and continue implementation with the dev's resolution applied. If the reply itself introduces a new step-7-class ambiguity, invoke step 7 again (counter increments).
 
@@ -154,40 +156,40 @@ so that scope-changing, AC-contradicting, cross-story-breaking, or materially-ri
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1 — Create `steps/step-07-dev-clarification.md` (AC: #1, #3, #4, #5, #6, #7)**
-  - [ ] Create the file with YAML frontmatter (`clarification_count: ''`, `last_clarification_comment_id: ''`, `pending_clarification: ''` — in that order), `# Step 7: Dev Clarification Prompt` H1, and the `## RULES`, `## WHEN TO INVOKE`, `## TRIAGE`, `## COMMENT TEMPLATES`, `## INSTRUCTIONS`, and `## RESUME` sections exactly as specified in AC #1 and AC #3–#7.
-  - [ ] Verify the `## RULES` section includes all seven rules: blocking, asks-the-dev-never-the-PM, append-only markdown-formatted, write-mode soft gate (still halts), blocking on post-failure, resume contract, variable contract.
-  - [ ] Verify the `## TRIAGE` section lists the five step-7 rows verbatim and includes the sentence "If an ambiguity matches none of these rows, use step 6 (assumption pattern) instead — this step is for ambiguities where no reasonable default exists."
-  - [ ] Include the verbatim mode-unavailable warning block from AC #3.
-  - [ ] Include the verbatim clarification-failed warning block from AC #4.
-  - [ ] Include the verbatim Template E (Dev Clarification Needed) from AC #5 — Template E MUST include the `**Status:**` line verbatim.
-  - [ ] Include the verbatim Template F (Clarification Resolved) from AC #6.
-  - [ ] Include the `## INSTRUCTIONS` numbered steps exactly as specified in AC #7 (7 steps). Verify step (1) delegates triage to `step-06-assumptions.md`'s decision matrix; step (3) carries the jump-to-step-5 fallback for write-mode-absent; step (5) carries the explicit "do NOT fabricate a dev response" guard; step (7) branches on `{last_clarification_comment_id}` being empty vs non-empty.
+- [x] **Task 1 — Create `steps/step-07-dev-clarification.md` (AC: #1, #3, #4, #5, #6, #7)**
+  - [x] Create the file with YAML frontmatter (`clarification_count: ''`, `last_clarification_comment_id: ''`, `pending_clarification: ''` — in that order), `# Step 7: Dev Clarification Prompt` H1, and the `## RULES`, `## WHEN TO INVOKE`, `## TRIAGE`, `## COMMENT TEMPLATES`, `## INSTRUCTIONS`, and `## RESUME` sections exactly as specified in AC #1 and AC #3–#7.
+  - [x] Verify the `## RULES` section includes all seven rules: blocking, asks-the-dev-never-the-PM, append-only markdown-formatted, write-mode soft gate (still halts), blocking on post-failure, resume contract, variable contract.
+  - [x] Verify the `## TRIAGE` section lists the five step-7 rows verbatim and includes the sentence "If an ambiguity matches none of these rows, use step 6 (assumption pattern) instead — this step is for ambiguities where no reasonable default exists."
+  - [x] Include the verbatim mode-unavailable warning block from AC #3.
+  - [x] Include the verbatim clarification-failed warning block from AC #4.
+  - [x] Include the verbatim Template E (Dev Clarification Needed) from AC #5 — Template E MUST include the `**Status:**` line verbatim.
+  - [x] Include the verbatim Template F (Clarification Resolved) from AC #6.
+  - [x] Include the `## INSTRUCTIONS` numbered steps exactly as specified in AC #7 (7 steps). Verify step (1) delegates triage to `step-06-assumptions.md`'s decision matrix; step (3) carries the jump-to-step-5 fallback for write-mode-absent; step (5) carries the explicit "do NOT fabricate a dev response" guard; step (7) branches on `{last_clarification_comment_id}` being empty vs non-empty.
 
-- [ ] **Task 2 — Update `workflow.md` Dev Clarification section (AC: #2)**
-  - [ ] Open `src/custom-skills/clickup-dev-implement/workflow.md`.
-  - [ ] Replace the single-line HTML-comment breadcrumb under `## Dev Clarification` with the three-item replacement specified in AC #2 (description sentence, `See:` link, variable-availability statement mentioning independence from step 4's and step 6's counters).
-  - [ ] Confirm no other sections in `workflow.md` are touched — in particular, the `## Assumptions` section (populated by story 3.7) MUST remain byte-unchanged.
+- [x] **Task 2 — Update `workflow.md` Dev Clarification section (AC: #2)**
+  - [x] Open `src/custom-skills/clickup-dev-implement/workflow.md`.
+  - [x] Replace the single-line HTML-comment breadcrumb under `## Dev Clarification` with the three-item replacement specified in AC #2 (description sentence, `See:` link, variable-availability statement mentioning independence from step 4's and step 6's counters).
+  - [x] Confirm no other sections in `workflow.md` are touched — in particular, the `## Assumptions` section (populated by story 3.7) MUST remain byte-unchanged.
 
-- [ ] **Task 3 — Verify regression-free (AC: #8–#16)**
-  - [ ] `grep -E '\{(comment_count|last_comment_id|assumption_count|last_assumption_comment_id)\}' src/custom-skills/clickup-dev-implement/steps/step-07-dev-clarification.md` → 0 matches (counter isolation from steps 4 and 6 per rule (g)).
-  - [ ] `git diff -- src/custom-skills/clickup-dev-implement/steps/step-01-task-id-parser.md src/custom-skills/clickup-dev-implement/steps/step-02-task-fetch.md src/custom-skills/clickup-dev-implement/steps/step-03-planning-artifact-reader.md src/custom-skills/clickup-dev-implement/steps/step-04-progress-comment-poster.md src/custom-skills/clickup-dev-implement/steps/step-05-status-transition.md src/custom-skills/clickup-dev-implement/steps/step-06-assumptions.md` → empty.
-  - [ ] `git diff --stat -- BMAD-METHOD/` → empty.
-  - [ ] `git diff --stat -- src/tools/clickup/` → empty.
-  - [ ] `git diff --stat -- 'src/**/*.ts'` → empty.
-  - [ ] `git diff --stat -- src/custom-skills/clickup-create-story/` → empty.
-  - [ ] `git diff -- _bmad/custom/bmad-agent-dev.toml` → empty.
-  - [ ] `git diff -- src/custom-skills/clickup-dev-implement/SKILL.md` → empty.
-  - [ ] `git diff -- .gitignore .eslintignore .prettierignore eslint.config.mjs tsconfig.json tests/unit/dependency-audit.test.ts` → empty.
-  - [ ] Confirm the `## Assumptions` section of `workflow.md` is byte-unchanged relative to the merge commit of story 3.7 (manual inspection + `git diff` of that section's lines).
-  - [ ] `npm run build` → clean.
-  - [ ] `npm run lint` → 0 errors.
-  - [ ] `npm run format` → no diff in `src/custom-skills/clickup-dev-implement/`. Run before staging to accept any prettier reformat.
-  - [ ] `npm test` → no new failures vs. current baseline (234 passing).
+- [x] **Task 3 — Verify regression-free (AC: #8–#16)**
+  - [x] `grep -E '\{(comment_count|last_comment_id|assumption_count|last_assumption_comment_id)\}' src/custom-skills/clickup-dev-implement/steps/step-07-dev-clarification.md` → 0 matches (counter isolation from steps 4 and 6 per rule (g)).
+  - [x] `git diff -- src/custom-skills/clickup-dev-implement/steps/step-01-task-id-parser.md src/custom-skills/clickup-dev-implement/steps/step-02-task-fetch.md src/custom-skills/clickup-dev-implement/steps/step-03-planning-artifact-reader.md src/custom-skills/clickup-dev-implement/steps/step-04-progress-comment-poster.md src/custom-skills/clickup-dev-implement/steps/step-05-status-transition.md src/custom-skills/clickup-dev-implement/steps/step-06-assumptions.md` → empty.
+  - [x] `git diff --stat -- BMAD-METHOD/` → empty.
+  - [x] `git diff --stat -- src/tools/clickup/` → empty.
+  - [x] `git diff --stat -- 'src/**/*.ts'` → empty.
+  - [x] `git diff --stat -- src/custom-skills/clickup-create-story/` → empty.
+  - [x] `git diff -- _bmad/custom/bmad-agent-dev.toml` → empty.
+  - [x] `git diff -- src/custom-skills/clickup-dev-implement/SKILL.md` → empty.
+  - [x] `git diff -- .gitignore .eslintignore .prettierignore eslint.config.mjs tsconfig.json tests/unit/dependency-audit.test.ts` → empty.
+  - [x] Confirm the `## Assumptions` section of `workflow.md` is byte-unchanged relative to the merge commit of story 3.7 (manual inspection + `git diff` of that section's lines).
+  - [x] `npm run build` → clean.
+  - [x] `npm run lint` → 0 errors.
+  - [x] `npm run format` → no diff in `src/custom-skills/clickup-dev-implement/`. Run before staging to accept any prettier reformat.
+  - [x] `npm test` → no new failures vs. current baseline (234 passing).
 
-- [ ] **Task 4 — Commit (AC: all)**
-  - [ ] Stage in this order: `src/custom-skills/clickup-dev-implement/workflow.md`, `src/custom-skills/clickup-dev-implement/steps/step-07-dev-clarification.md`.
-  - [ ] Commit message: `feat(custom-skills): implement dev-clarification prompt in clickup-dev-implement`
+- [x] **Task 4 — Commit (AC: all)**
+  - [x] Stage in this order: `src/custom-skills/clickup-dev-implement/workflow.md`, `src/custom-skills/clickup-dev-implement/steps/step-07-dev-clarification.md`.
+  - [x] Commit message: `feat(custom-skills): implement dev-clarification prompt in clickup-dev-implement`
   - [ ] Body:
 
     ```
@@ -297,14 +299,14 @@ Never fabricate a dev response. Never treat no-response as implicit approval. Ne
 
 ### Step file naming convention for EPIC-3 (reminder)
 
-| Step file                             | Created by story | Execution order         |
-| ------------------------------------- | ---------------- | ----------------------- |
-| `step-01-task-id-parser.md`           | 3.2              | 1                       |
-| `step-02-task-fetch.md`               | 3.3              | 2                       |
-| `step-03-planning-artifact-reader.md` | 3.4              | 3                       |
-| `step-04-progress-comment-poster.md`  | 3.5              | 4 (M1, M2, M3+)         |
-| `step-05-status-transition.md`        | 3.6              | 5 (post-M2)             |
-| `step-06-assumptions.md`              | 3.7              | 6 (discretionary)       |
+| Step file                             | Created by story | Execution order             |
+| ------------------------------------- | ---------------- | --------------------------- |
+| `step-01-task-id-parser.md`           | 3.2              | 1                           |
+| `step-02-task-fetch.md`               | 3.3              | 2                           |
+| `step-03-planning-artifact-reader.md` | 3.4              | 3                           |
+| `step-04-progress-comment-poster.md`  | 3.5              | 4 (M1, M2, M3+)             |
+| `step-05-status-transition.md`        | 3.6              | 5 (post-M2)                 |
+| `step-06-assumptions.md`              | 3.7              | 6 (discretionary)           |
 | **`step-07-dev-clarification.md`**    | **3.8 (this)**   | **7 (blocking, on-demand)** |
 
 With story 3.8 merged, EPIC-3 steps 1–7 are complete. Story 3.9 does not add a step file — it wires the DS trigger in `_bmad/custom/bmad-agent-dev.toml` to route the Dev agent's implementation-mode invocation to this skill.
@@ -341,15 +343,21 @@ With story 3.8 merged, EPIC-3 steps 1–7 are complete. Story 3.9 does not add a
 
 ### Agent Model Used
 
-(to be filled by implementing agent)
+Opus 4.7 (`claude-opus-4-7[1m]`) via Claude Code, executing `bmad-dev-story` workflow.
 
 ### Debug Log References
 
-(to be filled by implementing agent)
+- AC #1 rule (g) contains a self-enforcing grep-zero-matches invariant for `{comment_count}`, `{last_comment_id}`, `{assumption_count}`, `{last_assumption_comment_id}`. Rendering those names in non-brace code-span form (`` `comment_count` `` etc.) preserves the rule's semantic content while satisfying the grep contract. Step 7's own counters stay brace-wrapped.
+- `npm run format` (plain `prettier --write .`) touched unrelated planning-artifact files (3-7 and 3-9); restored those to pre-prettier state since they are out of scope. Story 3-8's own prettier rewrite (trailing-whitespace normalisation on the Change Log table) was accepted because this file is editable by this story.
+- Working tree carried pre-existing, uncommitted edits at session start (see gitStatus snapshot): `BMAD-METHOD.code-workspace`, `planning-artifacts/stories/3-3...`, `planning-artifacts/stories/3-5...`, `src/custom-skills/clickup-dev-implement/steps/step-04-progress-comment-poster.md`. Per user decision (option 1) I scoped my work and commit narrowly. The step-04 and story-3-3/3-5 pre-existing edits were resolved externally before AC verification, so the final AC #8 diff check passed cleanly.
 
 ### Completion Notes List
 
-(to be filled by implementing agent)
+- Added `src/custom-skills/clickup-dev-implement/steps/step-07-dev-clarification.md` (170 lines) with all six required sections (RULES / WHEN TO INVOKE / TRIAGE / COMMENT TEMPLATES / INSTRUCTIONS / RESUME), verbatim warning blocks and Templates E + F, and the seven-rule RULES block.
+- Updated `src/custom-skills/clickup-dev-implement/workflow.md` `## Dev Clarification` section (three-line replacement: description sentence, `See:` link, variable-availability statement citing independence from step 4 and step 6 counters). No other `workflow.md` section touched.
+- AC #12 baseline preserved exactly: 234 passing, 0 failing (delta from 3.7 → 3.8 is zero tests, as expected for a markdown-only story).
+- Counter-isolation grep per AC #1 rule (g): `grep -E '\{(comment_count|last_comment_id|assumption_count|last_assumption_comment_id)\}' src/custom-skills/clickup-dev-implement/steps/step-07-dev-clarification.md` returns zero matches.
+- `workflow.md` `## Assumptions` section confirmed byte-unchanged (per AC #2).
 
 ### File List
 
@@ -371,7 +379,8 @@ With story 3.8 merged, EPIC-3 steps 1–7 are complete. Story 3.9 does not add a
 
 ## Change Log
 
-| Date       | Change                                                                                                                                                                                                                                                                                                                                                |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-04-23 | Story drafted from EPIC-3 bullet 8 via `bmad-create-story` workflow. Status → ready-for-dev.                                                                                                                                                                                                                                                          |
+| Date       | Change                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-04-23 | Story drafted from EPIC-3 bullet 8 via `bmad-create-story` workflow. Status → ready-for-dev.                                                                                                                                                                                                                                                                                                                                                                     |
 | 2026-04-23 | Validation pass (`bmad-create-story` checklist): added `{task_url}` to Template E via `**Ticket:**` line (E1); tightened Template E `**Status:**` line to route replies to the IDE session, not the ticket (E2); added `notify_all: true` / rule-(b) note under Dev Notes > addComment contract (E3); rewrote INSTRUCTIONS step (5) as two clear branches — posted-successfully vs. skipped/failed (O1); added baseline re-verification reminder to AC #12 (O2). |
+| 2026-04-23 | Implementation complete via `bmad-dev-story`: created `steps/step-07-dev-clarification.md` and updated `workflow.md` `## Dev Clarification` section. Rule (g) grep-zero-matches invariant satisfied by rendering step-4/6 counter names in non-brace form. Build, lint, prettier, and test gates all green (234 passing, 0 failing — baseline preserved; zero test-count delta as expected for markdown-only story). Status → review. |
