@@ -38,7 +38,11 @@ See: [./steps/step-04-progress-comment-poster.md](./steps/step-04-progress-comme
 
 ## Status Transitions
 
-<!-- story 3-6 will implement: validates target status, transitions in progress → in review → done -->
+Invoked after M2; calls `getListInfo` to validate the target status against the list's allowed statuses, then calls `updateTask` to transition the task to "in review"; non-blocking if write mode is unavailable or `updateTask` fails.
+
+See: [./steps/step-05-status-transition.md](./steps/step-05-status-transition.md)
+
+`{list_id}`, `{list_statuses}`, and `{transition_target}` are available to downstream steps after this step completes. `{transition_target}` is `''` (empty) if write mode was unavailable or no valid status match was found.
 
 ## Assumptions
 
