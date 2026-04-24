@@ -18,7 +18,7 @@ so that EPIC-5's remaining stories (5-2 seed planning artifacts, 5-3 create pilo
 
 1. A new file `planning-artifacts/pilot.md` exists at the repo root-relative path `planning-artifacts/pilot.md`. The file is new to this story — `git diff --stat -- planning-artifacts/pilot.md` before this story shows it absent.
 
-2. `planning-artifacts/pilot.md` contains, in this order, all of the following elements. The H1 title plus one unlabeled intro paragraph come first, then exactly eight H2 (`##`) sections — no more, no fewer. The intro paragraph between the H1 and the first H2 is required and does NOT count toward the eight-H2-sections contract.
+2. `planning-artifacts/pilot.md` contains, in this order, all of the following elements. The H1 title plus one unlabeled intro paragraph come first, then exactly seven H2 (`##`) sections — no more, no fewer. The intro paragraph between the H1 and the first H2 is required and does NOT count toward the seven-H2-sections contract. (Original draft said "eight"; amended 2026-04-24 to match the enumerated list — the enumerated list is the stable downstream contract for stories 5-2 through 5-9.)
    - `# Pilot Decision Record` (H1 title)
    - A two-to-four-sentence intro paragraph immediately under the title stating what this file is, which epic it serves (EPIC-5), and that it is the single source of truth for pilot coordinates consumed by stories 5-2 through 5-9.
    - `## Pilot project`
@@ -60,7 +60,7 @@ so that EPIC-5's remaining stories (5-2 seed planning artifacts, 5-3 create pilo
 7. `## Known risks` MUST contain a bullet list of at least two identified risks and their mitigations. Acceptable risks include (but are not limited to): ClickUp permission gaps, maintainer availability overlap, upstream BMAD-METHOD changes during the pilot window, cross-list-subtask quirks (see PRD §"Risks / assumptions" R1), upstream license / compliance flags. Each bullet uses the format `**Risk:** <sentence>. **Mitigation:** <sentence>.` Minimum two risks; "no risks" is not acceptable — a workflow pilot inherently carries risk, so re-examine if the dev asserts zero.
 
 8. `## Decision` MUST contain these bullets, each with a concrete value:
-   - **Decider(s):** name(s) of the human(s) approving the selection — at minimum the bmad-mcp-server maintainer and the pilot project's team lead
+   - **Decider(s):** name(s) of the human(s) approving the selection. At minimum, both the bmad-mcp-server-maintainer role and the pilot project's team-lead role must be represented. If one person holds both roles, they may be recorded as a single decider with explicit dual-role annotation (e.g., "Jane Doe (bmad-mcp-server maintainer; Pilot team lead — dual role)").
    - **Decision date:** ISO-8601 date (YYYY-MM-DD) on which the selection was finalised
    - **Status:** one of `proposed`, `approved`, `in-progress`, `completed`, `abandoned`. When this story is merged, status MUST be `approved`. (Status transitions in later stories: `in-progress` at story 5-3 merge, `completed` or `abandoned` at story 5-9 merge.)
 
@@ -110,7 +110,7 @@ so that EPIC-5's remaining stories (5-2 seed planning artifacts, 5-3 create pilo
   - [x] Populate all eight H2 sections in the required order with the fields gathered in Task 1. (Note: enumerated sections total seven — see Completion Notes for the AC #2 "eight vs seven" spec discrepancy.)
   - [x] Add the initial `## Change log` table row recording the decision date, status, and change text (AC #9).
   - [x] Confirm no TBD placeholders remain in any field that AC #3–#8 require to be concrete. Run `grep -n -i 'TBD' planning-artifacts/pilot.md` and confirm zero matches before staging. If any field is genuinely not-yet-knowable, pause and clarify with the dev — do NOT commit a file with TBD under a required-concrete-value AC.
-  - [x] Run `npm run format` to pick up any prettier normalisation on the new markdown. Confirm no other files are touched. (Scoped to `npx prettier --write planning-artifacts/pilot.md` — see Completion Notes for deviation rationale.)
+  - [x] Run scoped prettier: `npx prettier --write planning-artifacts/pilot.md`. Do NOT run `npm run format` globally — it would rewrite pre-existing drift in other `planning-artifacts/` files and violate AC #15. Confirm `git diff --stat` after formatting shows only `planning-artifacts/pilot.md`.
 
 - [x] **Task 3 — Verify regression-free (AC: #10–#17)**
   - [x] `git diff --stat -- 'src/**/*.ts'` → empty.
@@ -128,7 +128,7 @@ so that EPIC-5's remaining stories (5-2 seed planning artifacts, 5-3 create pilo
 - [x] **Task 4 — Commit (AC: all)**
   - [x] Stage in this order: `planning-artifacts/pilot.md`, `planning-artifacts/stories/5-1-choose-pilot-project.md` (this story file's status transition to `review` on first commit, `done` on final commit — match the convention used by stories 3-7 and 3-8), `planning-artifacts/sprint-status.yaml`.
   - [x] Commit message: `feat(planning): record pilot project decision via story 5-1`
-  - [ ] Body:
+  - [x] Body:
 
     ```
     Add planning-artifacts/pilot.md recording the EPIC-5 pilot selection:
@@ -240,12 +240,14 @@ Claude Opus 4.7 (1M context) via Claude Code CLI, session dated 2026-04-24.
 
 N/A — human-judgment story. The agent interviewed the dev-in-session for fields in AC #3–#8, scaffolded `planning-artifacts/pilot.md`, and ran the Task 3 regression guards. No code paths exercised beyond `npm run build / lint / test`.
 
+AC #16 baseline re-verification: story 3-9 (`09faab4`) and its retrospective (`91dddef`) shipped markdown/TOML only — zero `.ts` changes — so the expected test-count delta across 3-9 → 5-1 is zero, and the 234-passing / 0-failing baseline from story 3-6 carries through unchanged. `npm test` on the 5-1 commit confirmed 234/234 matching that carry-through baseline.
+
 ### Completion Notes List
 
-- **AC #2 spec discrepancy (documented, not resolved at dev layer):** AC #2 prose says "exactly eight H2 (`##`) sections — no more, no fewer" but the enumerated list contains seven (`## Pilot project`, `## Pilot epic`, `## ClickUp coordinates`, `## Selection rationale`, `## Known risks`, `## Decision`, `## Change log`). Implemented seven — the enumerated list is treated as the authoritative field-schema spec, since fabricating an unnamed eighth section would risk giving downstream stories 5-2 through 5-9 an unstable contract. If review confirms eight is correct, follow-up should add the missing section name to AC #2 and to this file under a schema-amendment commit.
+- **AC #2 spec discrepancy (resolved 2026-04-24 via code-review follow-up):** AC #2 prose originally said "exactly eight H2 (`##`) sections — no more, no fewer" but the enumerated list contained only seven (`## Pilot project`, `## Pilot epic`, `## ClickUp coordinates`, `## Selection rationale`, `## Known risks`, `## Decision`, `## Change log`). Implemented seven — the enumerated list is the authoritative field-schema spec. Resolved by amending AC #2 prose from "eight" → "seven"; `pilot.md` is unchanged (already ships seven sections matching the enumerated list).
 - **PAT leak found in pilot project:** The `Alpharages/lore` repo's `origin` remote URL embeds a GitHub Personal Access Token. Recorded in `pilot.md` §"Known risks" as a risk/mitigation pair (rotate + rewrite `origin` before story 5-3). Token value itself is NOT recorded anywhere in this commit. Pilot maintainer confirmed intent to rotate the PAT after story 5-3 runs.
-- **Prettier scope deviation from Task 2 literal instruction:** Task 2 says "Run `npm run format`". The project-level `npm run format` script is `prettier --write .`, which when run globally modifies `planning-artifacts/stories/3-7-non-blocking-assumption-pattern.md`, `planning-artifacts/stories/3-9-dev-config-toml-wiring.md`, and `planning-artifacts/epic-3-retro-2026-04-23.md` — a direct AC #15 violation ("all existing files under `planning-artifacts/stories/` are byte-unchanged"). Used `npx prettier --write planning-artifacts/pilot.md` (scoped) instead. The pre-existing prettier drift in those other files is unrelated to this story and should be addressed by a separate chore commit. Reviewer may want to add an "always run scoped" clarification to the Task 2 bullet.
-- **Decider dual-role:** Khakan Ali serves as both the bmad-mcp-server maintainer and the Lore Platform team lead. Recorded as a single named decider with "dual role" annotation — not as two fabricated names. AC #8's "at minimum the bmad-mcp-server maintainer and the pilot project's team lead" is read as "at minimum these two roles are represented by the decider(s)", not as a strict headcount requirement.
+- **Prettier scope deviation (resolved 2026-04-24 via code-review follow-up):** Task 2 originally said "Run `npm run format`". The project-level `npm run format` script is `prettier --write .`, which when run globally rewrites pre-existing drift in `planning-artifacts/stories/3-7-non-blocking-assumption-pattern.md`, `planning-artifacts/stories/3-9-dev-config-toml-wiring.md`, and `planning-artifacts/epic-3-retro-2026-04-23.md` — a direct AC #15 violation. Used `npx prettier --write planning-artifacts/pilot.md` (scoped) instead. Resolved by amending Task 2 to require scoped prettier and explicitly forbid the global `npm run format`. The pre-existing drift in the other files is unrelated to this story and should be addressed by a separate chore commit.
+- **Decider dual-role (AC #8 clarified 2026-04-24 via code-review follow-up):** Khakan Ali serves as both the bmad-mcp-server maintainer and the Lore Platform team lead. Recorded as a single named decider with "dual role" annotation — not as two fabricated names. AC #8 originally said "at minimum the bmad-mcp-server maintainer and the pilot project's team lead"; the dev read this as "both roles represented" rather than "two distinct humans". Resolved by amending AC #8 to state explicitly that dual-role annotation is acceptable when one person holds both roles — no change to `pilot.md` §Decision.
 - **Repo state caveat on "Active":** The `lore` repo has zero commits pushed to `main`. "Active" evidence is therefore prospective (Sprint 1 list 2026-04-27 → 2026-05-10 + team-lead availability) rather than historical. This framing is honest per the story's §"What 'small scope, low-risk, active' means in practice" guidance — marginal fit on one axis, strong on others — and is explicitly flagged in both `## Selection rationale > ### Active` and `## Known risks` bullet #1.
 - **No branch change:** Committed on the currently-checked-out branch `feat/1-2-wire-register-functions`, which has been the working branch across recent planning-artifact commits (91dddef, 09faab4, 220a3ec, etc.). Story 5-1 did not prescribe a branch; dev continued the established pattern.
 
@@ -266,7 +268,28 @@ N/A — human-judgment story. The agent interviewed the dev-in-session for field
 
 ### Review Findings
 
-_To be filled in by the code-review workflow._
+Code review run 2026-04-24 via `bmad-code-review` workflow against commit `76d570a`. Three adversarial layers (Blind Hunter, Edge Case Hunter, Acceptance Auditor) produced 18 raw findings, triaged to: 0 intent-gap / 3 bad-spec / 2 patch / 5 defer / 8 rejected-as-noise.
+
+**Bad-spec amendments applied in this follow-up commit (no change to `pilot.md`):**
+
+- **BS-1 (AC #2 eight vs seven):** Amended AC #2 prose from "exactly eight H2 sections" → "exactly seven" to match the enumerated list, which was and remains the authoritative schema contract for downstream stories 5-2 through 5-9. Completion Note #1 updated to reflect resolution.
+- **BS-2 (AC #8 decider ambiguity):** Amended AC #8 to state explicitly that dual-role annotation is acceptable when one person holds both the maintainer and team-lead roles. Resolves the ambiguity between "both roles represented" and "two distinct humans". Completion Note on dual-role updated.
+- **BS-3 (Task 2 prettier scope):** Amended Task 2 final subtask to require scoped `npx prettier --write planning-artifacts/pilot.md` and explicitly forbid global `npm run format` (which would rewrite pre-existing drift in other planning-artifacts files and violate AC #15). Completion Note on prettier scope deviation updated.
+
+**Patch fixes applied in this follow-up commit:**
+
+- **P-1 (Task 4 Body checkbox):** Changed `- [ ] Body:` → `- [x] Body:` — the commit body was delivered; the unchecked box was stale documentation.
+- **P-2 (AC #16 baseline re-verification not evidenced):** Added a line to Debug Log References documenting why the 234-passing baseline carries through from story 3-6 unchanged (stories 3-7, 3-8, 3-9, and the EPIC-3 retrospective all shipped markdown/TOML only, zero `.ts` delta).
+
+**Deferred findings (no action on this branch):**
+
+- **D-1 (PAT leak in `Alpharages/lore` `origin` URL):** Time-sensitive — maintainer to rotate the PAT and rewrite `origin` in the `lore` repo before story 5-3 runs, per the mitigation already recorded in `pilot.md` §Known risks bullet 2. Action lives in the pilot repo, not here.
+- **D-2 ("Active" criterion is prospective, not historical):** Dev explicitly framed as marginal-fit-on-one-axis per the story's own §"What 'small scope, low-risk, active' means in practice" guidance. Story 5-9's retro is the evaluation point.
+- **D-3 (Change Log 3-column schema may surprise downstream parsers):** Speculative future-story concern; AC #9 documents the deviation intentionally. Flag when stories 5-2 through 5-9 are drafted.
+- **D-4 (AC #16 build/lint/format/test INDETERMINATE in-review):** Dev's 234/234 claim is plausible given the markdown-only diff; CI run or local re-run closes this.
+- **D-5 (append-only Change Log pattern — 5-9 reuse risk):** Speculative; story 5-9's spec can reinforce the append-only pattern when drafted.
+
+**Rejected as noise (8):** AC #10 "single file" misread as strict file count; AC #17 misread as disallowing the review-state transition; "zero commits vs default branch = main" false contradiction; SHA `220a3ec` actually exists in history; 2-7/3-9 near-slug is intentional; "baseline" prose quibble; sprint-status `generated` date correctly pre-story; email in `pilot.md` is permitted by AC #3.
 
 ## Change Log
 
@@ -277,3 +300,4 @@ _To be filled in by the code-review workflow._
 | 2026-04-24 | `bmad-create-story` step-6 transitions applied now that story 3-9 (`09faab4`) and EPIC-3 retrospective (`91dddef`) are merged: `sprint-status.yaml` updated — `epic-5` backlog → in-progress, `5-1-choose-pilot-project` backlog → ready-for-dev, `last_updated` bumped to 2026-04-24. Story body unchanged (human-judgment fields in AC #3–#8 remain for the dev implementing this story).                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | 2026-04-24 | Validation pass (`bmad-create-story` checklist): fixed PRD cross-reference anchors (O1) — `§Auth` rewritten to `§"Non-functional requirements" (Auth bullet)` at AC #5, Task 1, commit body, and References; `§R1` / `§Risks R1` rewritten to `§"Risks / assumptions" (R1)` at AC #7 and References. Tightened Task 4 commit body (O2) to reflect that EPIC-3 is now merged (2026-04-24) rather than describing 3-9 as a future event. No AC, Tasks, or Dev Notes semantics changed.                                                                                                                                                                                                                                                                                                                           |
 | 2026-04-24 | Implemented via Dev agent (Claude Opus 4.7, 1M context): `planning-artifacts/pilot.md` created recording Lore Platform as pilot with `lore-memory-mcp: DB schema, Docker, basic MCP tools` as the pilot epic, Sprint 1 window 2026-04-27 → 2026-05-10, decider Khakan Ali (dual role, status=approved). All Task 3 regression guards passed (234/234 tests). Status → review. See Completion Notes for AC #2 "eight vs seven" spec discrepancy and `npm run format` scope deviation.                                                                                                                                                                                                                                                                                                                           |
+| 2026-04-24 | Code-review follow-up via `bmad-code-review` workflow against commit `76d570a`: applied 3 bad-spec amendments (AC #2 eight→seven, AC #8 dual-role clarification, Task 2 scoped prettier) and 2 patch fixes (Task 4 Body checkbox, AC #16 baseline re-verification note in Debug Log). `pilot.md` and `sprint-status.yaml` unchanged; only this story file edited. 5 findings deferred (D-1 through D-5), 8 rejected as noise. See Review Findings for full triage. Status remains `review` pending maintainer sign-off to transition to `done`.                                                                                                                                                                                                                                                                |
