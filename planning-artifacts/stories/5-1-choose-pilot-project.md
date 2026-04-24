@@ -1,6 +1,6 @@
 # Story 5.1: Choose pilot project
 
-Status: review
+Status: done
 
 Epic: [EPIC-5: Pilot + iterate](../epics/EPIC-5-pilot-iterate.md)
 
@@ -260,7 +260,7 @@ AC #16 baseline re-verification: story 3-9 (`09faab4`) and its retrospective (`9
 **Modified**
 
 - `planning-artifacts/sprint-status.yaml` — `5-1-choose-pilot-project: ready-for-dev` → `review`; `last_updated` bumped (AC #17)
-- `planning-artifacts/stories/5-1-choose-pilot-project.md` — `Status: ready-for-dev` → `Status: review`; task checkboxes marked; Dev Agent Record sections filled; Change Log row added
+- `planning-artifacts/stories/5-1-choose-pilot-project.md` — `Status: ready-for-dev` → `Status: review` → `Status: done`; task checkboxes marked; Dev Agent Record sections filled; Review Findings filled after code review; Change Log rows added
 
 **Deleted**
 
@@ -301,3 +301,4 @@ Code review run 2026-04-24 via `bmad-code-review` workflow against commit `76d57
 | 2026-04-24 | Validation pass (`bmad-create-story` checklist): fixed PRD cross-reference anchors (O1) — `§Auth` rewritten to `§"Non-functional requirements" (Auth bullet)` at AC #5, Task 1, commit body, and References; `§R1` / `§Risks R1` rewritten to `§"Risks / assumptions" (R1)` at AC #7 and References. Tightened Task 4 commit body (O2) to reflect that EPIC-3 is now merged (2026-04-24) rather than describing 3-9 as a future event. No AC, Tasks, or Dev Notes semantics changed.                                                                                                                                                                                                                                                                                                                           |
 | 2026-04-24 | Implemented via Dev agent (Claude Opus 4.7, 1M context): `planning-artifacts/pilot.md` created recording Lore Platform as pilot with `lore-memory-mcp: DB schema, Docker, basic MCP tools` as the pilot epic, Sprint 1 window 2026-04-27 → 2026-05-10, decider Khakan Ali (dual role, status=approved). All Task 3 regression guards passed (234/234 tests). Status → review. See Completion Notes for AC #2 "eight vs seven" spec discrepancy and `npm run format` scope deviation.                                                                                                                                                                                                                                                                                                                           |
 | 2026-04-24 | Code-review follow-up via `bmad-code-review` workflow against commit `76d570a`: applied 3 bad-spec amendments (AC #2 eight→seven, AC #8 dual-role clarification, Task 2 scoped prettier) and 2 patch fixes (Task 4 Body checkbox, AC #16 baseline re-verification note in Debug Log). `pilot.md` and `sprint-status.yaml` unchanged; only this story file edited. 5 findings deferred (D-1 through D-5), 8 rejected as noise. See Review Findings for full triage. Status remains `review` pending maintainer sign-off to transition to `done`.                                                                                                                                                                                                                                                                |
+| 2026-04-24 | Closed after code review: Status → done; `sprint-status.yaml` `5-1-choose-pilot-project` review → done, `last_updated` bumped. EPIC-5's pilot decision record is now the stable reference consumed by stories 5-2 through 5-9. Time-sensitive defer D-1 (PAT rotation in `Alpharages/lore` repo) remains open and must be actioned before story 5-3 starts.                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
