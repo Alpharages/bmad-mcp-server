@@ -20,9 +20,11 @@ This file records the EPIC-5 pilot selection for the bmad-mcp-server project: wh
 ## ClickUp coordinates
 
 - **Workspace (team) ID:** 9018612026
-- **Space name:** AlphaRages
-- **Backlog list name:** Backlog (path: `AlphaRages > Lore > Backlog`)
+- **Space name:** Team Space
+- **Backlog list name:** Backlog (path: `Team Space > Lore > Backlog`)
 - **Sprint folder name:** sprint-1 (active list: `Sprint 1 (4/27 - 5/10)`)
+- **Pilot epic task ID:** 86excfrge
+- **Pilot epic task URL:** https://app.clickup.com/t/86excfrge
 
 `CLICKUP_API_KEY` is intentionally not recorded in this file — it is a per-user personal token per PRD §"Non-functional requirements" (Auth bullet). `CLICKUP_TEAM_ID` (recorded above) is team-shared and safe to version.
 
@@ -38,7 +40,7 @@ The `Alpharages/lore` repository has zero commits pushed to `main` and no produc
 
 ### Active
 
-Pilot window is defined as 2026-04-27 → 2026-05-10, backed by the ClickUp active-sprint list `Sprint 1 (4/27 - 5/10)` created on 2026-04-24 inside `AlphaRages > Lore > sprint-1`. Team lead Khakan Ali (also the bmad-mcp-server maintainer) has committed to drive the pilot during this window, and the `lore` repo kickoff (first commits + first epic + first stories) is itself the pilot's work. Framing: "Active" evidence is prospective availability plus a dated sprint list rather than historical commit activity, since the project is pre-first-commit.
+Pilot window is defined as 2026-04-27 → 2026-05-10, backed by the ClickUp active-sprint list `Sprint 1 (4/27 - 5/10)` created on 2026-04-24 inside `Team Space > sprint-1`. Team lead Khakan Ali (also the bmad-mcp-server maintainer) has committed to drive the pilot during this window, and the `lore` repo kickoff (first commits + first epic + first stories) is itself the pilot's work. Framing: "Active" evidence is prospective availability plus a dated sprint list rather than historical commit activity, since the project is pre-first-commit.
 
 ## Known risks
 
@@ -50,10 +52,11 @@ Pilot window is defined as 2026-04-27 → 2026-05-10, backed by the ClickUp acti
 
 - **Decider(s):** Khakan Ali (bmad-mcp-server maintainer; Lore Platform team lead — dual role)
 - **Decision date:** 2026-04-24
-- **Status:** approved
+- **Status:** in-progress
 
 ## Change log
 
-| Date       | Status   | Change                                                                                                         |
-| ---------- | -------- | -------------------------------------------------------------------------------------------------------------- |
-| 2026-04-24 | approved | Initial pilot selection recorded via story 5-1. Lore Platform chosen; Sprint 1 window 2026-04-27 → 2026-05-10. |
+| Date       | Status      | Change                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ---------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-04-24 | approved    | Initial pilot selection recorded via story 5-1. Lore Platform chosen; Sprint 1 window 2026-04-27 → 2026-05-10.                                                                                                                                                                                                                                                                                                                                                                |
+| 2026-04-25 | in-progress | ClickUp pilot epic created via story 5-3: https://app.clickup.com/t/86excfrge (`86excfrge`). Status advances to `in-progress` per story 5-1 AC #8. §ClickUp coordinates space name corrected `AlphaRages` → `Team Space` to match actual workspace layout; §Selection rationale > Active path fragment corrected accordingly (Option-A freshness fix per Task 0, relaxes AC #14 by one §Selection rationale hunk). Stories 5-4 / 5-5 can now run against a real Backlog epic. |
