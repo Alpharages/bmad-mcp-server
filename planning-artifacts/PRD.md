@@ -62,7 +62,7 @@ Let the team run the full BMAD agent flow (PM → Architect → Dev) while keepi
 
 - **Backlog list** per space → humans create **epics** here as tasks.
 - **Sprint folder** → ClickUp's native Sprints feature, lists per sprint.
-- **Stories** → subtasks of an epic (parent = epic task), living in the active Sprint list.
+- **Stories** → subtasks of an epic (parent = epic task). The subtask's `list_id` MAY equal the epic's `list_id` (same-list layout — default; required when ClickUp's `Tasks in Multiple Lists` ClickApp is OFF) OR differ (cross-list layout — subtask in the active Sprint list, parent in the Backlog list; requires the ClickApp toggle ON). Both shapes are supported by `clickup-create-story`; the workspace-level toggle gates which is feasible. (Per `prd-clickup-layout-vs-merged-state-drift` in `planning-artifacts/friction-log.md`; the original cross-list-only shape was unsatisfiable in workspaces with the ClickApp OFF.)
 - **Write channels:** humans own _description_; agents write only via _comments_ and _status_.
 
 ## Architecture
@@ -100,3 +100,13 @@ Space, sprint folder, and backlog list are discovered at runtime via interactive
 - Bidirectional sync
 - Migration of historical file-based stories
 - Granular per-agent permissions beyond ClickUp token scopes
+
+## Change log
+
+<!-- prettier-ignore-start -->
+
+| Date       | Change                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-04-27 | §ClickUp layout: subtask placement amended from cross-list-only to dual-shape (same-list OR cross-list, gated by the workspace's `Tasks in Multiple Lists` ClickApp toggle). Per `prd-clickup-layout-vs-merged-state-drift` in `planning-artifacts/friction-log.md`; story 5-7 amendment. §Risks R1 sentence preserved unchanged (R1 is forward-looking; this amendment is the backward-looking layout update reflecting the same-list pivot adopted during the EPIC-5 pilot run). |
+
+<!-- prettier-ignore-end -->

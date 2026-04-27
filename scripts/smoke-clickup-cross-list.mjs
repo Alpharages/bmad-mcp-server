@@ -21,6 +21,16 @@
  *   1 — assertion failure, protocol error, server crash, or R1 materialization
  *   2 — missing/malformed env config (including same-list equality check)
  *   3 — round-trip passed but cleanup DELETE failed
+ *
+ * ⚠️  Workspace-toggle dependency (story-1-6-smoke-false-positive-risk):
+ *     A SMOKE PASS from this harness is conditional on the workspace having
+ *     ClickUp's "Tasks in Multiple Lists" ClickApp toggle ON. If the toggle
+ *     is OFF, cross-list createTask is rejected with `400 — Parent not child
+ *     of list, ECODE: ITEM_137` (observed during the EPIC-5 pilot, story 5-4).
+ *     The harness does NOT inspect the toggle state directly — verify it in
+ *     the ClickUp workspace UI before relying on a PASS as evidence that PRD
+ *     §Risks R1 is mitigated. A PASS from one workspace does not transfer
+ *     to another workspace whose toggle is OFF.
  */
 
 import { spawn } from 'node:child_process';
@@ -474,6 +484,9 @@ async function main() {
 
   const summary = `SMOKE PASS cross-list epic_id=${epicId} story_id=${storyId} backlog_list=${backlogListId} sprint_list=${sprintListId} elapsed_ms=${Math.round(elapsed)}${cleanupStatus}`;
   console.error(summary);
+  console.error(
+    `[smoke-x][warn] PASS is conditional on workspace ClickApp "Tasks in Multiple Lists" toggle = ON. Verify the toggle in the ClickUp workspace UI before treating this signal as PRD §Risks R1 mitigation. See story-1-6-smoke-false-positive-risk in planning-artifacts/friction-log.md.`,
+  );
 
   await client.close();
   process.exit(cleanupChildFailed || cleanupParentFailed ? 3 : 0);

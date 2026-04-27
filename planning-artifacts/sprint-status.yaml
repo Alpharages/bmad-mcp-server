@@ -1,5 +1,5 @@
 # generated: 2026-04-21
-# last_updated: 2026-04-27 (story 5-6 code review done; 5-6-capture-friction-log → done)
+# last_updated: 2026-04-27 (story 5-7 implemented; 5-7-refine-prompts-and-templates → review)
 # project: bmad-mcp-server
 # project_key: NOKEY
 # tracking_system: file-system
@@ -49,7 +49,7 @@
 #   So EPIC-1 has 8 bullets but only 7 stories.
 
 generated: 2026-04-21
-last_updated: 2026-04-27 (story 5-6 code review done; 5-6-capture-friction-log → done)
+last_updated: 2026-04-27 (story 5-7 drafted; 5-7-refine-prompts-and-templates → ready-for-dev)
 project: bmad-mcp-server
 project_key: NOKEY
 tracking_system: file-system
@@ -111,7 +111,7 @@ development_status:
   5-4-dev-creates-pilot-stories: done
   5-5-dev-implements-pilot-story: done
   5-6-capture-friction-log: done
-  5-7-refine-prompts-and-templates: backlog
+  5-7-refine-prompts-and-templates: review
   5-8-team-facing-quickstart-docs: backlog
   5-9-pilot-retro-go-no-go: backlog
   epic-5-retrospective: optional

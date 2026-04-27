@@ -53,11 +53,17 @@ Starting implementation now.
 
 **Summary:** {brief description of what was implemented}
 
+**Pull Request:** {pr_url}
+
 **Files changed:**
 - {list of created/modified/deleted files with one-line description each}
 
 **Next:** Status transition to In Review (step 5).
 ```
+
+> **Template B substitution notes:**
+>
+> - For the Pull Request line: render `**Pull Request:** {pr_url}` only if `{pr_url}` is non-empty. If `{pr_url}` is empty (no PR was opened in this session — e.g. direct commit to main, doc-only change, or PR creation deferred), omit the entire `**Pull Request:** ...` line including its surrounding blank lines so the comment reads cleanly.
 
 ### Template C — Discretionary (M3+)
 
@@ -81,7 +87,7 @@ Starting implementation now.
 
 2. **Identify the milestone.** Determine which milestone (M1, M2, or M3+) applies to the current invocation.
 
-3. **Compose the comment.** Select the template that matches the milestone (A, B, or C). Substitute all `{...}` placeholders using step-context variables: `{task_id}` from step 1; `{task_name}`, `{task_url}`, `{epic_task_id}`, `{epic_name}` from step 2 (omit the epic line in Template A if `{epic_task_id}` is empty); `{prd_loaded}`, `{architecture_loaded}`, `{tech_spec_loaded}` from step 3. For Template B, summarise the implementation changes. For Template C, describe the decision or event.
+3. **Compose the comment.** Select the template that matches the milestone (A, B, or C). Substitute all `{...}` placeholders using step-context variables: `{task_id}` from step 1; `{task_name}`, `{task_url}`, `{epic_task_id}`, `{epic_name}` from step 2 (omit the epic line in Template A if `{epic_task_id}` is empty); `{prd_loaded}`, `{architecture_loaded}`, `{tech_spec_loaded}` from step 3. For Template B, summarise the implementation changes and set `{pr_url}` to the PR URL produced by `gh pr create`'s stdout (or to the empty string if no PR was opened in this session — direct commit to main, doc-only change, or PR creation deferred); the Pull Request line is omitted entirely when `{pr_url}` is empty per the Template B substitution notes. For Template C, describe the decision or event.
 
 4. **Post the comment.** Call `addComment` with `task_id` = `{task_id}` and `comment` = the composed markdown string from step 3.
 
@@ -96,3 +102,5 @@ Starting implementation now.
    > **Impact:** This milestone will not be recorded in ClickUp. Implementation continues unaffected.
    >
    > **What to do (optional):** Verify that `CLICKUP_API_KEY` has permission to comment on this task, then manually post the missed comment in ClickUp if needed.
+
+> **Refinement source:** `template-b-no-pr-field` (story 5-7).

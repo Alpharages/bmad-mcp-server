@@ -5,6 +5,13 @@
 # matching upstream entries and new codes append.
 # See: src/custom-skills/clickup-create-story/
 # See: src/custom-skills/clickup-dev-implement/
+#
+# Trigger dispatch in Claude Code CLI mode (ds-trigger-not-dispatched-via-toml,
+# story 5-7): TOML triggers are dispatched in Cursor / VS Code. In Claude Code
+# CLI mode, the agent invokes the custom skills directly (walking the steps
+# under src/custom-skills/<skill-name>/steps/) rather than via this routing
+# table. Both invocation paths produce the same artifacts; the table below is
+# load-bearing only for IDE-integrated invocations.
 
 [[agent.menu]]
 code = "CS"
@@ -15,3 +22,19 @@ skill = "clickup-create-story"
 code = "DS"
 description = "Implement a ClickUp task end-to-end — fetch task + parent-epic context, read planning artifacts, implement code, post progress comments, transition status"
 skill = "clickup-dev-implement"
+
+# Per-skill configuration knobs (story 5-7).
+# Both keys are optional; leave unset to preserve the original picker
+# behaviour (multi-list / multi-folder disambiguation prompts).
+
+[clickup_create_story]
+# Pin a specific Backlog list ID to bypass step-02-epic-picker's multi-list
+# disambiguation when more than one list named "Backlog" exists in the chosen
+# space (two-backlog-lists-in-team-space, story 5-7). Default: unset.
+# pinned_backlog_list_id = ""
+
+# Pin a specific Sprint folder ID to bypass step-03-sprint-list-picker's
+# multi-folder disambiguation when more than one folder containing "sprint"
+# exists in the chosen space (two-sprint-folders-in-team-space, story 5-7).
+# Default: unset.
+# pinned_sprint_folder_id = ""

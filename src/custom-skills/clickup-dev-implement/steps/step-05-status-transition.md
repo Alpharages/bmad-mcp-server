@@ -29,17 +29,28 @@ transition_target: ''
 
 3. **Fetch allowed statuses.** Call `getListInfo` with `list_id` = `{list_id}`. From the response, extract the `Valid status names` line and store the comma-separated list as `{list_statuses}`.
 
-4. **Validate target status.** Search `{list_statuses}` for a case-insensitive match to "in review". If no match is found, emit the status-mismatch warning block below, leave `{transition_target}` as `''`, and skip steps 5–6. Continue to the next workflow step.
+4. **Validate target status.** Iterate the **review-status match set** below in priority order and search `{list_statuses}` for a case-insensitive, whitespace-trimmed match. Use the first hit; if multiple statuses in `{list_statuses}` match different entries in the set, the highest-priority hit (earliest in the list below) wins. If no entry in the set matches, emit the status-mismatch warning block below, leave `{transition_target}` as `''`, and skip steps 5–6. Continue to the next workflow step.
 
-   > ⚠️ **Status transition skipped — no "in review" status found in list**
+   **Review-status match set (priority order):**
+   1. `in review`
+   2. `ready for review`
+   3. `code review`
+   4. `pending review`
+   5. `awaiting review`
+
+   The set is hardcoded — it covers the synonyms commonly seen across ClickUp workspaces (per `step-05-match-set-too-narrow` in the EPIC-5 friction log). A future workspace surfacing a sixth synonym is a one-line addition to this list.
+
+   > ⚠️ **Status transition skipped — no review-status synonym found in list**
    >
-   > The `clickup-dev-implement` skill called `getListInfo` for list `{list_id}` but could not find a status matching "in review" (case-insensitive) in the list's allowed statuses.
+   > The `clickup-dev-implement` skill called `getListInfo` for list `{list_id}` but could not find any of the review-status synonyms in the list's allowed statuses.
+   >
+   > **Tried (in priority order):** `in review`, `ready for review`, `code review`, `pending review`, `awaiting review` (case-insensitive, whitespace-trimmed).
    >
    > **Available statuses:** {list_statuses}
    >
    > **Impact:** Task `{task_id}` ({task_name}) will remain in its current status (`{task_status}`). Please manually transition the task to the appropriate review status in ClickUp.
    >
-   > **What to do (optional):** Ensure the sprint list contains an "in review" (or equivalent) status, then re-run the transition manually.
+   > **What to do (optional):** Ensure the sprint list contains one of the synonyms above (or rename your existing review status to match), then re-run the transition manually.
 
 5. **Set transition target.** Store the exact matched status name (preserving the casing returned by `getListInfo`) as `{transition_target}`.
 
@@ -61,3 +72,5 @@ transition_target: ''
    > **Impact:** Task `{task_id}` ({task_name}) remains in its current status (`{task_status}`). Implementation is complete; please manually transition the task to "in review" in ClickUp.
    >
    > **What to do (optional):** Verify that `CLICKUP_API_KEY` has permission to update this task, then manually set the status to `{transition_target}` in ClickUp if needed.
+
+> **Refinement source:** `step-05-in-review-literal-match-miss`, `step-05-match-set-too-narrow` (story 5-7).

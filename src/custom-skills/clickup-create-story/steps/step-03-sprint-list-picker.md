@@ -52,9 +52,11 @@ sprint_list_name: ''
 
    Otherwise, from the detailed response filter the tree to entries matching `{space_id}` to ensure only the selected space's folders are scanned.
 
-3. Scan the filtered folders for the sprint folder:
+3. **Pinned-folder short-circuit.** Before scanning, check whether `_bmad/custom/bmad-agent-dev.toml`'s `[clickup_create_story].pinned_sprint_folder_id` is set to a non-empty value. If it is, verify that the pinned ID appears as a folder in the filtered tree; if it does, set `{sprint_folder_id}` to the pinned value, confirm `✅ Sprint folder pinned via config: {sprint_folder_id}` to the user, and skip the scan below — proceed directly to instruction 5. If the pinned ID is not found in the tree, warn the user (`⚠️ pinned_sprint_folder_id not found in current space — falling back to scan`) and continue with the scan below. If the key is unset or empty, proceed directly to the scan.
+
+   Scan the filtered folders for the sprint folder:
    - **Exactly one folder** whose name contains "sprint" (case-insensitive): use it automatically.
-   - **More than one folder** whose name contains "sprint": present the matching folders as a numbered list and ask: "More than one sprint folder was found. Enter the number of the correct sprint folder."
+   - **More than one folder** whose name contains "sprint": present the matching folders as a numbered list and ask: "More than one sprint folder was found. Enter the number of the correct sprint folder." Pin the chosen folder via `[clickup_create_story].pinned_sprint_folder_id` to skip this prompt on future invocations.
    - **No folder** whose name contains "sprint" but other folders exist: present the full folder list as a numbered list and ask the user to identify the sprint folder by entering its number **or** its raw folder ID. If the user enters a number, resolve it to the corresponding folder. If the user enters a raw folder ID, verify it appears in the returned folder tree; if not found, warn the user and re-present the list.
    - **No folders at all** in the space: emit the following error block and stop.
 
@@ -100,7 +102,7 @@ sprint_list_name: ''
    [N] <list_name> (list_id: <id>)
    ```
 
-   Precede the list with the hint: "If your sprint lists have ClickUp date ranges configured, the active sprint is the one whose start date is before today and end date is after today."
+   Precede the list with the hint: "If your sprint lists have ClickUp date ranges configured, the active sprint is the one whose start date is on or before today and end date is on or after today (inclusive bounds — a sprint that starts today still counts as active)."
    Follow the list with: "Enter the number of the sprint list that should receive the new story."
 
 7. Parse the user's numeric response: validate it is a number between 1 and N; if invalid, re-present the list and ask again.
@@ -111,4 +113,6 @@ sprint_list_name: ''
 
 ## NEXT
 
-Step 4 (description composer, story 2.5) is not yet implemented. Inform the user that the sprint-list picker step is complete and the skill is still in progress.
+Proceed to [step-04-description-composer.md](./step-04-description-composer.md) with `{sprint_folder_id}`, `{sprint_list_id}`, and `{sprint_list_name}` available in step context (in addition to the variables already set by step-02).
+
+> **Refinement source:** `sprint-window-strict-less-than-edge-on-start-day`, `stale-next-wording-in-skill-files`, `two-sprint-folders-in-team-space` (story 5-7).

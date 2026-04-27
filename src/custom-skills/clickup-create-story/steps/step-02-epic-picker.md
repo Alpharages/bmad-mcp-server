@@ -27,11 +27,15 @@ epic_name: ''
 
 5. Call `searchSpaces` with `terms: ["{space_name}"]` to retrieve the detailed folder/list tree for the selected space (single-space search guarantees the ≤5 threshold for detailed mode).
 
-6. Scan the tree for a list whose name matches `Backlog` (case-insensitive). If found, set `{backlog_list_id}` automatically (do not ask the user). If NOT found, present all lists visible in the tree and ask: "I couldn't find a list named 'Backlog'. Enter the name or number of the list that holds your epics."
+6. **Pinned-list short-circuit.** Before scanning the tree, check whether `_bmad/custom/bmad-agent-dev.toml`'s `[clickup_create_story].pinned_backlog_list_id` is set to a non-empty value. If it is, verify that the pinned ID appears as a list in the tree returned by `searchSpaces`; if it does, set `{backlog_list_id}` to the pinned value, confirm `✅ Backlog list pinned via config: {backlog_list_id}` to the user, and skip the scan. If the pinned ID is not found in the tree, warn the user (`⚠️ pinned_backlog_list_id not found in current space — falling back to scan`) and continue with the scan below. If the key is unset or empty, proceed directly to the scan.
 
-   > **Edge case:** If the space tree contains multiple lists named `Backlog` (possible in multi-folder spaces), present both and ask the user to pick.
+   Scan the tree for a list whose name matches `Backlog` (case-insensitive). If found, set `{backlog_list_id}` automatically (do not ask the user). If NOT found, present all lists visible in the tree and ask: "I couldn't find a list named 'Backlog'. Enter the name or number of the list that holds your epics."
+
+   > **Edge case:** If the space tree contains multiple lists named `Backlog` (possible in multi-folder spaces), present both and ask the user to pick. Pin the chosen list via `[clickup_create_story].pinned_backlog_list_id` to skip this prompt on future invocations.
 
 7. Call `searchTasks` with `list_ids: ["{backlog_list_id}"]` and no search terms to retrieve all tasks in the Backlog list.
+
+   **Filter the results to root-level tasks only.** For each returned task, drop it unless its `parent_task_id` field is null/absent/empty. Treat all of the following as "no parent": the field is missing entirely from the response, the value is the literal string `null`, the value is the literal empty string `''`, or the value is JSON `null`. Only keep tasks that survive this filter — these are the candidate epics. Subtasks (created later under the same-list pivot per `cross-list-subtask-block`) MUST NOT appear as candidate epics in the picker.
 
 8. If zero tasks are returned, emit the following error block and stop:
 
@@ -54,3 +58,5 @@ epic_name: ''
 ## NEXT
 
 Proceed to [step-03-sprint-list-picker.md](./step-03-sprint-list-picker.md) (story 2.4) with `{space_id}`, `{space_name}`, `{backlog_list_id}`, `{epic_id}`, and `{epic_name}` available in step context.
+
+> **Refinement source:** `epic-picker-no-root-level-filter`, `two-backlog-lists-in-team-space` (story 5-7).

@@ -50,7 +50,7 @@ task_description: ''
 
 5. Ask (optional follow-up): "Any additional scope notes for this story? (Press Enter to skip.)" Accept free-text or empty input. Store as `{scope_notes}` (a local variable for this step only) if non-empty.
 
-6. Call `getTaskById` with `id: "{epic_id}"` to fetch the full epic task details. The response contains task metadata, then the task's own description content, then comments (each prefixed with `Comment by {username} on {date}:`), then status-change events. Extract only the text **before** the first `Comment by` line as `{epic_description}` — do not include any comment or status-change content. If `getTaskById` returns an error or the pre-comment content is empty, warn the user ("⚠️ Could not fetch epic description — proceeding without it.") and continue with `{epic_description}` as an empty string.
+6. Call `getTaskById` with `id: "{epic_id}"` to fetch the full epic task details. The response contains a leading metadata block (lines like `task_id: ...`, `name: ...`, `parent_task_id: ...`, etc.), then the task's own description content, then comments (each prefixed with `Comment by {username} on {date}:`), then status-change events. Extract only the text **before** the first `Comment by` line, then **also** strip the leading metadata block — peel off everything up to and including the line that contains `parent_task_id: ...`, or up to (but not including) the first heading line `## ...` if no `parent_task_id:` line is present, whichever comes first. The remaining text is `{epic_description}` — do not include any metadata, comment, or status-change content. If `getTaskById` returns an error or the pre-comment content is empty, warn the user ("⚠️ Could not fetch epic description — proceeding without it.") and continue with `{epic_description}` as an empty string.
 
 7. Compose `{task_description}` as a structured Markdown document following the template below. The composer MUST:
    - Pull a concise "Business Context" summary (≤5 bullet points) from `{prd_content}` — specifically the Problem, Goal, and the Functional requirements most relevant to `{story_title}`.
@@ -124,3 +124,5 @@ task_description: ''
 ## NEXT
 
 Proceed to [step-05-create-task.md](./step-05-create-task.md) (story 2.6) with `{story_title}`, `{task_description}`, `{epic_id}`, `{epic_name}`, `{sprint_list_id}`, and `{sprint_list_name}` available in step context.
+
+> **Refinement source:** `gettaskbyid-metadata-description-boundary` (story 5-7).
