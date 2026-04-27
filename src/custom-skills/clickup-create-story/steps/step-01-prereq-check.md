@@ -11,6 +11,22 @@ architecture_content: ''
 - This step calls `pickSpace` (no arguments) exactly once for token validation. No other ClickUp API calls are made in this step. No writes to ClickUp.
 - If either required file is missing, **stop the entire skill run immediately**. Do not proceed to step 2.
 
+## CWD Assertion
+
+Run this check **before** the permission gate. It catches the case where the dev session is open at the bmad-mcp-server repo root rather than the pilot/target repo whose planning artifacts the skill is supposed to read.
+
+0. **Assert pilot-repo cwd.** Resolve `{cwd}` from `pwd`. Look for a `.bmad-pilot-marker` file at `{cwd}/.bmad-pilot-marker`. If the file is present, read its first line and verify it begins with `bmad-pilot-marker:` (any non-empty value); record `{cwd_assertion}` = `pass`. If the file is absent, emit the cwd error block below and stop.
+
+   > ❌ **Cwd assertion failed — not the pilot repo**
+   >
+   > The `clickup-create-story` skill expects to run with `{cwd}` pointing at the pilot/target repo whose `planning-artifacts/PRD.md` and `planning-artifacts/architecture.md` will be read. The current `{cwd}` does not contain a `.bmad-pilot-marker` sentinel file at its root.
+   >
+   > **Why:** When Claude Code opens multiple repos in one session, `pwd` can resolve to the bmad-mcp-server repo root rather than the target repo. Reading planning artifacts from the wrong cwd silently produces stories grounded in the wrong PRD.
+   >
+   > **What to do:** Either `cd` to the pilot repo before re-invoking the skill, or place a `.bmad-pilot-marker` file at the target repo root (a single line `bmad-pilot-marker: 1` is sufficient; optional `repo:` and `epic:` fields enable stronger assertion).
+   >
+   > **Disclosed-deviation escape hatch:** If the dev session must remain at the bmad-mcp-server cwd (e.g. multi-repo Claude Code project) and the planning artifacts are loaded via absolute-path `Read` against the pilot-repo files, record the deviation in the Dev Agent Record §Agent Model Used and continue. Stories 5-4 and 5-5 used this path under disclosed deviation.
+
 ## Permission Gate
 
 Before checking project files, run these two checks in order. If either fails, emit the corresponding error block and stop the entire skill run immediately.
@@ -57,22 +73,6 @@ Before checking project files, run these two checks in order. If either fails, e
 > - Confirm `CLICKUP_TEAM_ID` is set to your workspace ID (7–10 digits).
 > - Restart the MCP server after updating either variable, then re-invoke the Dev
 >   agent in story-creation mode.
-
-## CWD Assertion
-
-Run this check **before** the permission gate. It catches the case where the dev session is open at the bmad-mcp-server repo root rather than the pilot/target repo whose planning artifacts the skill is supposed to read.
-
-0. **Assert pilot-repo cwd.** Resolve `{cwd}` from `pwd`. Look for a `.bmad-pilot-marker` file at `{cwd}/.bmad-pilot-marker`. If the file is present, read its first line and verify it begins with `bmad-pilot-marker:` (any non-empty value); record `{cwd_assertion}` = `pass`. If the file is absent, emit the cwd error block below and stop.
-
-   > ❌ **Cwd assertion failed — not the pilot repo**
-   >
-   > The `clickup-create-story` skill expects to run with `{cwd}` pointing at the pilot/target repo whose `planning-artifacts/PRD.md` and `planning-artifacts/architecture.md` will be read. The current `{cwd}` does not contain a `.bmad-pilot-marker` sentinel file at its root.
-   >
-   > **Why:** When Claude Code opens multiple repos in one session, `pwd` can resolve to the bmad-mcp-server repo root rather than the target repo. Reading planning artifacts from the wrong cwd silently produces stories grounded in the wrong PRD.
-   >
-   > **What to do:** Either `cd` to the pilot repo before re-invoking the skill, or place a `.bmad-pilot-marker` file at the target repo root (a single line `bmad-pilot-marker: 1` is sufficient; optional `repo:` and `epic:` fields enable stronger assertion).
-   >
-   > **Disclosed-deviation escape hatch:** If the dev session must remain at the bmad-mcp-server cwd (e.g. multi-repo Claude Code project) and the planning artifacts are loaded via absolute-path `Read` against the pilot-repo files, record the deviation in the Dev Agent Record §Agent Model Used and continue. Stories 5-4 and 5-5 used this path under disclosed deviation.
 
 ## INSTRUCTIONS
 

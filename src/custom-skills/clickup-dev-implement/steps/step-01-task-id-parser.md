@@ -33,7 +33,7 @@ Run these two checks **before** parsing the task ID. They catch wrong-cwd and or
 >
 > The `clickup-dev-implement` skill found a GitHub Personal Access Token prefix embedded in `git remote -v` output for the current repo. Continuing would mean every subsequent `git push` reads the leaked token, and any forked clone of this repo retains it.
 >
-> **Why:** Embedding `ghp_…` / `github_pat_…` / `ghs_…` / `ghu_…` / `ghr_…` in a remote URL is a credential leak. Story 5-5 added this preflight after `pilot.md` §Known risks bullet 2 surfaced the same gap.
+> **Why:** Embedding `ghp_…` / `github_pat_…` / `ghs_…` / `ghu_…` / `ghr_…` in a remote URL is a credential leak. Story 5-7 added this preflight after story 5-5's `pilot.md` §Known risks bullet 2 surfaced the same gap.
 >
 > **What to do:**
 >
