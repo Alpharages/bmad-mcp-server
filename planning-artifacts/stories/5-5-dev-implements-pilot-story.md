@@ -442,7 +442,23 @@ PR `https://github.com/Alpharages/lore/pull/1`: state=OPEN, body references `htt
 
 ### Review Findings
 
-(to be populated by the code-review pass after dev-story execution; mirrors the [story 5-4 §Senior Developer Review (AI)](./5-4-dev-creates-pilot-stories.md) ledger pattern)
+**Reviewer:** Claude Sonnet 4.6 (AI), 2026-04-27.
+
+| # | Finding | Severity | Resolution |
+|---|---------|----------|------------|
+| 1 | `propagatedFrom` in `schema.ts` lacked `.references(() => lessons.id, { onDelete: 'set null' })` — FK existed in migration SQL but not in Drizzle schema, causing a type-safety gap at the ORM layer. | Medium | Attempted `.references()` but Drizzle's type inference cannot resolve circular dependency on self-referential tables (TypeScript error TS7022/TS7024). Resolved with a clear documentation comment on the column explaining the intentional omission; FK remains enforced at DB level by `0000_initial.sql`. | 
+| 2 | `package.json` included `postgres` (postgres.js `^3.4.5`) alongside `pg` (`^8.13.3`). The client uses `drizzle-orm/node-postgres` which depends on `pg`; `postgres` was an unused duplicate driver. | Low | Removed `postgres` from `dependencies`. |
+| 3 | `fastify: ^4.28.0` and `openai: ^4.77.0` pre-declared in `dependencies` with no application code using them in this story. | Observation | Removed both; they land when the `save-lesson` / `query-lessons` stories add the actual code. |
+| 4 | `withProjectContext` used `tx as unknown as typeof db` double-cast, a type-safety escape hatch that could mask runtime errors. | Low | Replaced with `DbTx` type alias derived from `Parameters<Parameters<typeof db.transaction>[0]>[0]`; `fn(tx)` now requires no cast. |
+
+**Action Items for story 5-7:**
+
+- Expand `step-05-status-transition.md` match-set to include `ready for review`, `code review`, `pending review`, `awaiting review` (literal `"in review"` missed the Backlog list's custom status).
+- Add a `**Pull Request:** <url>` field to Template B in `step-04-progress-comment-poster.md`.
+- Document `gh auth` pre-requisite (must be configured with access to the target org) in the `clickup-dev-implement` skill or a quickstart guide.
+- Investigate DS-trigger dispatch via `_bmad/custom/bmad-agent-dev.toml` in Claude Code CLI mode.
+
+**Fixes committed to `Alpharages/lore` at `2ef2284` on `feat/lore-memory-mcp-pgvector-schema`, pushed to origin.**
 
 ## Change Log
 
@@ -452,5 +468,6 @@ PR `https://github.com/Alpharages/lore/pull/1`: state=OPEN, body references `htt
 | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 2026-04-27 | Story drafted from EPIC-5 bullet 5 via `bmad-create-story` workflow. Status → ready-for-dev. `sprint-status.yaml` updated: `5-5-dev-implements-pilot-story` backlog → ready-for-dev, `last_updated` bumped. Work-site is the pilot repo (`Alpharages/lore`) for the implementation + PR plus ClickUp workspace `9018612026` for the M1 / M2 comments and status transition; bmad-mcp-server side is markdown + YAML only. The skill `clickup-dev-implement` (DS trigger) is invoked from the pilot repo cwd `/Volumes/Data/project/products/alpharages/lore` against one of `86exd8y7a` / `86exd8yh3` / `86exd8yrh`, recommended pick `86exd8y7a` (Postgres + pgvector schema). AC #6 carries the Backlog-list status-enum probe forward from story 5-4 §Senior Developer Review (AI) Action Item bullet 4 with three explicit resolution paths. |
 | 2026-04-27 | Validation pass against `bmad-create-story` checklist applied five non-blocking refinements: AC #18 extended to require a `git remote -v | grep -E 'ghp_|github_pat_'` zero-match preflight against the pilot repo's origin URL (consumes story 5-4 §Senior Developer Review (AI) Action Item bullet 8 — story 5-5 is the first story to actually `git push` to `Alpharages/lore`, so it is the natural enforcement point) plus a Task 0 sub-bullet adding the lore-origin-PAT scan + `gh auth status` check; §Out of Scope gained an explicit deferral of the three-way `store-lesson` ↔ `save-lesson` reconciliation (story 5-4 Action Item bullet 3) to story 5-7, with AC #11 grounding-citations accepting whichever name the seeded `tech-spec.md` carries; Task 0 sub-bullet 8 tightened to require the literal case-insensitive `"in review"` match (matching `step-05-status-transition.md` instruction 4's hardcoded contract) — synonyms (`review`, `code review`, `pending review`) do NOT satisfy the skill's match logic and the synonym-set expansion is a story-5-7-scoped refinement; Task 4 gained a PR-body secret scan sub-bullet (`gh pr view ... --json body --jq .body | grep -Ei 'ghp_|...'`) extending AC #9 to the GitHub PR-description surface that ClickUp-comment scans do not reach; AC #5 reconciled with `step-04-progress-comment-poster.md` Template B's actual structure (no `Pull Request:` field — PR URL embeds in the `**Summary:**` paragraph; the missing-PR-field gap is a friction-log entry queued to story 5-7). No AC removed, no AC weakened, no Out-of-Scope expanded. Status remains `ready-for-dev`. |
+| 2026-04-27 | Code-review pass by Claude Sonnet 4.6 (AI). Four findings resolved: (1) `propagatedFrom` self-referential FK documented as intentionally omitted from Drizzle schema (circular type inference limitation; DB-level FK in SQL migration unchanged); (2) `postgres` duplicate driver removed from `package.json`; (3) premature `fastify` + `openai` deps removed; (4) `withProjectContext` double-cast replaced with `DbTx` alias. Fixes committed to `Alpharages/lore` at `2ef2284`. Four story-5-7 action items recorded in §Review Findings. Status → done. `sprint-status.yaml` updated. |
 
 <!-- prettier-ignore-end -->
