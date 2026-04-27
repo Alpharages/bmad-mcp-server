@@ -655,6 +655,7 @@ ClickUp adds an MCP prompt for triaging assigned tasks. The prompt text is Germa
 - **[API Contracts](./docs/api-contracts.md)** - MCP tools and TypeScript APIs
 - **[Development Guide](./docs/development-guide.md)** - Contributing and testing
 - **[Release Process](./.github/RELEASE_PROCESS.md)** - Release workflow for maintainers
+- **[BMAD + ClickUp Team Quickstart](./docs/clickup-quickstart.md)** - Team-lead workflow for invoking the Dev agent against ClickUp epics
 
 ---
 
