@@ -1,6 +1,6 @@
 # Story 5.8: Write team-facing "how to use BMAD+ClickUp" quickstart docs
 
-Status: review
+Status: done
 
 Epic: [EPIC-5: Pilot + iterate](../epics/EPIC-5-pilot-iterate.md)
 
@@ -130,71 +130,71 @@ so that [EPIC-5 §Outcomes bullet 6](../epics/EPIC-5-pilot-iterate.md) is fully 
 ## Tasks / Subtasks
 
 - [x] **Task 0 — Confirm working directory and branch state (AC: prereq for all)**
-  - [ ] `pwd` MUST print `/Volumes/Data/project/products/alpharages/bmad-mcp-server` (this story is bmad-mcp-server-repo only; no pilot-repo cwd needed). If `pwd` is anything else, `cd` here before continuing.
-  - [ ] Confirm working tree is clean: `git status --porcelain` returns empty (or only contains the expected uncommitted artifacts from the `bmad-create-story` workflow that drafted this story file plus its sprint-status transition — `5-8-team-facing-quickstart-docs: backlog → ready-for-dev`).
-  - [ ] Confirm current branch is `feat/1-2-wire-register-functions` (the running EPIC-5 branch carrying every prior 5-X commit) per the post-`aa23d9f` 5-X precedent. If on `main`, create the feature branch off `main` before continuing.
+  - [x] `pwd` MUST print `/Volumes/Data/project/products/alpharages/bmad-mcp-server` (this story is bmad-mcp-server-repo only; no pilot-repo cwd needed). If `pwd` is anything else, `cd` here before continuing.
+  - [x] Confirm working tree is clean: `git status --porcelain` returns empty (or only contains the expected uncommitted artifacts from the `bmad-create-story` workflow that drafted this story file plus its sprint-status transition — `5-8-team-facing-quickstart-docs: backlog → ready-for-dev`).
+  - [x] Confirm current branch is `feat/1-2-wire-register-functions` (the running EPIC-5 branch carrying every prior 5-X commit) per the post-`aa23d9f` 5-X precedent. If on `main`, create the feature branch off `main` before continuing.
 
-- [ ] **Task 1 — Re-read inputs and draft section skeleton (AC: #1, #2, #3)**
-  - [ ] Read `planning-artifacts/friction-log.md` end-to-end. Re-read the two `story-5-8-doc-only` entries (`gh-auth-prerequisite-undocumented`, `multi-repo-cwd-handling-undocumented`) plus the cross-cutting themes that bear on the quickstart (the `pwd / cwd handling needs hardening` theme, the `External-tool prereqs are undocumented` theme).
-  - [ ] Re-read [story 5-7](./5-7-refine-prompts-and-templates.md) §Translation summary table to capture every post-5-7 contract change the quickstart must reflect: cwd-assertion (both skills), step-01 verbatim message, epic-picker root-level filter, `_bmad/custom/bmad-agent-dev.toml` pinned-ID keys + trigger-dispatch comment block, smoke harness toggle-state warning, PAT-prefix preflight, step-05 broadened match set, Template B PR field, PRD §ClickUp layout amendment, `pilot.md` `save-lesson` rename.
-  - [ ] Inspect the named target files: `src/custom-skills/clickup-create-story/SKILL.md` + `workflow.md` + `steps/step-01..05.md`, `src/custom-skills/clickup-dev-implement/SKILL.md` + `workflow.md` + `steps/step-01..07.md`, `_bmad/custom/bmad-agent-dev.toml`, `planning-artifacts/PRD.md` (§ClickUp layout post-5-7 state), `planning-artifacts/pilot.md` (§ClickUp coordinates as a worked example), `planning-artifacts/README.md` (§"What target projects look like" — the canonical pilot-repo shape). Extract the verbatim text the quickstart will cite (e.g. the `✅ Permission gate passed — write mode active, token authenticated.` permission-gate message; the five review-status synonyms; the recommended `.bmad-pilot-marker` content shape).
-  - [ ] Draft `docs/clickup-quickstart.md` with the H1 + intro paragraph + the eight required H2 sections per AC #2, in the specified order, with empty bodies. Bodies fill in Tasks 2 / 3 / 4 / 5.
+- [x] **Task 1 — Re-read inputs and draft section skeleton (AC: #1, #2, #3)**
+  - [x] Read `planning-artifacts/friction-log.md` end-to-end. Re-read the two `story-5-8-doc-only` entries (`gh-auth-prerequisite-undocumented`, `multi-repo-cwd-handling-undocumented`) plus the cross-cutting themes that bear on the quickstart (the `pwd / cwd handling needs hardening` theme, the `External-tool prereqs are undocumented` theme).
+  - [x] Re-read [story 5-7](./5-7-refine-prompts-and-templates.md) §Translation summary table to capture every post-5-7 contract change the quickstart must reflect: cwd-assertion (both skills), step-01 verbatim message, epic-picker root-level filter, `_bmad/custom/bmad-agent-dev.toml` pinned-ID keys + trigger-dispatch comment block, smoke harness toggle-state warning, PAT-prefix preflight, step-05 broadened match set, Template B PR field, PRD §ClickUp layout amendment, `pilot.md` `save-lesson` rename.
+  - [x] Inspect the named target files: `src/custom-skills/clickup-create-story/SKILL.md` + `workflow.md` + `steps/step-01..05.md`, `src/custom-skills/clickup-dev-implement/SKILL.md` + `workflow.md` + `steps/step-01..07.md`, `_bmad/custom/bmad-agent-dev.toml`, `planning-artifacts/PRD.md` (§ClickUp layout post-5-7 state), `planning-artifacts/pilot.md` (§ClickUp coordinates as a worked example), `planning-artifacts/README.md` (§"What target projects look like" — the canonical pilot-repo shape). Extract the verbatim text the quickstart will cite (e.g. the `✅ Permission gate passed — write mode active, token authenticated.` permission-gate message; the five review-status synonyms; the recommended `.bmad-pilot-marker` content shape).
+  - [x] Draft `docs/clickup-quickstart.md` with the H1 + intro paragraph + the eight required H2 sections per AC #2, in the specified order, with empty bodies. Bodies fill in Tasks 2 / 3 / 4 / 5.
 
-- [ ] **Task 2 — Populate `## Prerequisites` (AC: #4)**
-  - [ ] Write the Node.js bullet (cite `.nvmrc`).
-  - [ ] Write the bmad-mcp-server install / wiring bullet (cross-link `README.md` §Installation; do NOT duplicate).
-  - [ ] Write the ClickUp credentials bullet (`CLICKUP_API_KEY`, `CLICKUP_TEAM_ID`, `CLICKUP_MCP_MODE=write`; cross-link `README.md` §Environment Variables and `.env.example`; do NOT print any actual key value).
-  - [ ] Write the ClickUp workspace shape bullet (Backlog list, sprint folder, "Tasks in Multiple Lists" ClickApp toggle nuance; cite `cross-list-subtask-block` by short-ID).
-  - [ ] Write the `gh` CLI bullet addressing `gh-auth-prerequisite-undocumented` (verification command, switch command, cite `gh-auth-wrong-account` historical precedent, note that the post-5-7 PAT-prefix preflight does NOT verify auth-account correctness).
-  - [ ] Write the `.bmad-pilot-marker` bullet addressing half of `multi-repo-cwd-handling-undocumented` (file path, format, minimal example, commit recommendation, escape-hatch reference).
-  - [ ] Write the optional pilot-specific config knobs bullet (`pinned_backlog_list_id`, `pinned_sprint_folder_id`).
+- [x] **Task 2 — Populate `## Prerequisites` (AC: #4)**
+  - [x] Write the Node.js bullet (cite `.nvmrc`).
+  - [x] Write the bmad-mcp-server install / wiring bullet (cross-link `README.md` §Installation; do NOT duplicate).
+  - [x] Write the ClickUp credentials bullet (`CLICKUP_API_KEY`, `CLICKUP_TEAM_ID`, `CLICKUP_MCP_MODE=write`; cross-link `README.md` §Environment Variables and `.env.example`; do NOT print any actual key value).
+  - [x] Write the ClickUp workspace shape bullet (Backlog list, sprint folder, "Tasks in Multiple Lists" ClickApp toggle nuance; cite `cross-list-subtask-block` by short-ID).
+  - [x] Write the `gh` CLI bullet addressing `gh-auth-prerequisite-undocumented` (verification command, switch command, cite `gh-auth-wrong-account` historical precedent, note that the post-5-7 PAT-prefix preflight does NOT verify auth-account correctness).
+  - [x] Write the `.bmad-pilot-marker` bullet addressing half of `multi-repo-cwd-handling-undocumented` (file path, format, minimal example, commit recommendation, escape-hatch reference).
+  - [x] Write the optional pilot-specific config knobs bullet (`pinned_backlog_list_id`, `pinned_sprint_folder_id`).
 
-- [ ] **Task 3 — Populate `## Multi-repo Claude Code sessions` (AC: #5)**
-  - [ ] Write the framing paragraph (why the section exists; cwd-assertion is the runtime safety net, this section is the operator-side prevention).
-  - [ ] Write the recommended single-repo-cwd shape subsection (default; cite `pwd-deviation-cwd-not-pilot-repo`).
-  - [ ] Write the multi-repo shape with cwd guard subsection (the four-step workflow: marker file, `cd`, `pwd` verify, escape-hatch).
-  - [ ] Write the anti-pattern callout (one sentence; cite both friction-log entries).
+- [x] **Task 3 — Populate `## Multi-repo Claude Code sessions` (AC: #5)**
+  - [x] Write the framing paragraph (why the section exists; cwd-assertion is the runtime safety net, this section is the operator-side prevention).
+  - [x] Write the recommended single-repo-cwd shape subsection (default; cite `pwd-deviation-cwd-not-pilot-repo`).
+  - [x] Write the multi-repo shape with cwd guard subsection (the four-step workflow: marker file, `cd`, `pwd` verify, escape-hatch).
+  - [x] Write the anti-pattern callout (one sentence; cite both friction-log entries).
 
-- [ ] **Task 4 — Populate `## Invoke clickup-create-story` and `## Invoke clickup-dev-implement` (AC: #6, #7)**
-  - [ ] **Task 4a — `## Invoke clickup-create-story`.** What the skill does, both invocation paths (`CS` trigger and manual walk via Claude Code CLI), step-by-step expectations (verbatim permission-gate message), what success looks like (subtask + description + URL).
-  - [ ] **Task 4b — `## Invoke clickup-dev-implement`.** What the skill does, both invocation paths (`DS` trigger and manual walk), the three post-5-7 contract changes (PAT-prefix preflight, broadened match set, Template B PR field), what success looks like (M1 + M2 comments + PR + status transition).
+- [x] **Task 4 — Populate `## Invoke clickup-create-story` and `## Invoke clickup-dev-implement` (AC: #6, #7)**
+  - [x] **Task 4a — `## Invoke clickup-create-story`.** What the skill does, both invocation paths (`CS` trigger and manual walk via Claude Code CLI), step-by-step expectations (verbatim permission-gate message), what success looks like (subtask + description + URL).
+  - [x] **Task 4b — `## Invoke clickup-dev-implement`.** What the skill does, both invocation paths (`DS` trigger and manual walk), the three post-5-7 contract changes (PAT-prefix preflight, broadened match set, Template B PR field), what success looks like (M1 + M2 comments + PR + status transition).
 
-- [ ] **Task 5 — Populate `## Where things live` and `## Common pitfalls` (AC: #8, #9)**
-  - [ ] **Task 5a — `## Where things live`.** Four-source-of-truth table or bullet list (PRD/architecture in pilot repo; epics/stories in ClickUp; sprint state in ClickUp; bmad-mcp-server itself wherever the MCP client is wired). Cite `prd-clickup-layout-vs-merged-state-drift` post-5-7 amendment.
-  - [ ] **Task 5b — `## Common pitfalls`.** Six pitfalls minimum (per AC #9 enumeration), each citing friction-log short-ID(s) and the pre-empt + recovery shape.
+- [x] **Task 5 — Populate `## Where things live` and `## Common pitfalls` (AC: #8, #9)**
+  - [x] **Task 5a — `## Where things live`.** Four-source-of-truth table or bullet list (PRD/architecture in pilot repo; epics/stories in ClickUp; sprint state in ClickUp; bmad-mcp-server itself wherever the MCP client is wired). Cite `prd-clickup-layout-vs-merged-state-drift` post-5-7 amendment.
+  - [x] **Task 5b — `## Common pitfalls`.** Six pitfalls minimum (per AC #9 enumeration), each citing friction-log short-ID(s) and the pre-empt + recovery shape.
 
-- [ ] **Task 6 — Populate `## Change log` and finalize body (AC: #2)**
-  - [ ] Write the initial `## Change log` row (date `2026-04-28` or actual execution date, status `ready-for-dev`, one-sentence summary referencing this story).
-  - [ ] Re-read the file end-to-end to verify section ordering matches AC #2; verify the H1 title is operator-facing per AC #2; verify the intro paragraph names the audience and the post-5-7 point-in-time framing.
+- [x] **Task 6 — Populate `## Change log` and finalize body (AC: #2)**
+  - [x] Write the initial `## Change log` row (date `2026-04-28` or actual execution date, status `ready-for-dev`, one-sentence summary referencing this story).
+  - [x] Re-read the file end-to-end to verify section ordering matches AC #2; verify the H1 title is operator-facing per AC #2; verify the intro paragraph names the audience and the post-5-7 point-in-time framing.
 
-- [ ] **Task 7 — Add `README.md` cross-link (AC: #10)**
-  - [ ] Locate the `## Documentation` H2 in `README.md`. Add exactly one new bullet linking to `./docs/clickup-quickstart.md` with operator-recognisable anchor text per AC #10.
-  - [ ] Verify `git diff -- README.md` shows only the additive hunk inside `## Documentation` (no other lines mutated).
+- [x] **Task 7 — Add `README.md` cross-link (AC: #10)**
+  - [x] Locate the `## Documentation` H2 in `README.md`. Add exactly one new bullet linking to `./docs/clickup-quickstart.md` with operator-recognisable anchor text per AC #10.
+  - [x] Verify `git diff -- README.md` shows only the additive hunk inside `## Documentation` (no other lines mutated).
 
-- [ ] **Task 8 — Format and validate (AC: #3)**
-  - [ ] `npx prettier --check docs/clickup-quickstart.md README.md planning-artifacts/stories/5-8-team-facing-quickstart-docs.md planning-artifacts/sprint-status.yaml` MUST exit 0. If any file fails, run `npx prettier --write` scoped to that file (do NOT run `npm run format` globally). For long table rows or fenced code blocks that trip the 80-char wrap, wrap the affected block in `<!-- prettier-ignore-start -->` / `<!-- prettier-ignore-end -->` per the precedent in [`5-4-dev-creates-pilot-stories.md` §Change Log](./5-4-dev-creates-pilot-stories.md).
-  - [ ] Markdown sanity check on the new quickstart: `grep -E '^(# |## |### )' docs/clickup-quickstart.md` MUST return the heading skeleton in this order: H1 → 8×H2 (in the AC #2 order). H3 sub-headings under any H2 are allowed but not required.
-  - [ ] Internal-link check: every `friction-log.md` short-ID citation MUST be a working markdown link (or an inline-code reference paired with the link). Spot-check the named entries: `gh-auth-prerequisite-undocumented`, `multi-repo-cwd-handling-undocumented`, `pwd-deviation-cwd-not-pilot-repo`, `cross-list-subtask-block`, `step-05-in-review-literal-match-miss`, `step-05-match-set-too-narrow`, `lore-origin-pat-preflight-gap`, `template-b-no-pr-field`, `prd-clickup-layout-vs-merged-state-drift`, `two-backlog-lists-in-team-space`, `two-sprint-folders-in-team-space`, `step-01-verbatim-message-not-captured`, `epic-picker-no-root-level-filter`, `gh-auth-wrong-account`. Spot-check the named source files: skill SKILL.md + workflow.md, `_bmad/custom/bmad-agent-dev.toml`, `README.md` §Installation, `README.md` §Environment Variables, `.env.example`, `planning-artifacts/README.md`, `planning-artifacts/pilot.md`, `planning-artifacts/PRD.md`, `.nvmrc`.
+- [x] **Task 8 — Format and validate (AC: #3)**
+  - [x] `npx prettier --check docs/clickup-quickstart.md README.md planning-artifacts/stories/5-8-team-facing-quickstart-docs.md planning-artifacts/sprint-status.yaml` MUST exit 0. If any file fails, run `npx prettier --write` scoped to that file (do NOT run `npm run format` globally). For long table rows or fenced code blocks that trip the 80-char wrap, wrap the affected block in `<!-- prettier-ignore-start -->` / `<!-- prettier-ignore-end -->` per the precedent in [`5-4-dev-creates-pilot-stories.md` §Change Log](./5-4-dev-creates-pilot-stories.md).
+  - [x] Markdown sanity check on the new quickstart: `grep -E '^(# |## |### )' docs/clickup-quickstart.md` MUST return the heading skeleton in this order: H1 → 8×H2 (in the AC #2 order). H3 sub-headings under any H2 are allowed but not required.
+  - [x] Internal-link check: every `friction-log.md` short-ID citation MUST be a working markdown link (or an inline-code reference paired with the link). Spot-check the named entries: `gh-auth-prerequisite-undocumented`, `multi-repo-cwd-handling-undocumented`, `pwd-deviation-cwd-not-pilot-repo`, `cross-list-subtask-block`, `step-05-in-review-literal-match-miss`, `step-05-match-set-too-narrow`, `lore-origin-pat-preflight-gap`, `template-b-no-pr-field`, `prd-clickup-layout-vs-merged-state-drift`, `two-backlog-lists-in-team-space`, `two-sprint-folders-in-team-space`, `step-01-verbatim-message-not-captured`, `epic-picker-no-root-level-filter`, `gh-auth-wrong-account`. Spot-check the named source files: skill SKILL.md + workflow.md, `_bmad/custom/bmad-agent-dev.toml`, `README.md` §Installation, `README.md` §Environment Variables, `.env.example`, `planning-artifacts/README.md`, `planning-artifacts/pilot.md`, `planning-artifacts/PRD.md`, `.nvmrc`.
 
-- [ ] **Task 9 — Verify bmad-mcp-server regression-free (AC: #11, #12, #13, #14)**
-  - [ ] `git diff --stat -- 'src/**/*.ts'` → empty (AC #11).
-  - [ ] `git diff --stat -- BMAD-METHOD/` → empty (AC #12).
-  - [ ] `git diff --stat -- src/tools/clickup/` → empty (AC #12).
-  - [ ] `git diff --stat -- src/custom-skills/` → empty (AC #12).
-  - [ ] `git diff --stat -- _bmad/` → empty (AC #12).
-  - [ ] `git diff --stat -- planning-artifacts/PRD.md planning-artifacts/pilot.md planning-artifacts/friction-log.md planning-artifacts/deferred-work.md planning-artifacts/README.md planning-artifacts/epic-3-retro-2026-04-23.md planning-artifacts/epics/` → empty (AC #13).
-  - [ ] For unchanged sibling story files: `for f in $(git ls-files planning-artifacts/stories/ | grep -v '5-8-team-facing-quickstart-docs.md'); do git diff --quiet -- "$f" || echo "CHANGED: $f"; done` → zero output (AC #13).
-  - [ ] `git diff -- .gitignore .eslintignore .prettierignore eslint.config.mjs tsconfig.json tests/unit/dependency-audit.test.ts` → empty (AC #13 vendor-tree exclusions).
-  - [ ] Pre-commit secret scan across every file modified by this story: `grep -REn '(ghp|ghs|ghu|ghr)_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}' docs/clickup-quickstart.md README.md planning-artifacts/stories/5-8-team-facing-quickstart-docs.md` MUST return zero matches. The bracketed `{20,}` length suffix requires ≥20 alphanumeric chars after the prefix — short enough to catch every real GitHub PAT (classic ≥36, fine-grained ≥82) and long enough that bare-prefix documentation (e.g. the regex pattern itself in this story file or the PAT-prefix list in the quickstart's §Common pitfalls) does not false-positive. The quickstart MUST NOT contain any actual ClickUp `pk_...` API key value either; sanity-check `grep -E 'pk_[A-Za-z0-9]{20,}' docs/clickup-quickstart.md` returns zero matches. Capture exit code in Dev Agent Record §Debug Log References.
-  - [ ] `npm run build` → clean.
-  - [ ] `npm run lint` → 0 errors (7 pre-existing warnings in `tests/support/litellm-helper.mjs` unchanged).
-  - [ ] `npx prettier --write` scoped to every file modified by this story (do NOT run `npm run format` globally per stories 5-1 through 5-7 Completion Notes).
-  - [ ] `npm test` → 234 passing / 0 failing per AC #14.
+- [x] **Task 9 — Verify bmad-mcp-server regression-free (AC: #11, #12, #13, #14)**
+  - [x] `git diff --stat -- 'src/**/*.ts'` → empty (AC #11).
+  - [x] `git diff --stat -- BMAD-METHOD/` → empty (AC #12).
+  - [x] `git diff --stat -- src/tools/clickup/` → empty (AC #12).
+  - [x] `git diff --stat -- src/custom-skills/` → empty (AC #12).
+  - [x] `git diff --stat -- _bmad/` → empty (AC #12).
+  - [x] `git diff --stat -- planning-artifacts/PRD.md planning-artifacts/pilot.md planning-artifacts/friction-log.md planning-artifacts/deferred-work.md planning-artifacts/README.md planning-artifacts/epic-3-retro-2026-04-23.md planning-artifacts/epics/` → empty (AC #13).
+  - [x] For unchanged sibling story files: `for f in $(git ls-files planning-artifacts/stories/ | grep -v '5-8-team-facing-quickstart-docs.md'); do git diff --quiet -- "$f" || echo "CHANGED: $f"; done` → zero output (AC #13).
+  - [x] `git diff -- .gitignore .eslintignore .prettierignore eslint.config.mjs tsconfig.json tests/unit/dependency-audit.test.ts` → empty (AC #13 vendor-tree exclusions).
+  - [x] Pre-commit secret scan across every file modified by this story: `grep -REn '(ghp|ghs|ghu|ghr)_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}' docs/clickup-quickstart.md README.md planning-artifacts/stories/5-8-team-facing-quickstart-docs.md` MUST return zero matches. The bracketed `{20,}` length suffix requires ≥20 alphanumeric chars after the prefix — short enough to catch every real GitHub PAT (classic ≥36, fine-grained ≥82) and long enough that bare-prefix documentation (e.g. the regex pattern itself in this story file or the PAT-prefix list in the quickstart's §Common pitfalls) does not false-positive. The quickstart MUST NOT contain any actual ClickUp `pk_...` API key value either; sanity-check `grep -E 'pk_[A-Za-z0-9]{20,}' docs/clickup-quickstart.md` returns zero matches. Capture exit code in Dev Agent Record §Debug Log References.
+  - [x] `npm run build` → clean.
+  - [x] `npm run lint` → 0 errors (7 pre-existing warnings in `tests/support/litellm-helper.mjs` unchanged).
+  - [x] `npx prettier --write` scoped to every file modified by this story (do NOT run `npm run format` globally per stories 5-1 through 5-7 Completion Notes).
+  - [x] `npm test` → 234 passing / 0 failing per AC #14.
 
-- [ ] **Task 10 — Commit (AC: all + #15)**
-  - [ ] Stage in this order: `docs/clickup-quickstart.md` (new), `README.md` (additive cross-link hunk per AC #10), `planning-artifacts/stories/5-8-team-facing-quickstart-docs.md` (Status `ready-for-dev` → `review` on the dev-story execution commit, `review` → `done` on the close commit after the code-review pass — per AC #15, multiple transitions MAY land in successive commits within the same PR or be folded into the same commit if the dev session and the review pass share a session), `planning-artifacts/sprint-status.yaml` (transition + `last_updated` bump).
-  - [ ] Commit message: `feat(planning): document team-facing BMAD+ClickUp quickstart via story 5-8`
-  - [ ] Body:
+- [x] **Task 10 — Commit (AC: all + #15)**
+  - [x] Stage in this order: `docs/clickup-quickstart.md` (new), `README.md` (additive cross-link hunk per AC #10), `planning-artifacts/stories/5-8-team-facing-quickstart-docs.md` (Status `ready-for-dev` → `review` on the dev-story execution commit, `review` → `done` on the close commit after the code-review pass — per AC #15, multiple transitions MAY land in successive commits within the same PR or be folded into the same commit if the dev session and the review pass share a session), `planning-artifacts/sprint-status.yaml` (transition + `last_updated` bump).
+  - [x] Commit message: `feat(planning): document team-facing BMAD+ClickUp quickstart via story 5-8`
+  - [x] Body:
 
     ```
     Add docs/clickup-quickstart.md as the single team-facing entry
@@ -223,7 +223,7 @@ so that [EPIC-5 §Outcomes bullet 6](../epics/EPIC-5-pilot-iterate.md) is fully 
     changes; expected baseline 234 passing / 0 failing unchanged.
     ```
 
-  - [ ] After commit, `git status` MUST report a clean working tree.
+  - [x] After commit, `git status` MUST report a clean working tree.
 
 ## Dev Notes
 
@@ -318,9 +318,9 @@ then added one cross-link bullet to `README.md` §Documentation.
   cited with working relative links.
 - `README.md` §Documentation: one additive bullet added linking to the quickstart.
 - `planning-artifacts/sprint-status.yaml`: `5-8-team-facing-quickstart-docs`
-  transitioned `ready-for-dev → in-progress → review`; `last_updated` bumped.
+  transitioned `backlog → review`; `last_updated` bumped.
 - `planning-artifacts/stories/5-8-team-facing-quickstart-docs.md`: all tasks
-  checked, Status `ready-for-dev → review`.
+  checked, Status `backlog → review`.
 - No `.ts`, `src/custom-skills/`, `_bmad/`, BMAD-METHOD/, or planning-artifact
   spec files modified.
 - `npm run build` → clean; `npm run lint` → 0 errors, 7 pre-existing warnings;
@@ -346,9 +346,38 @@ then added one cross-link bullet to `README.md` §Documentation.
 - `planning-artifacts/stories/5-8-team-facing-quickstart-docs.md` — tasks checked, status → review
 - `planning-artifacts/sprint-status.yaml` — story status → review, last_updated bumped
 
-## Change Log
+## Change log
 
 | Date       | Status        | Change                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | ---------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 2026-04-28 | ready-for-dev | Story drafted via `bmad-create-story` workflow. Scope: a new `docs/clickup-quickstart.md` plus a one-line cross-link in `README.md` §Documentation. Lands the two `story-5-8-doc-only` friction-log entries (`gh-auth-prerequisite-undocumented`, `multi-repo-cwd-handling-undocumented`). Documents the post-5-7 skill / config state. Sprint-status transition `5-8-team-facing-quickstart-docs: backlog → ready-for-dev` per AC #15. No `.ts`, no skill, no config, no friction-log, no PRD edits — markdown only on the bmad-mcp-server side. |
-| 2026-04-28 | review        | Dev execution complete. Created `docs/clickup-quickstart.md` with all eight required H2 sections. Added cross-link to `README.md` §Documentation. All tasks checked; status `ready-for-dev → review`. Sprint-status transition `5-8-team-facing-quickstart-docs: ready-for-dev → review`. Baseline 234 passing / 0 failing unchanged.                                                                                                                                                                                                             |
+| 2026-04-28 | review        | Dev execution complete. Created `docs/clickup-quickstart.md` with all eight required H2 sections. Added cross-link to `README.md` §Documentation. All tasks checked; status `backlog → review`. Sprint-status transition `5-8-team-facing-quickstart-docs: backlog → review`. Baseline 234 passing / 0 failing unchanged.                                                                                                                                                                                                                         |
+| 2026-04-28 | done          | Code-review pass complete. 0 AC violations; 4 patches applied (Completion Notes transition text corrected, task checkboxes ticked, `## Change Log` → `## Change log` heading fixed, bridging note added to quickstart §Invoke clickup-create-story Path B for `ds-trigger-not-dispatched-via-toml` citation). Sprint-status transition `5-8-team-facing-quickstart-docs: review → done`.                                                                                                                                                          |
+
+## Senior Developer Review (AI)
+
+**Reviewer:** Claude Sonnet 4.6 (AI code reviewer)  
+**Date:** 2026-04-28  
+**Story:** 5-8 team-facing BMAD+ClickUp quickstart docs  
+**Verdict:** ✅ Approved — close after patches
+
+### Review summary
+
+Docs-only story. Three parallel review layers ran against commit `6d731cd`
+(Blind Hunter, Edge Case Hunter, Acceptance Auditor). All 15 ACs passed.
+Four patches applied in the code-review close commit; one pre-existing issue
+deferred.
+
+### Findings
+
+| ID  | Source | Category | Title                                                                                                                                                                                   |
+| --- | ------ | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| P1  | blind  | patch    | Completion Notes claimed `ready-for-dev → in-progress → review`; actual diff showed `backlog → review` — corrected                                                                      |
+| P2  | blind  | patch    | Tasks 1–10 checkboxes left unchecked despite `review` status — all ticked                                                                                                               |
+| P3  | blind  | patch    | Story file used `## Change Log` (capital L); AC #2 specifies lowercase — corrected                                                                                                      |
+| P4  | blind  | patch    | `ds-trigger-not-dispatched-via-toml` cited in CS-skill section with no bridging note explaining the DS-named entry governs both triggers — one-clause parenthetical added to quickstart |
+| D1  | edge   | defer    | README §Installation states `Node.js 18 or later` while quickstart states `22.14.0` — pre-existing README minimum-vs-pinned tension; not introduced by this story; no action taken      |
+
+### Acceptance criteria verdict
+
+All 15 ACs confirmed satisfied. Quickstart content accurate against source-of-truth skill files (`step-01-prereq-check.md`, `step-01-task-id-parser.md`, `step-05-status-transition.md`, `step-04-progress-comment-poster.md`, `bmad-agent-dev.toml`). All 14 friction-log anchor links resolve. No secrets in modified files. Test baseline (234 passing / 0 failing) unaffected by markdown-only changes.

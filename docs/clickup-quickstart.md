@@ -232,6 +232,10 @@ skill = "clickup-create-story"
 
 > Addresses the documented-not-fixed behaviour:
 > [`ds-trigger-not-dispatched-via-toml`](../planning-artifacts/friction-log.md#ds-trigger-not-dispatched-via-toml)
+> (the entry name reflects the DS/`clickup-dev-implement` trigger, but the same
+> TOML-dispatch gap applies to the CS/`clickup-create-story` trigger in Claude Code
+> CLI mode — see the comment block in
+> [`_bmad/custom/bmad-agent-dev.toml`](../_bmad/custom/bmad-agent-dev.toml))
 
 In Claude Code CLI mode, the `CS` trigger is not dispatched via the TOML routing
 table. The agent invokes the skill steps directly, walking
