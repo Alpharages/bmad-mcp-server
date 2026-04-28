@@ -46,8 +46,7 @@ import type { Workflow } from '../types/index.js';
  * Official BMAD-METHOD repository — used as the automatic fallback source
  * so users don't need to install BMAD separately.
  */
-const DEFAULT_BMAD_REMOTE =
-  'git+https://github.com/Alpharages/BMAD-METHOD.git';
+const DEFAULT_BMAD_REMOTE = 'git+https://github.com/Alpharages/BMAD-METHOD.git';
 
 /**
  * Constants for resource loading
@@ -324,7 +323,11 @@ export class ResourceLoaderGit {
     try {
       const entries = readdirSync(agentsPath, { withFileTypes: true });
       for (const entry of entries) {
-        if (entry.isFile() && entry.name.endsWith('.md') && entry.name.toLowerCase() !== 'readme.md') {
+        if (
+          entry.isFile() &&
+          entry.name.endsWith('.md') &&
+          entry.name.toLowerCase() !== 'readme.md'
+        ) {
           // v5: flat *.md file
           names.push(basename(entry.name, '.md'));
         } else if (entry.isDirectory()) {
@@ -366,7 +369,12 @@ export class ResourceLoaderGit {
    * Checks src/bmm-skills first, then bmm-skills at root level.
    */
   private findBmmSkillsRoot(basePath: string): string | null {
-    for (const rel of ['src/bmm-skills', 'bmm-skills']) {
+    for (const rel of [
+      'src/bmm-skills',
+      'bmm-skills',
+      'src/custom-skills',
+      'custom-skills',
+    ]) {
       const candidate = join(basePath, rel);
       if (existsSync(candidate)) return candidate;
     }
@@ -406,7 +414,8 @@ export class ResourceLoaderGit {
             const agentName = entry.name.slice('bmad-agent-'.length);
             if (!agents.has(agentName)) agents.set(agentName, skillFile);
           } else {
-            if (!workflows.has(entry.name)) workflows.set(entry.name, skillFile);
+            if (!workflows.has(entry.name))
+              workflows.set(entry.name, skillFile);
           }
           // Do NOT recurse — this directory owns its SKILL.md
         } else {
@@ -496,7 +505,13 @@ export class ResourceLoaderGit {
         source: 'project',
       });
       candidates.push({
-        path: join(projectBmad, projectPathInfo.module, 'agents', `bmad-agent-${name}`, 'SKILL.md'),
+        path: join(
+          projectBmad,
+          projectPathInfo.module,
+          'agents',
+          `bmad-agent-${name}`,
+          'SKILL.md',
+        ),
         source: 'project',
       });
     } else {
@@ -523,7 +538,13 @@ export class ResourceLoaderGit {
               source: 'project',
             });
             candidates.push({
-              path: join(projectBmad, module, 'agents', `bmad-agent-${name}`, 'SKILL.md'),
+              path: join(
+                projectBmad,
+                module,
+                'agents',
+                `bmad-agent-${name}`,
+                'SKILL.md',
+              ),
               source: 'project',
             });
           }
@@ -537,18 +558,48 @@ export class ResourceLoaderGit {
     const userPathInfo = this.detectPathType(this.paths.userBmad);
     const userBmad = userPathInfo.bmadRoot;
     if (userPathInfo.module) {
-      candidates.push({ path: join(userBmad, userPathInfo.module, 'agents', `${name}.md`), source: 'user' });
-      candidates.push({ path: join(userBmad, userPathInfo.module, 'agents', `bmad-agent-${name}`, 'SKILL.md'), source: 'user' });
+      candidates.push({
+        path: join(userBmad, userPathInfo.module, 'agents', `${name}.md`),
+        source: 'user',
+      });
+      candidates.push({
+        path: join(
+          userBmad,
+          userPathInfo.module,
+          'agents',
+          `bmad-agent-${name}`,
+          'SKILL.md',
+        ),
+        source: 'user',
+      });
     } else {
-      candidates.push({ path: join(userBmad, 'agents', `${name}.md`), source: 'user' });
-      candidates.push({ path: join(userBmad, 'agents', `bmad-agent-${name}`, 'SKILL.md'), source: 'user' });
+      candidates.push({
+        path: join(userBmad, 'agents', `${name}.md`),
+        source: 'user',
+      });
+      candidates.push({
+        path: join(userBmad, 'agents', `bmad-agent-${name}`, 'SKILL.md'),
+        source: 'user',
+      });
       try {
         const modules = readdirSync(userBmad, { withFileTypes: true })
           .filter((dirent) => dirent.isDirectory())
           .map((dirent) => dirent.name);
         for (const module of modules) {
-          candidates.push({ path: join(userBmad, module, 'agents', `${name}.md`), source: 'user' });
-          candidates.push({ path: join(userBmad, module, 'agents', `bmad-agent-${name}`, 'SKILL.md'), source: 'user' });
+          candidates.push({
+            path: join(userBmad, module, 'agents', `${name}.md`),
+            source: 'user',
+          });
+          candidates.push({
+            path: join(
+              userBmad,
+              module,
+              'agents',
+              `bmad-agent-${name}`,
+              'SKILL.md',
+            ),
+            source: 'user',
+          });
         }
       } catch {
         // Ignore errors scanning modules
@@ -576,7 +627,12 @@ export class ResourceLoaderGit {
           source: 'git',
         });
         candidates.push({
-          path: join(pathInfo.bmadRoot, 'agents', `bmad-agent-${name}`, 'SKILL.md'),
+          path: join(
+            pathInfo.bmadRoot,
+            'agents',
+            `bmad-agent-${name}`,
+            'SKILL.md',
+          ),
           source: 'git',
         });
 
@@ -594,7 +650,13 @@ export class ResourceLoaderGit {
               source: 'git',
             });
             candidates.push({
-              path: join(pathInfo.bmadRoot, module, 'agents', `bmad-agent-${name}`, 'SKILL.md'),
+              path: join(
+                pathInfo.bmadRoot,
+                module,
+                'agents',
+                `bmad-agent-${name}`,
+                'SKILL.md',
+              ),
               source: 'git',
             });
           }
@@ -629,7 +691,12 @@ export class ResourceLoaderGit {
       if (!bmmRoot) continue;
       const skillPath = this.scanBmmSkills(bmmRoot).agents.get(name);
       if (skillPath && existsSync(skillPath)) {
-        return { name, path: skillPath, content: readFileSync(skillPath, 'utf-8'), source };
+        return {
+          name,
+          path: skillPath,
+          content: readFileSync(skillPath, 'utf-8'),
+          source,
+        };
       }
     }
 
@@ -861,11 +928,17 @@ export class ResourceLoaderGit {
     if (existsSync(projectBmad)) {
       // If a specific module was detected, only scan that module
       if (projectPathInfo.module) {
-        const moduleAgents = join(projectBmad, projectPathInfo.module, 'agents');
+        const moduleAgents = join(
+          projectBmad,
+          projectPathInfo.module,
+          'agents',
+        );
         this.scanAgentsDir(moduleAgents).forEach((name) => agents.add(name));
       } else {
         // Flat structure: bmad/agents/*.md (v5) or bmad/agents/bmad-agent-*/SKILL.md (v6)
-        this.scanAgentsDir(join(projectBmad, 'agents')).forEach((name) => agents.add(name));
+        this.scanAgentsDir(join(projectBmad, 'agents')).forEach((name) =>
+          agents.add(name),
+        );
 
         // Modular structure: bmad/{module}/agents/
         try {
@@ -874,7 +947,9 @@ export class ResourceLoaderGit {
             .map((dirent) => dirent.name);
 
           for (const module of modules) {
-            this.scanAgentsDir(join(projectBmad, module, 'agents')).forEach((name) => agents.add(name));
+            this.scanAgentsDir(join(projectBmad, module, 'agents')).forEach(
+              (name) => agents.add(name),
+            );
           }
         } catch {
           // Ignore errors scanning modules
@@ -887,15 +962,21 @@ export class ResourceLoaderGit {
     const userBmad = userPathInfo.bmadRoot;
     if (existsSync(userBmad)) {
       if (userPathInfo.module) {
-        this.scanAgentsDir(join(userBmad, userPathInfo.module, 'agents')).forEach((name) => agents.add(name));
+        this.scanAgentsDir(
+          join(userBmad, userPathInfo.module, 'agents'),
+        ).forEach((name) => agents.add(name));
       } else {
-        this.scanAgentsDir(join(userBmad, 'agents')).forEach((name) => agents.add(name));
+        this.scanAgentsDir(join(userBmad, 'agents')).forEach((name) =>
+          agents.add(name),
+        );
         try {
           const modules = readdirSync(userBmad, { withFileTypes: true })
             .filter((dirent) => dirent.isDirectory())
             .map((dirent) => dirent.name);
           for (const module of modules) {
-            this.scanAgentsDir(join(userBmad, module, 'agents')).forEach((name) => agents.add(name));
+            this.scanAgentsDir(join(userBmad, module, 'agents')).forEach(
+              (name) => agents.add(name),
+            );
           }
         } catch {
           // Ignore errors scanning modules
@@ -908,18 +989,26 @@ export class ResourceLoaderGit {
       const pathInfo = this.detectPathType(localPath);
 
       if (pathInfo.module) {
-        this.scanAgentsDir(join(localPath, 'agents')).forEach((name) => agents.add(name));
+        this.scanAgentsDir(join(localPath, 'agents')).forEach((name) =>
+          agents.add(name),
+        );
       } else {
         // BMAD root - scan flat and modular
-        this.scanAgentsDir(join(pathInfo.bmadRoot, 'agents')).forEach((name) => agents.add(name));
+        this.scanAgentsDir(join(pathInfo.bmadRoot, 'agents')).forEach((name) =>
+          agents.add(name),
+        );
 
         try {
-          const modules = readdirSync(pathInfo.bmadRoot, { withFileTypes: true })
+          const modules = readdirSync(pathInfo.bmadRoot, {
+            withFileTypes: true,
+          })
             .filter((dirent) => dirent.isDirectory())
             .map((dirent) => dirent.name);
 
           for (const module of modules) {
-            this.scanAgentsDir(join(pathInfo.bmadRoot, module, 'agents')).forEach((name) => agents.add(name));
+            this.scanAgentsDir(
+              join(pathInfo.bmadRoot, module, 'agents'),
+            ).forEach((name) => agents.add(name));
           }
         } catch {
           // Ignore errors scanning modules
@@ -929,18 +1018,24 @@ export class ResourceLoaderGit {
       // Also scan bmm-skills layout (Alpharages/BMAD-METHOD)
       const bmmRoot = this.findBmmSkillsRoot(localPath);
       if (bmmRoot) {
-        this.scanBmmSkills(bmmRoot).agents.forEach((_, name) => agents.add(name));
+        this.scanBmmSkills(bmmRoot).agents.forEach((_, name) =>
+          agents.add(name),
+        );
       }
     }
 
     // Project & user bmm-skills
     const projectBmmRoot = this.findBmmSkillsRoot(this.paths.projectRoot);
     if (projectBmmRoot) {
-      this.scanBmmSkills(projectBmmRoot).agents.forEach((_, name) => agents.add(name));
+      this.scanBmmSkills(projectBmmRoot).agents.forEach((_, name) =>
+        agents.add(name),
+      );
     }
     const userBmmRoot = this.findBmmSkillsRoot(this.paths.userBmad);
     if (userBmmRoot) {
-      this.scanBmmSkills(userBmmRoot).agents.forEach((_, name) => agents.add(name));
+      this.scanBmmSkills(userBmmRoot).agents.forEach((_, name) =>
+        agents.add(name),
+      );
     }
 
     return Array.from(agents).sort();
@@ -1103,18 +1198,24 @@ export class ResourceLoaderGit {
       // Also scan bmm-skills layout (Alpharages/BMAD-METHOD)
       const bmmRoot = this.findBmmSkillsRoot(localPath);
       if (bmmRoot) {
-        this.scanBmmSkills(bmmRoot).workflows.forEach((_, name) => workflows.add(name));
+        this.scanBmmSkills(bmmRoot).workflows.forEach((_, name) =>
+          workflows.add(name),
+        );
       }
     }
 
     // Project & user bmm-skills
     const projectBmmRoot = this.findBmmSkillsRoot(this.paths.projectRoot);
     if (projectBmmRoot) {
-      this.scanBmmSkills(projectBmmRoot).workflows.forEach((_, name) => workflows.add(name));
+      this.scanBmmSkills(projectBmmRoot).workflows.forEach((_, name) =>
+        workflows.add(name),
+      );
     }
     const userBmmRoot = this.findBmmSkillsRoot(this.paths.userBmad);
     if (userBmmRoot) {
-      this.scanBmmSkills(userBmmRoot).workflows.forEach((_, name) => workflows.add(name));
+      this.scanBmmSkills(userBmmRoot).workflows.forEach((_, name) =>
+        workflows.add(name),
+      );
     }
 
     return Array.from(workflows).sort();
@@ -1211,11 +1312,18 @@ export class ResourceLoaderGit {
         // v6 SKILL.md: parse markdown headings
         const h1 = content.match(/^#\s+(.+)$/m);
         if (h1) metadata.displayName = h1[1].trim();
-        const overview = content.match(/##\s+Overview\s*\n+([\s\S]*?)(?=\n##|$)/);
-        if (overview) metadata.description = overview[1].trim().substring(0, 300);
-        const style = content.match(/##\s+Communication Style\s*\n+([\s\S]*?)(?=\n##|$)/);
+        const overview = content.match(
+          /##\s+Overview\s*\n+([\s\S]*?)(?=\n##|$)/,
+        );
+        if (overview)
+          metadata.description = overview[1].trim().substring(0, 300);
+        const style = content.match(
+          /##\s+Communication Style\s*\n+([\s\S]*?)(?=\n##|$)/,
+        );
         if (style) metadata.communicationStyle = style[1].trim();
-        const principles = content.match(/##\s+Principles\s*\n+([\s\S]*?)(?=\n##|$)/);
+        const principles = content.match(
+          /##\s+Principles\s*\n+([\s\S]*?)(?=\n##|$)/,
+        );
         if (principles) metadata.principles = principles[1].trim();
         return metadata;
       }
@@ -1469,6 +1577,43 @@ export class ResourceLoaderGit {
    * ```
    */
   async listWorkflowsWithMetadata(): Promise<Workflow[]> {
+    // Always scan custom skills (src/custom-skills, bmm-skills) from all sources.
+    // These are never in the CSV manifest so they must be merged in separately.
+    const customSkillsMap = new Map<string, Workflow>();
+    const allBmmRoots = [
+      this.paths.projectRoot,
+      this.paths.userBmad,
+      ...Array.from(this.resolvedGitPaths.values()),
+    ];
+    for (const root of allBmmRoots) {
+      const bmmRoot = this.findBmmSkillsRoot(root);
+      if (!bmmRoot) continue;
+      this.scanBmmSkills(bmmRoot).workflows.forEach((skillPath, name) => {
+        if (customSkillsMap.has(name)) return;
+        let description = '';
+        try {
+          const raw = readFileSync(skillPath, 'utf-8');
+          const fm = raw.match(/^---\n([\s\S]*?)\n---/);
+          if (fm) {
+            /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
+            const parsed = parseYaml(fm[1]) as any;
+            if (parsed?.description) description = String(parsed.description);
+            /* eslint-enable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
+          }
+        } catch {
+          // Ignore parse errors
+        }
+        customSkillsMap.set(name, {
+          name,
+          description,
+          module: 'custom-skills',
+          path: '',
+          standalone: true,
+        });
+      });
+    }
+
+    let manifestWorkflows: Workflow[] = [];
     try {
       // Load workflow-manifest.csv
       const manifestContent = await this.loadFile('_cfg/workflow-manifest.csv');
@@ -1482,7 +1627,7 @@ export class ResourceLoaderGit {
       });
 
       // Map parsed records to Workflow objects
-      const workflows: Workflow[] = records.map((record) => ({
+      manifestWorkflows = records.map((record) => ({
         name: record.name || '',
         description: record.description || '',
         module: record.module || 'unknown',
@@ -1490,47 +1635,29 @@ export class ResourceLoaderGit {
         ...(record.trigger && { trigger: record.trigger }),
         standalone: record.standalone?.toLowerCase() === 'true',
       }));
-
-      return workflows;
     } catch {
-      // No manifest — build list from discovered workflows + bmm-skills frontmatter
+      // No manifest — build list from discovered workflows
       const workflowNames = await this.listWorkflows();
-
-      // Pre-build a description map from bmm-skills SKILL.md frontmatter
-      const descMap = new Map<string, string>();
-      const allBmmRoots = [
-        this.paths.projectRoot,
-        this.paths.userBmad,
-        ...Array.from(this.resolvedGitPaths.values()),
-      ];
-      for (const root of allBmmRoots) {
-        const bmmRoot = this.findBmmSkillsRoot(root);
-        if (!bmmRoot) continue;
-        this.scanBmmSkills(bmmRoot).workflows.forEach((skillPath, name) => {
-          if (descMap.has(name)) return;
-          try {
-            const raw = readFileSync(skillPath, 'utf-8');
-            const fm = raw.match(/^---\n([\s\S]*?)\n---/);
-            if (fm) {
-              /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
-              const parsed = parseYaml(fm[1]) as any;
-              if (parsed?.description) descMap.set(name, String(parsed.description));
-              /* eslint-enable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
-            }
-          } catch {
-            // Ignore parse errors
-          }
-        });
-      }
-
-      return workflowNames.map((name) => ({
-        name,
-        description: descMap.get(name) ?? '',
-        module: 'bmm-skills',
-        path: '',
-        standalone: true,
-      }));
+      manifestWorkflows = workflowNames
+        .filter((name) => !customSkillsMap.has(name))
+        .map((name) => ({
+          name,
+          description: '',
+          module: 'bmm-skills',
+          path: '',
+          standalone: true,
+        }));
     }
+
+    // Merge: manifest workflows first, then custom skills not already in manifest
+    const manifestNames = new Set(manifestWorkflows.map((w) => w.name));
+    const merged = [...manifestWorkflows];
+    for (const [name, skill] of customSkillsMap) {
+      if (!manifestNames.has(name)) {
+        merged.push(skill);
+      }
+    }
+    return merged;
   }
 
   /**

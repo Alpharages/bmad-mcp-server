@@ -46,6 +46,13 @@
  */
 
 import { BMADServerLiteMultiToolGit } from './server.js';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+// Resolve the server's own package root (build/../ = project root).
+// This is used as the default projectRoot so the server always finds its
+// own src/custom-skills/ regardless of what process.cwd() is at startup.
+const _serverRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 /**
  * Main entry point function
@@ -64,17 +71,15 @@ async function main() {
     .slice(2)
     .filter((arg) => arg.startsWith('git+'));
 
-  // Allow overriding project root via BMAD_ROOT environment variable
-  // This is useful for testing and custom deployments
-  const projectRoot = process.env.BMAD_ROOT;
+  // BMAD_ROOT overrides the default; default is the server's own package root
+  // so src/custom-skills/ is always found regardless of process.cwd().
+  const projectRoot = process.env.BMAD_ROOT ?? _serverRoot;
 
   console.error('BMAD MCP Server (Tool-per-Agent + Git Support)');
   if (gitRemotes.length > 0) {
     console.error(`Git remotes: ${gitRemotes.join(', ')}`);
   }
-  if (projectRoot) {
-    console.error(`Project root: ${projectRoot}`);
-  }
+  console.error(`Project root: ${projectRoot}`);
 
   const server = new BMADServerLiteMultiToolGit(projectRoot, gitRemotes);
   await server.start();

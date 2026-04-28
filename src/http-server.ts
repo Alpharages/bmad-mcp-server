@@ -1,8 +1,11 @@
 import { createServer, IncomingMessage, ServerResponse } from 'node:http';
 import { randomUUID } from 'node:crypto';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js';
 import { BMADServerLiteMultiToolGit } from './server.js';
+import { validateClickUpEnv } from './utils/clickup-env.js';
 
 interface Session {
   transport: StreamableHTTPServerTransport;
@@ -45,9 +48,13 @@ async function readBody(req: IncomingMessage): Promise<unknown> {
 }
 
 const gitRemotes = process.argv.slice(2).filter((a) => a.startsWith('git+'));
-const projectRoot = process.env.BMAD_ROOT;
+const _serverRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const projectRoot = process.env.BMAD_ROOT ?? _serverRoot;
 
-async function handleMcp(req: IncomingMessage, res: ServerResponse): Promise<void> {
+async function handleMcp(
+  req: IncomingMessage,
+  res: ServerResponse,
+): Promise<void> {
   if (req.method === 'POST') {
     let body: unknown;
     try {
@@ -65,13 +72,21 @@ async function handleMcp(req: IncomingMessage, res: ServerResponse): Promise<voi
     }
 
     if (isInitializeRequest(body)) {
-      const transport: StreamableHTTPServerTransport = new StreamableHTTPServerTransport({
-        sessionIdGenerator: () => randomUUID(),
-        onsessioninitialized: (id) => { sessions.set(id, { transport }); },
-        onsessionclosed: (id) => { sessions.delete(id); },
-      });
+      const transport: StreamableHTTPServerTransport =
+        new StreamableHTTPServerTransport({
+          sessionIdGenerator: () => randomUUID(),
+          onsessioninitialized: (id) => {
+            sessions.set(id, { transport });
+          },
+          onsessionclosed: (id) => {
+            sessions.delete(id);
+          },
+        });
 
-      const bmadServer = new BMADServerLiteMultiToolGit(projectRoot, gitRemotes);
+      const bmadServer = new BMADServerLiteMultiToolGit(
+        projectRoot,
+        gitRemotes,
+      );
       await bmadServer.connect(transport);
       await transport.handleRequest(req, res, body);
       return;
@@ -94,41 +109,81 @@ async function handleMcp(req: IncomingMessage, res: ServerResponse): Promise<voi
   sendJSON(res, 405, { error: 'Method not allowed' });
 }
 
-export async function startHttpServer(): Promise<void> {
+export function startHttpServer(): void {
   const port = parseInt(process.env.PORT ?? '3000', 10);
 
-  const httpServer = createServer(async (req: IncomingMessage, res: ServerResponse) => {
-    try {
-      const pathname = req.url?.split('?')[0] ?? '/';
+  const httpServer = createServer(
+    (req: IncomingMessage, res: ServerResponse) => {
+      (async () => {
+        try {
+          const pathname = req.url?.split('?')[0] ?? '/';
 
-      if (pathname === '/health') {
-        sendJSON(res, 200, { status: 'ok', sessions: sessions.size });
-        return;
-      }
+          if (pathname === '/health') {
+            sendJSON(res, 200, { status: 'ok', sessions: sessions.size });
+            return;
+          }
 
-      if (!authenticate(req)) {
-        sendJSON(res, 401, { error: 'Unauthorized' });
-        return;
-      }
+          if (!authenticate(req)) {
+            sendJSON(res, 401, { error: 'Unauthorized' });
+            return;
+          }
 
-      if (pathname === '/mcp') {
-        await handleMcp(req, res);
-        return;
-      }
+          if (pathname === '/mcp') {
+            await handleMcp(req, res);
+            return;
+          }
 
-      sendJSON(res, 404, { error: 'Not found' });
-    } catch (err) {
-      console.error('Request error:', err);
-      if (!res.headersSent) sendJSON(res, 500, { error: 'Internal server error' });
-    }
+          sendJSON(res, 404, { error: 'Not found' });
+        } catch (err) {
+          console.error('Request error:', err);
+          if (!res.headersSent)
+            sendJSON(res, 500, { error: 'Internal server error' });
+        }
+      })().catch((err) => {
+        console.error('Unhandled request promise rejection:', err);
+        if (!res.headersSent) {
+          try {
+            sendJSON(res, 500, { error: 'Internal server error' });
+          } catch {
+            // Response already closed — give up.
+          }
+        }
+      });
+    },
+  );
+
+  // `listen` errors (EADDRINUSE, bind failures) are emitted asynchronously
+  // on the 'error' event — the listen callback only fires on success. Without
+  // an explicit listener, Node crashes with "unhandled error event".
+  httpServer.on('error', (err) => {
+    console.error('HTTP server error:', err);
+    process.exit(1);
   });
+
+  const clickUpEnv = validateClickUpEnv();
+  const requireClickUp = /^(1|true)$/i.test(
+    (process.env.BMAD_REQUIRE_CLICKUP ?? '').trim(),
+  );
+
+  if (clickUpEnv.kind !== 'ok') {
+    console.error(clickUpEnv.diagnostic);
+    if (requireClickUp) {
+      process.exit(1);
+    }
+  } else {
+    for (const w of clickUpEnv.warnings) {
+      console.error(`ClickUp env warning: ${w}`);
+    }
+  }
 
   httpServer.listen(port, '0.0.0.0', () => {
     console.error(`BMAD MCP HTTP Server listening on port ${port}`);
     console.error(`MCP endpoint: http://0.0.0.0:${port}/mcp`);
     console.error(`Health check: http://0.0.0.0:${port}/health`);
     if (!process.env.BMAD_API_KEY) {
-      console.error('WARNING: BMAD_API_KEY not set — server is open to all clients');
+      console.error(
+        'WARNING: BMAD_API_KEY not set — server is open to all clients',
+      );
     }
   });
 }

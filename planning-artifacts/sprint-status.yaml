@@ -1,0 +1,117 @@
+# generated: 2026-04-21
+# last_updated: 2026-04-28 (story 5-9 code review done; 5-9-pilot-retro-go-no-go → done; epic-5 → done; epic-5-retrospective → done)
+# project: bmad-mcp-server
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: planning-artifacts/stories
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - Developer typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+#
+# PROJECT-SPECIFIC NOTES:
+# =======================
+# - This file is a BOOTSTRAP artifact. Per PRD §Repo layout and §Goal, ClickUp is the
+#   intended long-term source of truth for sprint/story state. This YAML exists only
+#   until EPIC-1 + EPIC-2 land, at which point story/epic state moves to ClickUp and
+#   this file (plus planning-artifacts/stories/ and planning-artifacts/epics/) gets
+#   archived.
+# - Location deviates from BMAD default: lives at planning-artifacts/sprint-status.yaml
+#   (not implementation-artifacts/sprint-status.yaml). The PRD explicitly omits
+#   implementation-artifacts/ from the target repo layout.
+# - Story 1-1 merges EPIC-1 bullets 1 + 2 (vendor source + record SHA) into one atomic
+#   operation — see planning-artifacts/stories/1-1-vendor-clickup-mcp-source.md header.
+#   So EPIC-1 has 8 bullets but only 7 stories.
+
+generated: 2026-04-21
+last_updated: 2026-04-28 (story 5-9 code review done; 5-9-pilot-retro-go-no-go → done; epic-5 → done; epic-5-retrospective → done)
+project: bmad-mcp-server
+project_key: NOKEY
+tracking_system: file-system
+story_location: planning-artifacts/stories
+
+development_status:
+  # EPIC-1: ClickUp MCP integration layer
+  epic-1: done
+  1-1-vendor-clickup-mcp-source: done
+  1-2-wire-register-functions: done
+  1-3-env-var-wiring: done
+  1-4-space-picker: done
+  1-5-smoke-test-crud: done
+  1-6-smoke-test-cross-list-subtask: done
+  1-7-document-tool-surface: done
+  epic-1-retrospective: done
+
+  # EPIC-2: Dev agent story-creation mode → ClickUp (non-destructive)
+  epic-2: in-progress
+  2-1-scaffold-clickup-create-story-skill: done
+  2-2-prereq-file-check: done
+  2-3-epic-picker: done
+  2-4-sprint-list-picker: done
+  2-5-description-composer: done
+  2-6-create-clickup-task: done
+  2-7-config-toml-wiring: done
+  2-8-upstream-regression-check: done
+  2-9-token-permission-gating: done
+  epic-2-retrospective: optional
+
+  # EPIC-3: Dev agent implementation mode → ClickUp (non-destructive)
+  epic-3: done
+  3-1-scaffold-clickup-dev-implement-skill: done
+  3-2-task-id-parser: done
+  3-3-task-fetch-with-epic-context: done
+  3-4-planning-artifact-reader: done
+  3-5-progress-comment-poster: done
+  3-6-status-transition-helper: done
+  3-7-non-blocking-assumption-pattern: done
+  3-8-dev-clarification-prompt: done
+  3-9-dev-config-toml-wiring: done
+  epic-3-retrospective: done
+
+  # EPIC-4: Non-ClickUp agent audit
+  epic-4: backlog
+  4-1-audit-pm-agent: backlog
+  4-2-audit-architect-agent: backlog
+  4-3-audit-ux-designer-agent: backlog
+  4-4-audit-analyst-agent: backlog
+  4-5-audit-tech-writer-agent: backlog
+  4-6-remediate-audit-violations: backlog
+  epic-4-retrospective: optional
+
+  # EPIC-5: Pilot + iterate
+  epic-5: done
+  5-1-choose-pilot-project: done
+  5-2-seed-pilot-planning-artifacts: done
+  5-3-create-pilot-epic-in-clickup: done
+  5-4-dev-creates-pilot-stories: done
+  5-5-dev-implements-pilot-story: done
+  5-6-capture-friction-log: done
+  5-7-refine-prompts-and-templates: done
+  5-8-team-facing-quickstart-docs: done
+  5-9-pilot-retro-go-no-go: done
+  epic-5-retrospective: done

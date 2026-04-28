@@ -17,9 +17,13 @@ Welcome to the BMAD MCP Server documentation - bringing the power of the [BMAD M
 
 System architecture, components, design principles, and data flow.
 
+Includes the [ClickUp Adapter Layer](./architecture.md#clickup-adapter-layer) design.
+
 ### 🔌 [API Contracts](./api-contracts.md)
 
 MCP tools API, resources, prompts, completions, and TypeScript APIs.
+
+Includes the [ClickUp Tools reference](./api-contracts.md#clickup-tools) with per-tool schemas and modes.
 
 ### � [Development Guide](./development-guide.md)
 

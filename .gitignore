@@ -96,3 +96,6 @@ bin/graph
 
 # Vendored third-party sources (must override src/**/*.js above)
 !src/tools/clickup/**
+
+# _bmad personal overrides (team overrides in _bmad/custom/*.toml are committed)
+_bmad/custom/*.user.toml

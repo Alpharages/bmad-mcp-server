@@ -1,6 +1,6 @@
 {
   "name": "bmad-mcp-server",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Model Context Protocol server for BMAD methodology",
   "type": "module",
   "bin": {
@@ -9,7 +9,7 @@
     "bmad": "./build/cli.js"
   },
   "scripts": {
-    "build": "tsc && chmod +x build/index.js && chmod +x build/index-http.js && chmod +x build/cli.js",
+    "build": "tsc && node scripts/build-clickup.mjs && chmod +x build/index.js && chmod +x build/index-http.js && chmod +x build/cli.js",
     "clean": "rm -rf build/ coverage/ test-results/ .bmad/cache/",
     "clean:all": "npm run clean && rm -rf node_modules/ package-lock.json",
     "prepare": "npm run build || true",
@@ -39,16 +39,24 @@
     "cli:list-tools": "node scripts/bmad-cli.mjs tools/list",
     "cli:list-resources": "node scripts/bmad-cli.mjs resources/list",
     "cli:list-agents": "node scripts/show-list-agents.mjs",
-    "cli:list-workflows": "node scripts/show-list-workflows.mjs"
+    "cli:list-workflows": "node scripts/show-list-workflows.mjs",
+    "smoke:clickup": "node scripts/smoke-clickup-crud.mjs stdio",
+    "smoke:clickup:http": "node scripts/smoke-clickup-crud.mjs http",
+    "smoke:clickup:cross-list": "node scripts/smoke-clickup-cross-list.mjs"
   },
   "files": [
     "build/"
   ],
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.4",
+    "@modelcontextprotocol/sdk": "^1.15.1",
     "csv-parse": "^6.1.0",
     "fast-xml-parser": "^5.3.1",
-    "js-yaml": "^4.1.0"
+    "fuse.js": "^7.1.0",
+    "js-yaml": "^4.1.0",
+    "remark-gfm": "^4.0.1",
+    "remark-parse": "^11.0.0",
+    "unified": "^11.0.5",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
     "@clack/prompts": "^0.11.0",
@@ -58,10 +66,12 @@
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
     "@types/js-yaml": "^4.0.9",
+    "@types/mdast": "^4.0.4",
     "@types/node": "^24.9.1",
     "@vitest/coverage-v8": "^4.0.3",
     "@vitest/ui": "^4.0.3",
     "dotenv": "^17.2.3",
+    "esbuild": "^0.28.0",
     "eslint": "^9.17.0",
     "globals": "^16.4.0",
     "husky": "^9.1.7",
