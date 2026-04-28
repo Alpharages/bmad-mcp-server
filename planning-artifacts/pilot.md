@@ -52,7 +52,7 @@ Pilot window is defined as 2026-04-27 → 2026-05-10, backed by the ClickUp acti
 
 - **Decider(s):** Khakan Ali (bmad-mcp-server maintainer; Lore Platform team lead — dual role)
 - **Decision date:** 2026-04-24
-- **Status:** in-progress
+- **Status:** go (see epic-5-retro-2026-04-28.md)
 
 ## Change log
 
@@ -61,3 +61,4 @@ Pilot window is defined as 2026-04-27 → 2026-05-10, backed by the ClickUp acti
 | 2026-04-24 | approved    | Initial pilot selection recorded via story 5-1. Lore Platform chosen; Sprint 1 window 2026-04-27 → 2026-05-10.                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | 2026-04-25 | in-progress | ClickUp pilot epic created via story 5-3: https://app.clickup.com/t/86excfrge (`86excfrge`). Status advances to `in-progress` per story 5-1 AC #8. §ClickUp coordinates space name corrected `AlphaRages` → `Team Space` to match actual workspace layout; §Selection rationale > Active path fragment corrected accordingly (Option-A freshness fix per Task 0, relaxes AC #14 by one §Selection rationale hunk). Stories 5-4 / 5-5 can now run against a real Backlog epic.                                                                                              |
 | 2026-04-27 | in-progress | §Pilot epic + §Selection rationale > Small scope: renamed `store-lesson` → `save-lesson` to align with the actual ClickUp subtask `86exd8yh3` (`Implement save-lesson MCP tool`) and the pilot-repo PRD/tech-spec canonical name `save_lesson`. Per `store-lesson-vs-save-lesson-name-mismatch` in `planning-artifacts/friction-log.md`; story 5-7 amendment. ClickUp epic `86excfrge` body amendment is queued for human-only follow-up (out-of-scope for story 5-7 per AC #8 carve-out). §Decision Status remains `in-progress` (next transition is story 5-9 go/no-go). |
+| 2026-04-28 | go          | CONDITIONAL GO verdict recorded via story 5-9 (`5-9-pilot-retro-go-no-go`). All 3 EPIC-5 exit criteria and all 6 outcomes satisfied. See `planning-artifacts/epic-5-retro-2026-04-28.md` for full rationale, friction-log resolution summary, and 4 action items.                                                                                                                                                                                                                                                                                                          |
