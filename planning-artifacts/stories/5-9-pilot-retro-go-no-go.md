@@ -1,6 +1,6 @@
 # Story 5.9: EPIC-5 pilot retro and go/no-go decision
 
-Status: review
+Status: done
 
 Epic: [EPIC-5: Pilot + iterate](../epics/EPIC-5-pilot-iterate.md)
 
@@ -609,16 +609,16 @@ _bmad/` → empty (AC #17).
         `tests/support/litellm-helper.mjs` unchanged).
   - [x] `npm test` → 234 passing / 0 failing (AC #19).
 
-- [ ] **Task 6 — Commit (AC: all + #15)**
-  - [ ] Stage: `planning-artifacts/epic-5-retro-YYYY-MM-DD.md` (new),
+- [x] **Task 6 — Commit (AC: all + #15)**
+  - [x] Stage: `planning-artifacts/epic-5-retro-YYYY-MM-DD.md` (new),
         `planning-artifacts/pilot.md` (§Decision update),
         `planning-artifacts/stories/5-9-pilot-retro-go-no-go.md` (tasks
         checked, Status `ready-for-dev → review`),
         `planning-artifacts/sprint-status.yaml` (transition + `last_updated`
         bump).
-  - [ ] Commit message:
+  - [x] Commit message:
         `feat(planning): EPIC-5 pilot retro and go/no-go decision via story 5-9`
-  - [ ] After commit, `git status` MUST report a clean working tree.
+  - [x] After commit, `git status` MUST report a clean working tree.
 
 ## Dev Notes
 
@@ -784,5 +784,75 @@ item A1 with a pre-second-team deadline.
 | ---------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 2026-04-28 | ready-for-dev | Story drafted via `bmad-create-story` workflow. Scope: a new `planning-artifacts/epic-5-retro-*.md` + `pilot.md` §Decision update. Closes EPIC-5 §Exit criteria bullet 3 ("Go/no-go decision recorded"). Sprint-status transition `5-9-pilot-retro-go-no-go: backlog → ready-for-dev` per AC #15. Markdown/YAML only. |
 | 2026-04-28 | review        | Dev-story execution: created `planning-artifacts/epic-5-retro-2026-04-28.md` (CONDITIONAL GO verdict, 11 H2 sections, 4 action items); updated `pilot.md` §Decision status `in-progress → go` + §Change log row; status `ready-for-dev → review`. Sprint-status `5-9-pilot-retro-go-no-go: review`. `last_updated` bumped. 234 passing / 0 failing. |
+| 2026-04-28 | done          | Code-review close: story 5-9 approved (1 P2 protocol note, no patches required). Status `review → done`. Sprint-status `5-9-pilot-retro-go-no-go: done`; `epic-5: in-progress → done`. `last_updated` bumped. EPIC-5 fully closed. |
 
 <!-- prettier-ignore-end -->
+
+## Senior Developer Review (AI)
+
+**Reviewer:** Claude Sonnet 4.6 (AI code reviewer)  
+**Date:** 2026-04-28  
+**Story:** 5-9 EPIC-5 pilot retro and go/no-go decision  
+**Verdict:** ✅ Approved — no patches required
+
+### Review summary
+
+Docs-only story. Reviewed commit `ec8c1a8` against all 19 ACs. All ACs
+pass. The retro file is structurally complete (H1 + 10×H2 in AC-mandated
+order, Prettier-clean), all exit-criteria and outcomes rows carry verifiable
+evidence, all 22 friction-log entries are accounted for, and the
+CONDITIONAL GO verdict is coherently reasoned. One P2 protocol deviation
+noted; no code change required.
+
+### Findings
+
+<!-- prettier-ignore-start -->
+
+| ID | Source        | Category | Title                                                                                                                                                                                                                   |
+| -- | ------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| P2 | AC #15 audit  | note     | Sprint-status transitioned `backlog → review` directly in the dev-execution commit; `ready-for-dev` intermediate state was never committed separately. The create-story and dev-story steps were folded into one commit. Terminal state (`review`) is correct; deviation is cosmetic. No fix required. |
+
+<!-- prettier-ignore-end -->
+
+### Acceptance criteria verdict
+
+All 19 ACs confirmed satisfied:
+
+- **AC #1** — `planning-artifacts/epic-5-retro-2026-04-28.md` exists at the
+  correct nesting level (same as `epic-3-retro-2026-04-23.md`). ✅
+- **AC #2** — H1 + 10×H2 in AC-mandated order (`grep -E '^(# |## )'`
+  returns the 11 expected headings in sequence). ✅
+- **AC #3 (Prettier)** — `npx prettier --check` exits 0 on all 4 files. ✅
+- **AC #3 (Epic summary)** — Delivery table, stories list, goal paragraph
+  present. ✅
+- **AC #4** — Exit criteria table: 3 rows, all ✅ with evidence citing story
+  and artifact references. ✅
+- **AC #5** — Outcomes table: 6 rows, all ✅ with evidence. ✅
+- **AC #6** — Friction log resolution: all 6 owner-bucket H3 subsections
+  present; closing summary sentence accounts for all 22 entries. ✅
+- **AC #7** — What went well: 4 H3 items with narrative + Impact paragraphs.
+  All 4 required topics present. ✅
+- **AC #8** — What didn't go well: 3 H3 items. All 3 required topics
+  present with short-IDs cited. ✅
+- **AC #9** — Key insights: 4 numbered items in EPIC-3 retro list format.
+  Second-pilot-run position stated (recommended, not hard go-condition,
+  captured as A3). EPIC-4 classified go-condition-soft. ✅
+- **AC #10** — Go/no-go: `CONDITIONAL GO` verdict in bold at section top;
+  3-paragraph rationale; 3 explicit conditions; next-steps paragraph. ✅
+- **AC #11** — Action items table: 4 rows (A1–A4) with owner, deadline,
+  success criteria. ✅
+- **AC #12** — Readiness assessment: 5 rows, statuses accurate against
+  source-of-truth. ✅
+- **AC #13** — Closeout: 2 paragraphs; verdict restated; sprint-status
+  close-commit reference; bootstrap-only archive note. ✅
+- **AC #14** — `pilot.md` diff shows exactly 2 hunks: §Decision status
+  `in-progress → go (see epic-5-retro-2026-04-28.md)` and new §Change log
+  row. Existing rows byte-unchanged. ✅
+- **AC #15** — Sprint-status `5-9-pilot-retro-go-no-go: review` on dev
+  commit (P2 protocol note above); `epic-5: done` on this close commit. ✅
+- **AC #16** — `git diff --stat -- 'src/**/*.ts'` empty. ✅
+- **AC #17** — `BMAD-METHOD/`, `src/tools/clickup/`, `src/custom-skills/`,
+  `_bmad/` all untouched. ✅
+- **AC #18** — Exactly 4 files in diff; no unexpected paths. ✅
+- **AC #19** — `npm run build` clean; `npm run lint` 0 errors / 7
+  pre-existing warnings; `npm test` 234 passing / 0 failing. ✅
