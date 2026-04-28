@@ -3,7 +3,7 @@ comment_count: ''
 last_comment_id: ''
 ---
 
-# Step 4: Progress Comment Poster
+# Step 5: Progress Comment Poster
 
 ## RULES
 

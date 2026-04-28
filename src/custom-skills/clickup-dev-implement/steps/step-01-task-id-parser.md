@@ -13,19 +13,7 @@ raw_input: ''
 
 ## PREFLIGHT
 
-Run these two checks **before** parsing the task ID. They catch wrong-cwd and origin-PAT-leak conditions that no downstream step otherwise enforces.
-
-0a. **Assert pilot-repo cwd.** Resolve `{cwd}` from `pwd`. Look for a `.bmad-pilot-marker` file at `{cwd}/.bmad-pilot-marker`. If the file is present, read its first line and verify it begins with `bmad-pilot-marker:` (any non-empty value); record `{cwd_assertion}` = `pass`. If the file is absent, emit the cwd error block below and stop.
-
-> ❌ **Cwd assertion failed — not the pilot repo**
->
-> The `clickup-dev-implement` skill expects to run with `{cwd}` pointing at the pilot/target repo whose code will be implemented. The current `{cwd}` does not contain a `.bmad-pilot-marker` sentinel file at its root.
->
-> **Why:** When Claude Code opens multiple repos in one session, `pwd` can resolve to the bmad-mcp-server repo root rather than the target repo. Implementing under the wrong cwd silently lands changes in the wrong tree.
->
-> **What to do:** Either `cd` to the pilot repo before re-invoking the skill, or place a `.bmad-pilot-marker` file at the target repo root (a single line `bmad-pilot-marker: 1` is sufficient; optional `repo:` and `epic:` fields enable stronger assertion).
->
-> **Disclosed-deviation escape hatch:** If the dev session must remain at the bmad-mcp-server cwd (e.g. multi-repo Claude Code project) and planning artifacts / source files are loaded via absolute-path `Read` against the pilot-repo files, record the deviation in the Dev Agent Record §Agent Model Used and continue. Story 5-5 used this path under disclosed deviation.
+Run this check **before** parsing the task ID. It catches origin-PAT-leak conditions that no downstream step otherwise enforces.
 
 0b. **Origin PAT-prefix preflight.** Run `git remote -v` and grep the output for the GitHub-PAT prefix pattern (`ghp_`, `github_pat_`, `ghs_`, `ghu_`, `ghr_`). If any remote URL embeds a PAT prefix, emit the PAT error block below and stop.
 

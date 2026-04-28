@@ -2,7 +2,14 @@
 
 **Goal:** Dev agent, invoked in implementation mode, accepts a ClickUp task ID and executes the full implement → comment → status loop.
 
-**Your Role:** Implementation-mode skill — reads a ClickUp task + repo planning artifacts, implements code via IDE file tools, posts progress comments, and transitions status. Does NOT create ClickUp tasks or write to `planning-artifacts/stories/`.
+**Your Role:** Implementation-mode skill — reads a ClickUp task + repo planning artifacts, implements code via IDE file tools using a red-green-refactor TDD cycle, posts progress comments, and transitions status. Does NOT create ClickUp tasks or write to `planning-artifacts/stories/`.
+
+## Critical Execution Rules
+
+- **Never stop for milestones, "significant progress", or session boundaries.** Execute continuously until ALL tasks/subtasks are done or an explicit HALT condition fires. Only the DoD gate in step 4 decides completion.
+- **Follow tasks/subtasks exactly.** Implement ONLY what is mapped to a task/subtask. No extra features, no surrounding cleanup, no premature abstractions.
+- **Red-Green-Refactor.** Tests written before implementation. Always.
+- **DoD gate before M2.** Validate `checklist.md` before posting the completion comment.
 
 ## Input
 
@@ -10,52 +17,60 @@ Accepts a ClickUp task identifier in bare ID, full app URL, or `CU-`-prefixed fo
 
 See: [./steps/step-01-task-id-parser.md](./steps/step-01-task-id-parser.md)
 
-`{task_id}` (normalised bare ClickUp task ID) is available to all downstream steps after this step completes.
+`{task_id}` is available to all downstream steps after this step completes.
 
 ## Fetch
 
-Calls `getTaskById` for the task and its parent epic, extracts task name, status, URL, and epic context.
+Calls `getTaskById` for the task and its parent epic. The full task description (including Acceptance Criteria, Tasks/Subtasks, and Dev Notes sections written by `clickup-create-story`) and all task comments are available in conversation context after this step.
 
 See: [./steps/step-02-task-fetch.md](./steps/step-02-task-fetch.md)
 
-`{task_name}`, `{task_status}`, `{task_url}`, `{epic_task_id}`, and `{epic_name}` are available to all downstream steps after this step completes. `{epic_task_id}` and `{epic_name}` are empty strings if the task has no parent epic or the parent fetch failed.
+`{task_name}`, `{task_status}`, `{task_url}`, `{epic_task_id}`, and `{epic_name}` are available to all downstream steps.
 
-## Planning Artifacts
+## Context Builder
 
-Uses the IDE Read file tool to load `planning-artifacts/PRD.md` and `planning-artifacts/architecture.md`, with optional `planning-artifacts/tech-spec.md`; stops with a fatal error if either required file is absent.
+Loads `planning-artifacts/PRD.md` and `planning-artifacts/architecture.md` (required), `planning-artifacts/tech-spec.md` and `project-context.md` (optional). Also parses the task description's Acceptance Criteria, Tasks/Subtasks, and Dev Notes sections from the ClickUp task content already in context — these become the authoritative implementation plan.
 
 See: [./steps/step-03-planning-artifact-reader.md](./steps/step-03-planning-artifact-reader.md)
 
-`{prd_loaded}` and `{architecture_loaded}` are `'true'` after this step completes. `{tech_spec_loaded}` is `'true'` if `planning-artifacts/tech-spec.md` was found, `'false'` otherwise. PRD, architecture, and (when present) tech-spec content are available in conversation context to all downstream steps after this step completes.
+`{prd_loaded}`, `{architecture_loaded}`, `{task_ac_list}`, and `{task_subtasks}` are available to all downstream steps after this step completes.
+
+## Implementation Loop
+
+Delegates to the `bmad-dev-story` workflow with the ClickUp task description pre-supplied as the virtual story file. `bmad-dev-story` handles everything: review-continuation detection, red-green-refactor TDD cycle, per-task DoD validation, and completion communication. File-system side-effects (sprint-status.yaml, local story file) are skipped — ClickUp is the record. When `bmad-dev-story` improves upstream, this skill inherits those improvements automatically.
+
+See: [./steps/step-04-implementation-loop.md](./steps/step-04-implementation-loop.md)
+
+`{implementation_complete}`, `{files_changed}`, and `{pr_url}` are available to all downstream steps after this step completes.
 
 ## Progress Comments
 
-Invoked at M1 (immediately after steps 1–3 complete) and M2 (after all implementation changes are committed), and optionally at M3+ decision points; posts markdown-formatted, append-only comments via `addComment`; non-blocking if write mode (`CLICKUP_MCP_MODE=write`) is unavailable or `addComment` fails.
+Invoked at M1 (before any code is written) and M2 (after all implementation changes are committed), and optionally at M3+ decision points; posts markdown-formatted, append-only comments via `addComment`; non-blocking if `CLICKUP_MCP_MODE=write` is unavailable or `addComment` fails.
 
-See: [./steps/step-04-progress-comment-poster.md](./steps/step-04-progress-comment-poster.md)
+See: [./steps/step-05-progress-comment-poster.md](./steps/step-05-progress-comment-poster.md)
 
-`{comment_count}` and `{last_comment_id}` are available to downstream steps after this step's first invocation. `{comment_count}` is `'0'` if write mode was unavailable; `''` (empty) if write mode was active but no comment was successfully posted.
+`{comment_count}` and `{last_comment_id}` are available after first invocation.
 
 ## Status Transitions
 
-Invoked after M2; calls `getListInfo` to validate the target status against the list's allowed statuses, then calls `updateTask` to transition the task to "in review"; non-blocking if write mode is unavailable or `updateTask` fails.
+Invoked after M2; calls `getListInfo` to validate target status, then `updateTask` to transition to "in review"; non-blocking if write mode is unavailable or `updateTask` fails.
 
-See: [./steps/step-05-status-transition.md](./steps/step-05-status-transition.md)
+See: [./steps/step-06-status-transition.md](./steps/step-06-status-transition.md)
 
-`{list_id}`, `{list_statuses}`, and `{transition_target}` are available to downstream steps after this step completes. `{transition_target}` is `''` (empty) if write mode was unavailable or no valid status match was found.
+`{list_id}`, `{list_statuses}`, and `{transition_target}` are available after this step.
 
 ## Assumptions
 
-Invoked at the agent's discretion during implementation, zero or more times; posts a markdown "Assumption Made" comment via `addComment`; non-blocking if write mode is unavailable or `addComment` fails; does NOT wait for a human response; escalates to step 7 when the ambiguity exceeds the decision-matrix threshold.
+Invoked at the agent's discretion during implementation, zero or more times; posts a markdown "Assumption Made" comment via `addComment`; non-blocking; does NOT wait for a human response; escalates to step 8 when the ambiguity exceeds the decision-matrix threshold.
 
-See: [./steps/step-06-assumptions.md](./steps/step-06-assumptions.md)
+See: [./steps/step-07-assumptions.md](./steps/step-07-assumptions.md)
 
-`{assumption_count}` and `{last_assumption_comment_id}` are available to downstream steps after this step's first invocation. `{assumption_count}` is `'0'` if write mode was unavailable; `''` (empty) if write mode was active but no assumption was successfully posted in this session. These counters are independent of `{comment_count}` / `{last_comment_id}` from step 4.
+`{assumption_count}` and `{last_assumption_comment_id}` are independent of step 5's progress-comment counters.
 
 ## Dev Clarification
 
-Invoked at the agent's discretion during implementation, zero or more times; posts a markdown "Dev Clarification Needed" comment via `addComment`; **halts implementation** until the dev replies in the active conversation; asks the dev, never the PM; blocking contract preserved even when write mode is unavailable or `addComment` fails.
+Invoked at the agent's discretion, zero or more times; posts a markdown "Dev Clarification Needed" comment via `addComment`; **halts implementation** until the dev replies in the active conversation; asks the dev, never the PM; blocking contract preserved even when write mode is unavailable.
 
-See: [./steps/step-07-dev-clarification.md](./steps/step-07-dev-clarification.md)
+See: [./steps/step-08-dev-clarification.md](./steps/step-08-dev-clarification.md)
 
-`{clarification_count}`, `{last_clarification_comment_id}`, and `{pending_clarification}` are available to downstream steps after this step's first invocation. `{clarification_count}` is `'0'` if write mode was unavailable; `''` (empty) if write mode was active but no clarification was successfully posted in this session. `{pending_clarification}` is `'true'` whenever the agent is awaiting a dev reply. These counters are independent of `{comment_count}` / `{last_comment_id}` (step 4) and `{assumption_count}` / `{last_assumption_comment_id}` (step 6).
+`{clarification_count}`, `{last_clarification_comment_id}`, and `{pending_clarification}` are independent of steps 5 and 7 counters.
