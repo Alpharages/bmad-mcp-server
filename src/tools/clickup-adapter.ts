@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument */
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { validateClickUpEnv, type ClickUpMode } from '../utils/clickup-env.js';
+import { validateClickUpEnv, type ClickUpMode, type ClickUpSessionCredentials } from '../utils/clickup-env.js';
 import type { ClickUpSessionState } from './clickup-session.js';
 import { registerSpacePickerTools } from './clickup-space-picker.js';
 import { logger } from '../utils/logger.js';
@@ -26,8 +26,17 @@ function sanitizeErrorMessage(input: unknown): string {
 export async function registerClickUpTools(
   server: McpServer,
   session: ClickUpSessionState,
+  sessionCredentials?: ClickUpSessionCredentials,
 ): Promise<RegisterResult> {
-  const envResult = validateClickUpEnv();
+  const mergedEnv: NodeJS.ProcessEnv = sessionCredentials
+    ? {
+        ...process.env,
+        CLICKUP_API_KEY: sessionCredentials.apiKey,
+        CLICKUP_TEAM_ID: sessionCredentials.teamId,
+        CLICKUP_MCP_MODE: sessionCredentials.mode,
+      }
+    : process.env;
+  const envResult = validateClickUpEnv(mergedEnv);
 
   if (envResult.kind !== 'ok') {
     return {

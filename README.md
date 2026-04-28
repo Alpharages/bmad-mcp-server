@@ -186,7 +186,11 @@ Fill in the content one of two ways:
 
 ### Step 6 — Wire the credentials into your MCP config
 
-**Action.** Edit your AI client's MCP server config and add an `env` block:
+How you supply credentials depends on which transport you're using.
+
+#### stdio (local / npx install)
+
+Add an `env` block — the client injects these into the server process at startup:
 
 ```json
 {
@@ -204,13 +208,38 @@ Fill in the content one of two ways:
 }
 ```
 
-`CLICKUP_MCP_MODE=write` is required — `createTask`, `addComment`, and `updateTask` aren't registered in `read` mode and the dev skill will stop with a permission error.
+#### HTTP (self-hosted shared server)
+
+The server process has no ClickUp credentials of its own — each user passes theirs per-session via request headers. Add a `headers` block instead of `env`:
+
+```json
+{
+  "mcpServers": {
+    "bmad": {
+      "type": "http",
+      "url": "https://your-server.com/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_BMAD_API_KEY",
+        "X-ClickUp-Api-Key": "pk_...",
+        "X-ClickUp-Team-Id": "12345678",
+        "X-ClickUp-Mode": "write"
+      }
+    }
+  }
+}
+```
+
+The server reads `X-ClickUp-Api-Key`, `X-ClickUp-Team-Id`, and `X-ClickUp-Mode` from the session-init request and uses them for all ClickUp calls within that session. Credentials never touch the server's `.env` — each user brings their own key.
+
+---
+
+`CLICKUP_MCP_MODE=write` (or `X-ClickUp-Mode: write`) is required — `createTask`, `addComment`, and `updateTask` aren't registered in `read` mode and the dev skill will stop with a permission error.
 
 Restart your AI client.
 
 **Expected.** Ask: *"List my ClickUp spaces."* You should get the list back.
 
-**Fix.** If you see *"ClickUp tools disabled — missing required environment variables,"* the env vars didn't reach the server. Check JSON syntax and restart the client. Putting the values in your shell `export` won't work — they must be in the MCP config's `env:` block.
+**Fix.** If you see *"ClickUp tools disabled — missing required environment variables,"* the credentials didn't reach the server. For stdio: check JSON syntax, restart the client, and confirm the values are in the `env:` block (not just your shell). For HTTP: confirm the three `X-ClickUp-*` headers are present in the `headers:` block.
 
 ---
 
@@ -321,7 +350,7 @@ For the comprehensive runbook with every edge case, escape hatch, and historical
 | Symptom                                              | Likely cause                                                  | Fix                                                                                                                            |
 | ---------------------------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | Client doesn't see the bmad tool                     | Server didn't start                                           | Run the binary directly: `node /path/to/build/index.js`. Watch stderr for the error.                                           |
-| "ClickUp tools disabled — missing required env vars" | `CLICKUP_API_KEY` or `CLICKUP_TEAM_ID` not reaching the child | Put env vars in the MCP config `env:` block, not just your shell. Restart the client.                                          |
+| "ClickUp tools disabled — missing required env vars" | Credentials not reaching the server | **stdio:** add to `env:` block in MCP config, not just your shell. **HTTP:** add `X-ClickUp-Api-Key` and `X-ClickUp-Team-Id` to the `headers:` block. Restart the client. |
 | Skill stops at step 1 with "cwd assertion failed"    | Running the skill outside the pilot repo                      | `cd` into the pilot repo before invoking, or create `.bmad-pilot-marker` if missing.                                           |
 | `createTask` returns `400 ITEM_137`                  | Cross-list layout but "Tasks in Multiple Lists" is OFF        | Either turn the ClickApp on, or use same-list layout (epic + story in Backlog).                                                |
 | `gh pr create` fails with org-access error           | Wrong `gh` account active                                     | `gh auth status`, then `gh auth switch --user <handle>`.                                                                       |
@@ -446,24 +475,40 @@ Append a Git URL to the args to layer your own BMAD content over the defaults:
 
 ## ClickUp integration
 
-ClickUp tools are **additive** — the `bmad` tool keeps working with or without them. The ClickUp surface is enabled when both `CLICKUP_API_KEY` and `CLICKUP_TEAM_ID` are set; otherwise the server logs `ClickUp tools disabled: …` and runs in BMAD-only mode.
+ClickUp tools are **additive** — the `bmad` tool keeps working with or without them. The ClickUp surface is enabled when both the API key and team ID are supplied; otherwise the server logs `ClickUp tools disabled: …` and runs in BMAD-only mode.
 
-### Required env vars
+### How credentials are supplied
+
+Credential delivery differs by transport:
+
+| Transport | How to supply credentials |
+| --------- | ------------------------- |
+| **stdio** (local / npx) | `env` block in the MCP client config — injected into the server process at startup |
+| **HTTP** (self-hosted shared server) | `X-ClickUp-*` request headers — per-session, never stored server-side |
+
+This means a shared HTTP server requires **no ClickUp credentials in its `.env`**. Every user brings their own key via headers, so different users can authenticate independently to ClickUp from the same server instance.
+
+### stdio — env vars
 
 | Variable          | Purpose                                                                                   |
 | ----------------- | ----------------------------------------------------------------------------------------- |
 | `CLICKUP_API_KEY` | Personal token from ClickUp → Settings → Apps (starts with `pk_`)                         |
 | `CLICKUP_TEAM_ID` | Workspace / team ID (7–10 digits, visible in any settings page URL)                       |
+| `CLICKUP_MCP_MODE` | Tool-surface scope: `read-minimal`, `read`, or `write` (default: `write`)               |
+| `CLICKUP_PRIMARY_LANGUAGE` | Tool-description language: `de`, `en`, `fr`, `es`, `it` (default: `$LANG`)   |
+| `BMAD_REQUIRE_CLICKUP`     | `1`/`true` → hard-fail at boot if ClickUp vars are missing                    |
+| `MAX_IMAGES`               | Max inline images per ClickUp tool response (default: `4`)                    |
+| `MAX_RESPONSE_SIZE_MB`     | Max ClickUp response payload (default: `1`)                                   |
 
-### Optional env vars
+### HTTP — request headers
 
-| Variable                   | Default | Purpose                                                                  |
-| -------------------------- | ------- | ------------------------------------------------------------------------ |
-| `CLICKUP_MCP_MODE`         | `write` | Tool-surface scope: `read-minimal`, `read`, or `write`                   |
-| `CLICKUP_PRIMARY_LANGUAGE` | `$LANG` | Tool-description language: `de`, `en`, `fr`, `es`, `it`                  |
-| `BMAD_REQUIRE_CLICKUP`     | unset   | `1`/`true` → hard-fail at boot if ClickUp env vars are missing           |
-| `MAX_IMAGES`               | `4`     | Max inline images per ClickUp tool response                              |
-| `MAX_RESPONSE_SIZE_MB`     | `1`     | Max ClickUp response payload                                             |
+| Header                | Equivalent env var    | Required |
+| --------------------- | --------------------- | -------- |
+| `X-ClickUp-Api-Key`   | `CLICKUP_API_KEY`     | Yes      |
+| `X-ClickUp-Team-Id`   | `CLICKUP_TEAM_ID`     | Yes      |
+| `X-ClickUp-Mode`      | `CLICKUP_MCP_MODE`    | No (default: `write`) |
+
+Headers are read on session init and stored in-memory for the lifetime of that session only — they are never logged or written to disk.
 
 ### Mode → tool surface
 
@@ -477,7 +522,9 @@ A session-scoped picker (`pickSpace`, `getCurrentSpace`, `clearCurrentSpace`) is
 
 Stories in the active sprint list can have a parent epic in a separate backlog list — cross-list `parent_task_id` is supported and validated by a dedicated smoke test (see [Development](#development)).
 
-### Example client config
+### Example client configs
+
+**stdio:**
 
 ```json
 {
@@ -488,14 +535,33 @@ Stories in the active sprint list can have a parent epic in a separate backlog l
       "env": {
         "CLICKUP_API_KEY": "pk_...",
         "CLICKUP_TEAM_ID": "12345678",
-        "CLICKUP_MCP_MODE": "read"
+        "CLICKUP_MCP_MODE": "write"
       }
     }
   }
 }
 ```
 
-`read` is recommended for first-run exploration; switch to `write` once you've confirmed the right space and list.
+**HTTP (shared server):**
+
+```json
+{
+  "mcpServers": {
+    "bmad": {
+      "type": "http",
+      "url": "https://your-server.com/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_BMAD_API_KEY",
+        "X-ClickUp-Api-Key": "pk_...",
+        "X-ClickUp-Team-Id": "12345678",
+        "X-ClickUp-Mode": "write"
+      }
+    }
+  }
+}
+```
+
+`write` mode is required for the `clickup-create-story` and `clickup-dev-implement` skills. Use `read` for first-run exploration.
 
 ### Out of scope for this phase
 
@@ -582,11 +648,13 @@ For shared team deployments, run the HTTP transport behind a reverse proxy.
 ```bash
 git clone https://github.com/Alpharages/bmad-mcp-server.git
 cd bmad-mcp-server
-cp .env.example .env  # set BMAD_API_KEY to a strong secret
+cp .env.example .env  # set BMAD_API_KEY — no ClickUp vars needed here
 docker compose up -d
 ```
 
 The server starts on `http://localhost:3000`. BMAD content is fetched on first start and refreshed on each restart.
+
+> **ClickUp credentials are per-user, not per-server.** Each client passes its own `X-ClickUp-Api-Key` / `X-ClickUp-Team-Id` headers (see [ClickUp integration](#clickup-integration)). The server `.env` only needs `PORT`, `BMAD_API_KEY`, and optionally `BMAD_DEBUG`.
 
 ### HTTP endpoints
 
@@ -632,7 +700,12 @@ claude mcp add --transport http bmad https://your-domain.com/mcp \
   "mcpServers": {
     "bmad": {
       "url": "https://your-domain.com/mcp",
-      "headers": { "Authorization": "Bearer YOUR_KEY" }
+      "headers": {
+        "Authorization": "Bearer YOUR_KEY",
+        "X-ClickUp-Api-Key": "pk_...",
+        "X-ClickUp-Team-Id": "12345678",
+        "X-ClickUp-Mode": "write"
+      }
     }
   }
 }

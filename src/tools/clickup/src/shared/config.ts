@@ -1,3 +1,5 @@
+import { AsyncLocalStorage } from 'node:async_hooks';
+
 export const rawPrimaryLang = process.env.CLICKUP_PRIMARY_LANGUAGE || process.env.LANG;
 let detectedLanguageHint: string | undefined = undefined;
 
@@ -58,15 +60,23 @@ if (rawMode === 'read-minimal' || rawMode === 'read') {
   console.error(`Invalid CLICKUP_MCP_MODE "${rawMode}". Using default "write". Valid options: read-minimal, read, write`);
 }
 
+export interface ClickUpSessionCredentials {
+  apiKey: string;
+  teamId: string;
+  mode: McpMode;
+}
+
+const als = new AsyncLocalStorage<ClickUpSessionCredentials>();
+
+export function runWithClickUpCredentials<T>(creds: ClickUpSessionCredentials, fn: () => T): T {
+  return als.run(creds, fn);
+}
+
 export const CONFIG = {
-  apiKey: process.env.CLICKUP_API_KEY!,
-  teamId: process.env.CLICKUP_TEAM_ID!,
+  get apiKey() { return als.getStore()?.apiKey ?? (process.env.CLICKUP_API_KEY ?? ''); },
+  get teamId() { return als.getStore()?.teamId ?? (process.env.CLICKUP_TEAM_ID ?? ''); },
+  get mode() { return als.getStore()?.mode ?? mcpMode; },
   maxImages: process.env.MAX_IMAGES ? parseInt(process.env.MAX_IMAGES) : 4,
   maxResponseSizeMB: process.env.MAX_RESPONSE_SIZE_MB ? parseFloat(process.env.MAX_RESPONSE_SIZE_MB) : 1,
-  primaryLanguageHint: detectedLanguageHint, // Store the cleaned code directly
-  mode: mcpMode,
+  primaryLanguageHint: detectedLanguageHint,
 };
-
-if (!CONFIG.apiKey || !CONFIG.teamId) {
-  throw new Error("Missing Clickup API key or team ID");
-}
