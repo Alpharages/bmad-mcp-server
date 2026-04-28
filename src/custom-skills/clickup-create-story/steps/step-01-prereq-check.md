@@ -1,6 +1,7 @@
 ---
 prd_content: ''
 architecture_content: ''
+epics_content: ''
 ---
 
 # Step 1: Prereq File Check
@@ -8,28 +9,12 @@ architecture_content: ''
 ## RULES
 
 - `CLICKUP_MCP_MODE=write` is required. If `createTask` is not in the available tool list, stop immediately.
-- This step calls `pickSpace` (no arguments) exactly once for token validation. No other ClickUp API calls are made in this step. No writes to ClickUp.
+- Verify authentication by calling `pickSpace` directly — do NOT run shell commands (`printenv`, `env`, etc.) to check for env vars. ClickUp credentials live in the MCP server process, not in the shell.
 - If either required file is missing, **stop the entire skill run immediately**. Do not proceed to step 2.
-
-## CWD Assertion
-
-Run this check **before** the permission gate. It catches the case where the dev session is open at the bmad-mcp-server repo root rather than the pilot/target repo whose planning artifacts the skill is supposed to read.
-
-0. **Assert pilot-repo cwd.** Resolve `{cwd}` from `pwd`. Look for a `.bmad-pilot-marker` file at `{cwd}/.bmad-pilot-marker`. If the file is present, read its first line and verify it begins with `bmad-pilot-marker:` (any non-empty value); record `{cwd_assertion}` = `pass`. If the file is absent, emit the cwd error block below and stop.
-
-   > ❌ **Cwd assertion failed — not the pilot repo**
-   >
-   > The `clickup-create-story` skill expects to run with `{cwd}` pointing at the pilot/target repo whose `planning-artifacts/PRD.md` and `planning-artifacts/architecture.md` will be read. The current `{cwd}` does not contain a `.bmad-pilot-marker` sentinel file at its root.
-   >
-   > **Why:** When Claude Code opens multiple repos in one session, `pwd` can resolve to the bmad-mcp-server repo root rather than the target repo. Reading planning artifacts from the wrong cwd silently produces stories grounded in the wrong PRD.
-   >
-   > **What to do:** Either `cd` to the pilot repo before re-invoking the skill, or place a `.bmad-pilot-marker` file at the target repo root (a single line `bmad-pilot-marker: 1` is sufficient; optional `repo:` and `epic:` fields enable stronger assertion).
-   >
-   > **Disclosed-deviation escape hatch:** If the dev session must remain at the bmad-mcp-server cwd (e.g. multi-repo Claude Code project) and the planning artifacts are loaded via absolute-path `Read` against the pilot-repo files, record the deviation in the Dev Agent Record §Agent Model Used and continue. Stories 5-4 and 5-5 used this path under disclosed deviation.
 
 ## Permission Gate
 
-Before checking project files, run these two checks in order. If either fails, emit the corresponding error block and stop the entire skill run immediately.
+Run these two checks in order. If either fails, emit the corresponding error block and stop the entire skill run immediately.
 
 1. **Verify write mode.** Check whether `createTask` is available in the current tool list. If it is absent (mode is `read-minimal` or `read`), emit the mode error block below and stop.
 
@@ -39,52 +24,40 @@ Before checking project files, run these two checks in order. If either fails, e
 
    > ✅ Permission gate passed — write mode active, token authenticated.
 
-   Capture this line **verbatim** in the Dev Agent Record (§Debug Log References or §Completion Notes). Functional equivalents (e.g. "pickSpace returned N spaces") are not a substitute — downstream stories grep for the exact phrase. Then continue to `## INSTRUCTIONS`.
+   Capture this line **verbatim** in the Dev Agent Record. Then continue to `## INSTRUCTIONS`.
 
 ### Mode error block
 
 > ❌ **Permission gate failed — write mode required**
 >
-> The `clickup-create-story` skill requires `CLICKUP_MCP_MODE=write`. The current
-> mode does not register `createTask`, so task creation is impossible.
+> The `clickup-create-story` skill requires `CLICKUP_MCP_MODE=write`. The current mode does not register `createTask`, so task creation is impossible.
 >
-> **Why:** `createTask` is only registered in `write` mode. The full skill requires
-> `write` mode from step 1 (token verification via `pickSpace`) through step 5
-> (task creation via `createTask`). Running in `read-minimal` or `read` mode will
-> fail at step 5 at the latest — failing here avoids wasted picker round-trips.
->
-> **What to do:** Set `CLICKUP_MCP_MODE=write` in your environment and restart the
-> MCP server, then re-invoke the Dev agent in story-creation mode.
+> **What to do:** Set `CLICKUP_MCP_MODE=write` in the `bmad-mcp-server` env config (whichever name you gave it in your MCP client settings) and restart, then re-invoke the skill.
 
 ### Token error block
 
 > ❌ **Permission gate failed — ClickUp authentication failed**
 >
-> The `clickup-create-story` skill called `pickSpace` to verify your
-> `CLICKUP_API_KEY` token, but the ClickUp API returned an authentication error or
-> no spaces.
+> `pickSpace` returned an authentication error. The `CLICKUP_API_KEY` or `CLICKUP_TEAM_ID` in the MCP server config may be invalid or expired.
 >
-> **Why:** Without a valid token the skill cannot list epics (step 2), sprint lists
-> (step 3), or create tasks (step 5). Failing here avoids wasted picker round-trips.
->
-> **What to do:**
->
-> - Confirm `CLICKUP_API_KEY` is set in your environment to a valid personal token.
-> - Confirm `CLICKUP_TEAM_ID` is set to your workspace ID (7–10 digits).
-> - Restart the MCP server after updating either variable, then re-invoke the Dev
->   agent in story-creation mode.
+> **What to do:** Update the credentials in the `bmad-mcp-server` env config (whichever name you gave it in your MCP client settings), restart the MCP server, then re-invoke the skill.
 
 ## INSTRUCTIONS
 
 1. **Resolve the project root.** Determine `{project-root}` from the current working directory.
 
-2. **Check both required files simultaneously.** Verify whether each of the following paths exists:
+2. **Check required and optional files.** Verify whether each path exists:
+
+   **Required:**
    - `{project-root}/planning-artifacts/PRD.md`
    - `{project-root}/planning-artifacts/architecture.md`
 
-   Set `{prd_present}` = `present` or `**MISSING**` and `{arch_present}` = `present` or `**MISSING**` accordingly.
+   **Optional (strongly preferred — enables rich story generation):**
+   - `{project-root}/planning-artifacts/epics-and-stories.md`
 
-3. **If either file is missing, emit the following error block (substituting the correct status values) and stop:**
+   Set `{prd_present}`, `{arch_present}` = `present` or `**MISSING**`. Set `{epics_present}` = `present` or `absent`.
+
+3. **If either required file is missing, emit the following error block and stop:**
 
    ```
    ❌ **Prereq check failed — missing required file**
@@ -94,14 +67,21 @@ Before checking project files, run these two checks in order. If either fails, e
    - `planning-artifacts/PRD.md` — {prd_present}
    - `planning-artifacts/architecture.md` — {arch_present}
 
-   **Why:** Story descriptions are composed from PRD and architecture context (story 2.5). Without these files the description would be empty or fabricated.
+   **Why:** Story descriptions are composed from PRD and architecture context. Without these files the description would be empty or fabricated.
 
-   **What to do:** Add the missing file(s) to your project's `planning-artifacts/` directory, then re-invoke the Dev agent in story-creation mode.
+   **What to do:** Add the missing file(s) to your project's `planning-artifacts/` directory, then re-invoke the skill.
    ```
 
-4. **Load both files.** Read the contents of `{project-root}/planning-artifacts/PRD.md` into `{prd_content}` and `{project-root}/planning-artifacts/architecture.md` into `{architecture_content}` for use by downstream steps.
+4. **Load files.** Read:
+   - `{project-root}/planning-artifacts/PRD.md` → `{prd_content}`
+   - `{project-root}/planning-artifacts/architecture.md` → `{architecture_content}`
+   - If `epics-and-stories.md` is present: read it → `{epics_content}`. If absent, set `{epics_content}` = `''` and note to the user: `⚠️ planning-artifacts/epics-and-stories.md not found — story detail will be derived from PRD and epic ClickUp task only.`
 
-5. **Confirm and continue.** Report to the user that prerequisite files are present and loaded, then proceed to the next step.
+   Also check for optional files and note their presence (do not fail if absent):
+   - `{project-root}/planning-artifacts/ux-design.md` or similar `*ux*.md`
+   - `{project-root}/planning-artifacts/tech-spec.md`
+
+5. **Confirm and continue.** Report to the user which files were loaded, then proceed to the next step.
 
 ## NEXT
 
