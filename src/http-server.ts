@@ -1,5 +1,7 @@
 import { createServer, IncomingMessage, ServerResponse } from 'node:http';
 import { randomUUID } from 'node:crypto';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js';
 import { BMADServerLiteMultiToolGit } from './server.js';
@@ -46,7 +48,8 @@ async function readBody(req: IncomingMessage): Promise<unknown> {
 }
 
 const gitRemotes = process.argv.slice(2).filter((a) => a.startsWith('git+'));
-const projectRoot = process.env.BMAD_ROOT;
+const _serverRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const projectRoot = process.env.BMAD_ROOT ?? _serverRoot;
 
 async function handleMcp(
   req: IncomingMessage,

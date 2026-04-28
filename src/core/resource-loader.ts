@@ -1577,6 +1577,43 @@ export class ResourceLoaderGit {
    * ```
    */
   async listWorkflowsWithMetadata(): Promise<Workflow[]> {
+    // Always scan custom skills (src/custom-skills, bmm-skills) from all sources.
+    // These are never in the CSV manifest so they must be merged in separately.
+    const customSkillsMap = new Map<string, Workflow>();
+    const allBmmRoots = [
+      this.paths.projectRoot,
+      this.paths.userBmad,
+      ...Array.from(this.resolvedGitPaths.values()),
+    ];
+    for (const root of allBmmRoots) {
+      const bmmRoot = this.findBmmSkillsRoot(root);
+      if (!bmmRoot) continue;
+      this.scanBmmSkills(bmmRoot).workflows.forEach((skillPath, name) => {
+        if (customSkillsMap.has(name)) return;
+        let description = '';
+        try {
+          const raw = readFileSync(skillPath, 'utf-8');
+          const fm = raw.match(/^---\n([\s\S]*?)\n---/);
+          if (fm) {
+            /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
+            const parsed = parseYaml(fm[1]) as any;
+            if (parsed?.description) description = String(parsed.description);
+            /* eslint-enable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
+          }
+        } catch {
+          // Ignore parse errors
+        }
+        customSkillsMap.set(name, {
+          name,
+          description,
+          module: 'custom-skills',
+          path: '',
+          standalone: true,
+        });
+      });
+    }
+
+    let manifestWorkflows: Workflow[] = [];
     try {
       // Load workflow-manifest.csv
       const manifestContent = await this.loadFile('_cfg/workflow-manifest.csv');
@@ -1590,7 +1627,7 @@ export class ResourceLoaderGit {
       });
 
       // Map parsed records to Workflow objects
-      const workflows: Workflow[] = records.map((record) => ({
+      manifestWorkflows = records.map((record) => ({
         name: record.name || '',
         description: record.description || '',
         module: record.module || 'unknown',
@@ -1598,48 +1635,29 @@ export class ResourceLoaderGit {
         ...(record.trigger && { trigger: record.trigger }),
         standalone: record.standalone?.toLowerCase() === 'true',
       }));
-
-      return workflows;
     } catch {
-      // No manifest — build list from discovered workflows + bmm-skills frontmatter
+      // No manifest — build list from discovered workflows
       const workflowNames = await this.listWorkflows();
-
-      // Pre-build a description map from bmm-skills SKILL.md frontmatter
-      const descMap = new Map<string, string>();
-      const allBmmRoots = [
-        this.paths.projectRoot,
-        this.paths.userBmad,
-        ...Array.from(this.resolvedGitPaths.values()),
-      ];
-      for (const root of allBmmRoots) {
-        const bmmRoot = this.findBmmSkillsRoot(root);
-        if (!bmmRoot) continue;
-        this.scanBmmSkills(bmmRoot).workflows.forEach((skillPath, name) => {
-          if (descMap.has(name)) return;
-          try {
-            const raw = readFileSync(skillPath, 'utf-8');
-            const fm = raw.match(/^---\n([\s\S]*?)\n---/);
-            if (fm) {
-              /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
-              const parsed = parseYaml(fm[1]) as any;
-              if (parsed?.description)
-                descMap.set(name, String(parsed.description));
-              /* eslint-enable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
-            }
-          } catch {
-            // Ignore parse errors
-          }
-        });
-      }
-
-      return workflowNames.map((name) => ({
-        name,
-        description: descMap.get(name) ?? '',
-        module: 'bmm-skills',
-        path: '',
-        standalone: true,
-      }));
+      manifestWorkflows = workflowNames
+        .filter((name) => !customSkillsMap.has(name))
+        .map((name) => ({
+          name,
+          description: '',
+          module: 'bmm-skills',
+          path: '',
+          standalone: true,
+        }));
     }
+
+    // Merge: manifest workflows first, then custom skills not already in manifest
+    const manifestNames = new Set(manifestWorkflows.map((w) => w.name));
+    const merged = [...manifestWorkflows];
+    for (const [name, skill] of customSkillsMap) {
+      if (!manifestNames.has(name)) {
+        merged.push(skill);
+      }
+    }
+    return merged;
   }
 
   /**
