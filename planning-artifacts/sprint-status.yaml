@@ -1,5 +1,5 @@
 # generated: 2026-04-21
-# last_updated: 2026-04-28 (story 5-9 code review done; 5-9-pilot-retro-go-no-go → done; epic-5 → done)
+# last_updated: 2026-04-28 (story 5-9 code review done; 5-9-pilot-retro-go-no-go → done; epic-5 → done; epic-5-retrospective → done)
 # project: bmad-mcp-server
 # project_key: NOKEY
 # tracking_system: file-system
@@ -49,7 +49,7 @@
 #   So EPIC-1 has 8 bullets but only 7 stories.
 
 generated: 2026-04-21
-last_updated: 2026-04-28 (story 5-9 code review done; 5-9-pilot-retro-go-no-go → done; epic-5 → done)
+last_updated: 2026-04-28 (story 5-9 code review done; 5-9-pilot-retro-go-no-go → done; epic-5 → done; epic-5-retrospective → done)
 project: bmad-mcp-server
 project_key: NOKEY
 tracking_system: file-system
@@ -114,4 +114,4 @@ development_status:
   5-7-refine-prompts-and-templates: done
   5-8-team-facing-quickstart-docs: done
   5-9-pilot-retro-go-no-go: done
-  epic-5-retrospective: optional
+  epic-5-retrospective: done
