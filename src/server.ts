@@ -31,6 +31,7 @@ import {
 } from './tools/index.js';
 import { registerClickUpTools } from './tools/clickup-adapter.js';
 import { ClickUpSessionState } from './tools/clickup-session.js';
+import type { ClickUpSessionCredentials } from './utils/clickup-env.js';
 import { logger } from './utils/logger.js';
 
 export class BMADServerLiteMultiToolGit {
@@ -39,8 +40,10 @@ export class BMADServerLiteMultiToolGit {
   private initialized = false;
   private initPromise: Promise<void> | null = null;
   private readonly clickUpSession = new ClickUpSessionState();
+  private readonly sessionCredentials?: ClickUpSessionCredentials;
 
-  constructor(projectRoot?: string, gitRemotes?: string[]) {
+  constructor(projectRoot?: string, gitRemotes?: string[], sessionCredentials?: ClickUpSessionCredentials) {
+    this.sessionCredentials = sessionCredentials;
     this.engine = new BMADEngine(projectRoot, gitRemotes);
     this.server = new McpServer(
       {
@@ -520,6 +523,7 @@ export class BMADServerLiteMultiToolGit {
       const result = await registerClickUpTools(
         this.server,
         this.clickUpSession,
+        this.sessionCredentials,
       );
       const requireClickUp = /^(1|true)$/i.test(
         (process.env.BMAD_REQUIRE_CLICKUP ?? '').trim(),

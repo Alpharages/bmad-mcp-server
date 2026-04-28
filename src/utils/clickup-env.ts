@@ -8,6 +8,12 @@
 
 export type ClickUpMode = 'read-minimal' | 'read' | 'write';
 
+export interface ClickUpSessionCredentials {
+  apiKey: string;
+  teamId: string;
+  mode: ClickUpMode;
+}
+
 export type ClickUpEnvResult =
   | {
       kind: 'ok';
