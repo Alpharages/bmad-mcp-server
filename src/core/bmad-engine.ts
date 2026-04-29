@@ -192,10 +192,13 @@ export class BMADEngine {
   }
 
   /**
-   * List all available workflows by extracting them from agent menu items.
+   * List all available workflows.
    *
-   * Only workflows linked to agents appear in this list.
-   * Workflows not linked to agents can still be executed via direct bmad:// URI.
+   * Merges two sources:
+   * 1. Workflows referenced by agent menu items (carries agent linkage).
+   * 2. Workflows discovered by the loader (manifest + custom skills).
+   *    Custom skills under src/custom-skills/ are not referenced by any agent
+   *    menu, so without this merge they would never surface here.
    */
   async listWorkflows(filter?: ListFilter): Promise<BMADResult> {
     await this.initialize();
@@ -235,6 +238,30 @@ export class BMADEngine {
         } else {
           // Workflow offered by multiple agents
           workflowMap.get(workflowName)!.agents.push(agent.name);
+        }
+      }
+    }
+
+    // Merge in loader-discovered workflows (manifest + custom skills).
+    for (const w of this.workflows) {
+      if (filter?.module && w.module !== filter.module) continue;
+
+      if (!workflowMap.has(w.name)) {
+        workflowMap.set(w.name, {
+          name: w.name,
+          description: w.description,
+          module: w.module,
+          agents: [],
+          standalone: w.standalone ?? true,
+        });
+      } else {
+        // Backfill description/module from manifest if agent menu missed them.
+        const existing = workflowMap.get(w.name)!;
+        if (!existing.description && w.description) {
+          existing.description = w.description;
+        }
+        if (!existing.module && w.module) {
+          existing.module = w.module;
         }
       }
     }

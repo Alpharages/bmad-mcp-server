@@ -10,3 +10,4 @@ tests
 scripts
 !scripts/build-clickup.mjs
 *.md
+!src/custom-skills/**/*.md
