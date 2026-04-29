@@ -137,19 +137,32 @@ for the documented escape-hatch wording.
 
 ### Optional: pinned-ID config knobs
 
-If your ClickUp space has more than one list named `Backlog` or more than one
-sprint folder, the pickers in `step-02-epic-picker` and `step-03-sprint-list-picker`
-will ask for a numbered disambiguation at runtime. You can bypass this with two
-optional keys in [`_bmad/custom/bmad-agent-dev.toml`](../_bmad/custom/bmad-agent-dev.toml)
-under the `[clickup_create_story]` table:
+The pickers in `step-02-epic-picker` and `step-03-sprint-list-picker` call
+ClickUp on every invocation to discover the active space, the Backlog list,
+and the sprint folder. To skip those round-trips — and to bypass the
+disambiguation prompts that appear when more than one list named `Backlog` or
+more than one sprint folder exists in the space — pin the IDs in a project-
+local `.bmadmcp/config.toml` file.
 
-- `pinned_backlog_list_id` — pins a specific Backlog list ID (see
+Path: `{project-root}/.bmadmcp/config.toml` (gitignored at the project level;
+see [`.bmadmcp/config.example.toml`](../.bmadmcp/config.example.toml) for the
+full schema).
+
+Available keys per skill table (`[clickup_create_epic]` /
+`[clickup_create_story]`):
+
+- `pinned_space_id` — skip `getCurrentSpace` / `pickSpace` entirely.
+- `pinned_space_name` — display label; falls back to `(pinned)` if unset.
+- `pinned_backlog_list_id` — pin a specific Backlog list ID (see
   [`two-backlog-lists-in-team-space`](../planning-artifacts/friction-log.md#two-backlog-lists-in-team-space)).
-- `pinned_sprint_folder_id` — pins a specific sprint folder ID (see
+- `pinned_sprint_folder_id` — pin a specific sprint folder ID, story skill
+  only (see
   [`two-sprint-folders-in-team-space`](../planning-artifacts/friction-log.md#two-sprint-folders-in-team-space)).
 
-Both are optional and default to unset. Pinning is recommended only for spaces
-with these multi-list / multi-folder edge cases.
+All keys are optional and default to unset. Pinning both `pinned_space_id`
+and `pinned_backlog_list_id` produces the full short-circuit (zero ClickUp
+calls in the picker). Pinning only one yields a partial short-circuit; see
+the step-02 files for the precise behaviour.
 
 ## Multi-repo Claude Code sessions
 
@@ -454,12 +467,14 @@ in the conversation after implementation completes.
 numbered disambiguation list because more than one `Backlog` list or more than one
 `sprint*` folder exists in the space.
 
-**Pre-empt:** Pin the IDs in
-[`_bmad/custom/bmad-agent-dev.toml`](../_bmad/custom/bmad-agent-dev.toml):
+**Pre-empt:** Pin the IDs in `.bmadmcp/config.toml` at the project root (see
+[`.bmadmcp/config.example.toml`](../.bmadmcp/config.example.toml)):
 
 ```toml
 [clickup_create_story]
-pinned_backlog_list_id = "<your-backlog-list-id>"
+pinned_space_id         = "<your-space-id>"
+pinned_space_name       = "<your-space-name>"
+pinned_backlog_list_id  = "<your-backlog-list-id>"
 pinned_sprint_folder_id = "<your-sprint-folder-id>"
 ```
 

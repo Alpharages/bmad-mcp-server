@@ -1,0 +1,37 @@
+# bmad-mcp-server project-local config.
+#
+# Copy this file to `.bmadmcp/config.toml` (same directory) and fill in the
+# values that apply to your project. The actual `config.toml` is gitignored;
+# `config.example.toml` (this file) is committed as the schema reference.
+#
+# Path: `{project-root}/.bmadmcp/config.toml`
+# Read by: clickup-create-epic / clickup-create-story custom skills.
+#
+# All keys are optional. Unset keys preserve the original picker behaviour
+# (interactive space + list + folder selection on every invocation).
+
+# ---------------------------------------------------------------------------
+# clickup-create-epic
+# ---------------------------------------------------------------------------
+# Pinning both `pinned_space_id` and `pinned_backlog_list_id` makes the skill
+# skip `getCurrentSpace` / `pickSpace` / `searchSpaces` entirely and jump
+# straight to the local epic picker. Pinning only one of them produces a
+# partial short-circuit (see step-02-backlog-list-picker.md, instruction 0).
+
+[clickup_create_epic]
+# pinned_space_id        = ""    # ClickUp space ID (digits only)
+# pinned_space_name      = ""    # Display name; falls back to "(pinned)" if unset
+# pinned_backlog_list_id = ""    # ClickUp list ID for the Backlog list
+
+# ---------------------------------------------------------------------------
+# clickup-create-story
+# ---------------------------------------------------------------------------
+# Same pinning behaviour as above, plus `pinned_sprint_folder_id` to bypass
+# the sprint-folder scan in step-03-sprint-list-picker when more than one
+# folder containing "sprint" exists in the chosen space.
+
+[clickup_create_story]
+# pinned_space_id         = ""
+# pinned_space_name       = ""
+# pinned_backlog_list_id  = ""
+# pinned_sprint_folder_id = ""

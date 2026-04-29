@@ -637,6 +637,45 @@ Reviews a story implementation given a ClickUp task ID. Fetches the task require
 
 ---
 
+### Project-local config (`.bmadmcp/config.toml`)
+
+`clickup-create-epic` and `clickup-create-story` discover the active space, the
+Backlog list, and (for the story skill) the sprint folder by calling ClickUp on
+every invocation — typically `getCurrentSpace` → `pickSpace` → `searchSpaces`,
+then a tree scan. To pin those IDs and skip the round-trips, drop a project-
+local `.bmadmcp/config.toml` at the project root:
+
+```toml
+[clickup_create_epic]
+pinned_space_id        = "..."
+pinned_space_name      = "..."   # display only
+pinned_backlog_list_id = "..."
+
+[clickup_create_story]
+pinned_space_id         = "..."
+pinned_space_name       = "..."
+pinned_backlog_list_id  = "..."
+pinned_sprint_folder_id = "..."
+```
+
+When **both** `pinned_space_id` and `pinned_backlog_list_id` are set, the
+picker steps skip every ClickUp discovery call and jump straight to the local
+content steps. Pinning only one yields a partial short-circuit (see the step
+files for exact behaviour). All keys are optional.
+
+The file is intended to be gitignored at the project level (per-developer or
+per-project IDs aren't checked in). See
+[`.bmadmcp/config.example.toml`](./.bmadmcp/config.example.toml) for the full
+schema. The `.bmadmcp/` directory is the home for additional project-local
+MCP-server configs; current users are the two skills above, future configs
+will land alongside.
+
+> Does **not** apply to `clickup-dev-implement` or `clickup-code-review` —
+> those skills operate off a known task ID and don't run the space/list
+> pickers.
+
+---
+
 Custom skill source lives in `src/custom-skills/`. See [`src/custom-skills/README.md`](./src/custom-skills/README.md) for the extension boundary convention.
 
 ---
