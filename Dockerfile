@@ -19,6 +19,7 @@ WORKDIR /app
 COPY --from=builder --chown=bmad:bmad /app/build ./build
 COPY --from=builder --chown=bmad:bmad /app/node_modules ./node_modules
 COPY --chown=bmad:bmad package.json ./
+COPY --chown=bmad:bmad src/custom-skills/ ./src/custom-skills/
 
 USER bmad
 EXPOSE ${PORT:-3000}
