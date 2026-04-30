@@ -7,7 +7,11 @@ export type TomlLoadResult =
   | { kind: 'malformed'; path: string; error: Error };
 
 export function loadToml(absolutePath: string): TomlLoadResult {
-  if (!absolutePath.startsWith('/') && !/^[A-Za-z]:[\\/]/.test(absolutePath)) {
+  if (
+    !absolutePath.startsWith('/') &&
+    !absolutePath.startsWith('\\\\') &&
+    !/^[A-Za-z]:[\\/]/.test(absolutePath)
+  ) {
     throw new TypeError(
       `loadToml: expected absolute path, got "${absolutePath}"`,
     );
@@ -29,7 +33,19 @@ export function loadToml(absolutePath: string): TomlLoadResult {
     throw err;
   }
 
-  const contents = readFileSync(absolutePath, 'utf-8');
+  let contents: string;
+  try {
+    contents = readFileSync(absolutePath, 'utf-8');
+  } catch (err: unknown) {
+    if (
+      err instanceof Error &&
+      'code' in err &&
+      (err.code === 'ENOENT' || err.code === 'EISDIR')
+    ) {
+      return { kind: 'missing' };
+    }
+    throw err;
+  }
 
   try {
     const data = parse(contents);

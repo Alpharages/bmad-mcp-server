@@ -8,6 +8,7 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { TomlError } from 'smol-toml';
 import { loadToml } from '@/utils/toml-loader.js';
 
 describe('loadToml', () => {
@@ -113,8 +114,11 @@ describe('loadToml', () => {
       const p = join(tempDir, 'secret.toml');
       writeFileSync(p, 'key = "value"', 'utf-8');
       chmodSync(p, 0o000);
-      expect(() => loadToml(p)).toThrow();
-      chmodSync(p, 0o644);
+      try {
+        expect(() => loadToml(p)).toThrow();
+      } finally {
+        chmodSync(p, 0o644);
+      }
     },
   );
 
@@ -124,7 +128,7 @@ describe('loadToml', () => {
     const r = loadToml(p);
     expect(r.kind).toBe('malformed');
     if (r.kind === 'malformed') {
-      expect(r.error.constructor.name).toBe('TomlError');
+      expect(r.error).toBeInstanceOf(TomlError);
     }
   });
 
