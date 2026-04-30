@@ -46,6 +46,8 @@
 # target_list_id   = ""    # Pin the target list for bug tickets (skips list picker)
 # default_priority = ""    # Override severity-inferred priority (1=urgent,2=high,3=normal,4=low)
 # default_tags     = []    # Extra tags added beyond the automatic "bug" tag
+# pinned_epic_id   = ""    # Pin the epic parent (skips epic picker)
+# pinned_epic_name = ""    # Display name for the pinned epic
 
 # ---------------------------------------------------------------------------
 # Doc-path cascade
