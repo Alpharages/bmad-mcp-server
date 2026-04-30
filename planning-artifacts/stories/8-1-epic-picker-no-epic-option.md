@@ -351,10 +351,10 @@ planning-artifact epics file if relevant context exists there.
 
 ## Change Log
 
-| Date       | Change                                 |
-| ---------- | -------------------------------------- |
-| 2026-05-01 | Story drafted. Status → ready-for-dev. |
-| 2026-05-01 | Story implemented. Status → done.      |
+| Date       | Change                                       |
+| ---------- | -------------------------------------------- |
+| 2026-05-01 | Story drafted. Status → ready-for-dev.       |
+| 2026-05-01 | Story implemented. Status → done.            |
 | 2026-05-01 | Code review complete. 4 patches, 2 deferred. |
 
 ### Review Findings

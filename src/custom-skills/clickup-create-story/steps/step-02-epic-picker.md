@@ -32,6 +32,12 @@ epic_name: ''
                                       else true
    ```
 
+   Boolean coercion for `allow_no_epic`: TOML boolean `true` → feature enabled; TOML
+   boolean `false` → feature disabled. If the key is present but its value is not a TOML
+   boolean (e.g., a string `"true"` / `"false"`, or an integer), emit:
+   `⚠️ [clickup_create_story].allow_no_epic is not a boolean — defaulting to true`
+   and treat `effective_allow_no_epic` as `true`.
+
    Persist `effective_allow_no_epic` in step context for later instructions.
    - **If both effective `pinned_space_id` AND effective `pinned_backlog_list_id` are set to non-empty values:** skip the space and backlog discovery calls below. Set `{space_id}` = effective `pinned_space_id`, `{space_name}` = effective `pinned_space_name` (fall back to `(pinned)` if that key is unset), `{backlog_list_id}` = effective `pinned_backlog_list_id`. Confirm to the user: `✅ Space + backlog list pinned via .bmadmcp/config.toml — skipping picker.` Proceed directly to instruction 8 below (`searchTasks`) using the pinned `{backlog_list_id}`. If `searchTasks` returns "list not found" or a similar error, surface it verbatim and instruct the user to update or remove the pinned IDs in `.bmadmcp/config.toml`.
    - **If only effective `pinned_space_id` is set:** skip `getCurrentSpace` and `pickSpace`. Set `{space_id}` = effective `pinned_space_id`, `{space_name}` = effective `pinned_space_name` (or `(pinned)`). Continue to instruction 5 below (`searchSpaces`).
