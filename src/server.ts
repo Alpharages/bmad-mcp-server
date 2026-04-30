@@ -126,9 +126,9 @@ export class BMADServerLiteMultiToolGit {
     // ShapeOutput over six conditional optionals.
     const bmadSchema: z.ZodRawShape = {
       operation: z
-        .enum(['list', 'read', 'execute'])
+        .enum(['list', 'read', 'execute', 'resolve-doc-paths'])
         .describe(
-          'Operation type:\n- list: Get available agents/workflows/modules\n- read: Inspect agent or workflow details (read-only)\n- execute: Run agent or workflow with user context (action)',
+          'Operation type:\n- list: Get available agents/workflows/modules\n- read: Inspect agent or workflow details (read-only)\n- execute: Run agent or workflow with user context (action)\n- resolve-doc-paths: Resolve PRD/architecture/epics doc paths via the EPIC-6 cascade',
         ),
       module: z
         .enum(['core', 'bmm', 'cis'])
