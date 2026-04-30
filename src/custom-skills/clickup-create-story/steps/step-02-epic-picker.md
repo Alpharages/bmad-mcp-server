@@ -14,6 +14,7 @@ epic_name: ''
 - **Near-read-only.** This step calls only `pickSpace`, `getCurrentSpace`, `clearCurrentSpace`, `searchSpaces`, and `searchTasks`. No writes to ClickUp are performed.
 - **Early-exit.** Stop the skill run immediately if the user cannot identify a space, or if no Backlog list exists in the chosen space.
 - **No fabrication.** Never invent or assume an epic ID. Always display the enumerated list of epics and wait for explicit user selection.
+- **No-epic option.** When `[clickup_create_story].allow_no_epic` is `true` (the default), the pick-list includes a "no epic" entry. Selecting it sets `{epic_id}` = `''` and `{epic_name}` = `''`. Step 5 omits `parent_task_id` when `{epic_id}` is empty.
 
 ## INSTRUCTIONS
 
@@ -27,8 +28,11 @@ epic_name: ''
                                       else [clickup].pinned_space_name
    effective pinned_backlog_list_id = [clickup_create_story].pinned_backlog_list_id if non-empty,
                                       else [clickup].pinned_backlog_list_id
+   effective allow_no_epic          = [clickup_create_story].allow_no_epic          if set,
+                                      else true
    ```
 
+   Persist `effective_allow_no_epic` in step context for later instructions.
    - **If both effective `pinned_space_id` AND effective `pinned_backlog_list_id` are set to non-empty values:** skip the space and backlog discovery calls below. Set `{space_id}` = effective `pinned_space_id`, `{space_name}` = effective `pinned_space_name` (fall back to `(pinned)` if that key is unset), `{backlog_list_id}` = effective `pinned_backlog_list_id`. Confirm to the user: `✅ Space + backlog list pinned via .bmadmcp/config.toml — skipping picker.` Proceed directly to instruction 8 below (`searchTasks`) using the pinned `{backlog_list_id}`. If `searchTasks` returns "list not found" or a similar error, surface it verbatim and instruct the user to update or remove the pinned IDs in `.bmadmcp/config.toml`.
    - **If only effective `pinned_space_id` is set:** skip `getCurrentSpace` and `pickSpace`. Set `{space_id}` = effective `pinned_space_id`, `{space_name}` = effective `pinned_space_name` (or `(pinned)`). Continue to instruction 5 below (`searchSpaces`).
    - **If only effective `pinned_backlog_list_id` is set (no effective `pinned_space_id`):** continue to instruction 1 below; the list-pin will be applied at instruction 6.
@@ -68,23 +72,47 @@ epic_name: ''
 
    **Filter the results to root-level tasks only.** For each returned task, drop it unless its `parent_task_id` field is null/absent/empty. Treat all of the following as "no parent": the field is missing entirely from the response, the value is the literal string `null`, the value is the literal empty string `''`, or the value is JSON `null`. Only keep tasks that survive this filter — these are the candidate epics. Subtasks (created later under the same-list pivot per `cross-list-subtask-block`) MUST NOT appear as candidate epics in the picker.
 
-9. If zero tasks are returned, emit the following error block and stop:
+9. If zero tasks are returned:
+   - When `effective_allow_no_epic` is `true`, emit:
 
-   ```
-   ❌ **Epic picker failed — Backlog list is empty**
+     ```
+     ⚠️ **Backlog list is empty — no epics found**
 
-   The `clickup-create-story` skill found the Backlog list (`{backlog_list_id}`) in space **{space_name}** but it contains no tasks.
+     The Backlog list (`{backlog_list_id}`) in space **{space_name}** contains no root-level tasks. No epics are available to pick from.
 
-   **Why:** Epics are created by the team lead as tasks in the Backlog list before the Dev agent can create stories under them.
+     **Would you like to create this story without an epic parent (standalone task)?** [Y/n]
+     ```
 
-   **What to do:** Ask your team lead to create at least one epic task in the Backlog list for space **{space_name}**, then re-invoke the Dev agent in story-creation mode.
-   ```
+     - `Y` or Enter: set `{epic_id}` = `''`, `{epic_name}` = `''`. Emit `⏭️ No epic selected — story will be created as a standalone task.` Proceed to sprint-list picker (`## NEXT`).
+     - `N`: stop.
 
-10. Present the tasks as a numbered pick-list: `[N] Task name (ID: <task_id>) — status: <status>`.
+   - When `effective_allow_no_epic` is `false`, emit the original hard-stop error block and stop:
 
-11. Ask: "Which epic should this story be created under? Enter the number."
+     ```
+     ❌ **Epic picker failed — Backlog list is empty**
 
-12. Parse the user's response to set `{epic_id}` (the task ID) and `{epic_name}` (the task name). Confirm: "Selected epic: **{epic_name}** (`{epic_id}`). Continuing to sprint-list picker…"
+     The `clickup-create-story` skill found the Backlog list (`{backlog_list_id}`) in space **{space_name}** but it contains no tasks.
+
+     **Why:** Epics are created by the team lead as tasks in the Backlog list before the Dev agent can create stories under them.
+
+     **What to do:** Ask your team lead to create at least one epic task in the Backlog list for space **{space_name}**, then re-invoke the Dev agent in story-creation mode.
+     ```
+
+10. Present the tasks as a numbered pick-list. When `effective_allow_no_epic` is `true`, prepend a zeroth entry:
+
+    ```
+    [0] No epic — create as standalone task (research spike, ops task, hotfix, etc.)
+    [1] <epic_name> (ID: <task_id>) — status: <status>
+    [2] …
+    ```
+
+    When `effective_allow_no_epic` is `false`, present the list unchanged (no zero entry): `[N] Task name (ID: <task_id>) — status: <status>`.
+
+11. Ask: "Which epic should this story be created under? Enter the number." When `effective_allow_no_epic` is `true`, use instead: "Which epic should this story be created under? Enter `0` for no epic, or choose a number."
+
+12. Parse the user's response:
+    - Input `0` (when `effective_allow_no_epic` is `true`): set `{epic_id}` = `''`, `{epic_name}` = `''`. Emit `⏭️ **No epic selected — story will be created as a standalone task.**` Proceed to sprint-list picker (`## NEXT`).
+    - All other valid numeric inputs: set `{epic_id}` and `{epic_name}` from selection. Confirm: "Selected epic: **{epic_name}** (`{epic_id}`). Continuing to sprint-list picker…"
 
 ## NEXT
 

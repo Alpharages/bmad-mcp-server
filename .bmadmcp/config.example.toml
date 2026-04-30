@@ -37,6 +37,7 @@
 
 [clickup_create_story]
 # pinned_sprint_folder_id = ""   # Bypass sprint-folder disambiguation when >1 sprint folder exists
+# allow_no_epic           = true   # Set false to hide the "no epic" option and always require an epic parent
 
 # ---------------------------------------------------------------------------
 # clickup-create-bug — per-skill config

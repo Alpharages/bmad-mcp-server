@@ -25,7 +25,8 @@ Parse into `{story_title}`. If empty, re-ask. Accept optional follow-up: "Any ad
 
 ### 2. Fetch epic from ClickUp
 
-Call `getTaskById` with `id: "{epic_id}"`. Extract the epic description text (strip metadata block and all `Comment by …` lines). Store as `{epic_description}`. If fetch fails, set `{epic_description}` = `''` and warn (non-fatal — continue).
+- When `{epic_id}` is non-empty: call `getTaskById` with `id: "{epic_id}"`. Extract the epic description text (strip metadata block and all `Comment by …` lines). Store as `{epic_description}`. If fetch fails, set `{epic_description}` = `''` and warn (non-fatal — continue).
+- When `{epic_id}` is `''`: skip `getTaskById`. Set `{epic_description}` = `''`. Emit: `ℹ️ No epic parent — epic context will be empty in the story description.`
 
 ### 3. Invoke bmad-create-story in content-composition mode
 
@@ -35,7 +36,7 @@ Execute the `bmad-create-story` workflow via the `bmad` tool with the following 
 
 ```
 Story title: {story_title}
-Epic: {epic_name} ({epic_id})
+Epic: {epic_name} ({epic_id})  →  "(no epic)" when both are empty
 Epic description: {epic_description}
 PRD content: already loaded in conversation context (from step 1: prereq check)
 Architecture content: already loaded in conversation context
