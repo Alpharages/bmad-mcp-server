@@ -1,6 +1,6 @@
 # Story 6.4: Add `resolve-doc-paths` operation to the unified `bmad` MCP tool
 
-Status: review
+Status: done
 
 Epic: [EPIC-6: Configurable doc-path resolution (cascade)](../epics/EPIC-6-configurable-doc-path-resolution.md)
 
