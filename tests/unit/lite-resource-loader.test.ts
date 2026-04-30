@@ -149,4 +149,53 @@ describe('ResourceLoader (Lite)', () => {
       rmSync(gitCacheDir, { recursive: true, force: true });
     }
   });
+
+  it('should load clickup-create-story without confusion when clickup-create-bug also exists', async () => {
+    // arrange — two sibling skills in src/custom-skills/ (EPIC-7 layout)
+    const projectDir = mkdtempSync(join(tmpdir(), 'bmad-regression-7-8-'));
+    try {
+      const createStoryDir = join(
+        projectDir,
+        'src',
+        'custom-skills',
+        'clickup-create-story',
+      );
+      const createBugDir = join(
+        projectDir,
+        'src',
+        'custom-skills',
+        'clickup-create-bug',
+      );
+      mkdirSync(createStoryDir, { recursive: true });
+      mkdirSync(createBugDir, { recursive: true });
+      writeFileSync(
+        join(createStoryDir, 'SKILL.md'),
+        '---\nname: clickup-create-story\n---\n# ClickUp Create Story — sentinel',
+      );
+      writeFileSync(
+        join(createBugDir, 'SKILL.md'),
+        '---\nname: clickup-create-bug\n---\n# ClickUp Create Bug — sentinel',
+      );
+      const disambigLoader = new ResourceLoaderGit(projectDir);
+      // act + assert — create-story resolves to the correct skill
+      const storyResource = await disambigLoader.loadWorkflow(
+        'clickup-create-story',
+      );
+      expect(storyResource.name).toBe('clickup-create-story');
+      expect(storyResource.content).toContain(
+        'ClickUp Create Story — sentinel',
+      );
+      expect(storyResource.content).not.toContain('ClickUp Create Bug');
+      expect(storyResource.source).toBe('project');
+      // act + assert — create-bug resolves to the correct skill
+      const bugResource =
+        await disambigLoader.loadWorkflow('clickup-create-bug');
+      expect(bugResource.name).toBe('clickup-create-bug');
+      expect(bugResource.content).toContain('ClickUp Create Bug — sentinel');
+      expect(bugResource.content).not.toContain('ClickUp Create Story');
+      expect(bugResource.source).toBe('project');
+    } finally {
+      rmSync(projectDir, { recursive: true, force: true });
+    }
+  });
 });
