@@ -1,6 +1,6 @@
 # Story 7.3: Implement bug-intent prereq check (soft artifact loading)
 
-Status: done
+Status: review
 
 Epic: [EPIC-7: Bug-shaped stories in ClickUp](../epics/EPIC-7-bug-shaped-stories.md)
 
