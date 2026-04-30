@@ -113,12 +113,13 @@ that the ClickUp fetch is bypassed when `{epic_id}`is`''`.
     createTask parameter rule from instruction 5 of step-05.
 
 19. **`step-05 pre-creation summary shows standalone task when epic_id is empty`** —
-    assert the `## INSTRUCTIONS` section contains the text `_(none — standalone task)_`
-    in the context of the pre-creation summary (instruction 2). This is the exact phrase
-    the LLM must emit verbatim on the no-epic path.
+    assert the `## INSTRUCTIONS` section contains the text `*(none — standalone task)*`
+    (asterisk-italics, matching the live `step-05-create-task.md` file — see Debug Log
+    for the prettier-vs-asterisks history) in the context of the pre-creation summary
+    (instruction 2). This is the exact phrase the LLM must emit verbatim on the no-epic path.
 
 20. **`step-05 success message shows standalone task when epic_id is empty`** — assert
-    the `## INSTRUCTIONS` section contains `_(none — standalone task)_` at least twice
+    the `## INSTRUCTIONS` section contains `*(none — standalone task)*` at least twice
     (once in instruction 2, once in instruction 8). Two occurrences confirm both the
     summary and the success message use the canonical phrase.
 
