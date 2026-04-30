@@ -29,7 +29,7 @@ See: [./steps/step-02-task-fetch.md](./steps/step-02-task-fetch.md)
 
 ## Context Builder
 
-Loads `planning-artifacts/PRD.md` and `planning-artifacts/architecture.md` (required), `planning-artifacts/tech-spec.md` and `project-context.md` (optional). Also parses the task description's Acceptance Criteria, Tasks/Subtasks, and Dev Notes sections from the ClickUp task content already in context — these become the authoritative implementation plan.
+Calls `bmad({ operation: 'resolve-doc-paths' })` to determine PRD and architecture paths via the 3-layer cascade (`.bmadmcp/config.toml [docs]` → BMAD `_bmad/config.toml` chain → `planning-artifacts/` default), then verifies the required files exist at the resolved paths. Also reads `planning-artifacts/tech-spec.md` and `project-context.md` (optional, best-effort, hardcoded paths — `tech_spec_path` cascade is deferred to a later story). The skill aborts if either required file is missing, surfacing the cascade layer and instructions for all three override layers.
 
 See: [./steps/step-03-planning-artifact-reader.md](./steps/step-03-planning-artifact-reader.md)
 
