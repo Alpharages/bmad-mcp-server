@@ -84,7 +84,7 @@ files or the EPIC-6 implementation stories.
    g. This project's own override note: this repo's architecture lives at
    `docs/architecture.md` (not `planning-artifacts/architecture.md`), so a
    project-local `.bmadmcp/config.toml` must set `architecture_path =
-   "docs/architecture.md"`. The gitignored `.bmadmcp/config.toml` is the right
+"docs/architecture.md"`. The gitignored `.bmadmcp/config.toml` is the right
    place for this; `.bmadmcp/config.example.toml` (tracked) shows the schema.
 
 3. **`.bmadmcp/config.example.toml` MUST gain a `[docs]` section** appended after the
@@ -135,7 +135,7 @@ files or the EPIC-6 implementation stories.
    CLAUDE.md's `## Doc-Path Cascade` section) for contributor-level detail.
 
    e. The existing note `> Does **not** apply to clickup-dev-implement or
-   clickup-code-review` MUST be removed or corrected — those skills now DO consume
+clickup-code-review` MUST be removed or corrected — those skills now DO consume
    the cascade via `resolve-doc-paths`.
 
 5. **No TypeScript changes.** `git diff --stat -- src/` MUST be empty. No new

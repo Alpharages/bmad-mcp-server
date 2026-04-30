@@ -101,11 +101,11 @@ so that every subsequent invocation skips the picker entirely without any manual
    b. Before writing each key, check whether it already exists with a non-empty value in the
    file. If it does and the current value differs from the picker result, emit:
    `⚠️ .bmadmcp/config.toml already has [clickup].{key} set — not overwriting. Update
-   manually if needed.` and skip that key.
+manually if needed.` and skip that key.
 
    c. After a successful write, confirm:
    `✅ Space + backlog list saved to .bmadmcp/config.toml ([clickup] table) — future runs
-   will skip this picker.`
+will skip this picker.`
 
    d. If the write fails for any reason (permission error, disk error), emit a non-fatal
    warning and continue — auto-save is supplemental, the skill session is not interrupted.
