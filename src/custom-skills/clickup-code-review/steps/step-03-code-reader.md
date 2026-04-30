@@ -65,21 +65,33 @@ Continue with empty planning-artifact context — the review is non-fatal on pla
 
 **Check file existence at resolved paths.**
 
-- Check `{prd_info.path}`. If the file exists, load it into conversation context. If absent, emit the cascade-layer-aware warning below (non-fatal) and continue.
-- Check `{arch_info.path}`. If the file exists, load it into conversation context. If absent, emit the cascade-layer-aware warning below (non-fatal) and continue.
+- Check `{prd_info.path}`. If the file exists, load it into conversation context. If absent, emit (non-fatal) and continue:
 
-> ⚠️ **Planning artifact missing — review context reduced**
->
-> `<resolved_path>` [`<layer_tag>`] was not found. The review will proceed without it, but acceptance-criteria and design-conformance checks will be limited to the task description only.
->
-> **How to configure doc paths:**
-> 1. Per-project (highest priority): add `[docs].prd_path` / `[docs].architecture_path` to `.bmadmcp/config.toml`
-> 2. BMAD-config: set `[bmm].planning_artifacts` in `_bmad/config.toml`
-> 3. Default (no config needed): place file at `planning-artifacts/PRD.md` / `planning-artifacts/architecture.md`
+  > ⚠️ **Planning artifact missing — review context reduced**
+  >
+  > `<data.prd.path>` [`<data.prd.layer>`] was not found. The review will proceed without it, but acceptance-criteria and design-conformance checks will be limited to the task description only.
+  >
+  > **How to configure doc paths:**
+  > 1. Per-project (highest priority): add `[docs].prd_path` / `[docs].architecture_path` to `.bmadmcp/config.toml`
+  > 2. BMAD-config: set `[bmm].planning_artifacts` in `_bmad/config.toml`
+  > 3. Default (no config needed): place file at `planning-artifacts/PRD.md` / `planning-artifacts/architecture.md`
+
+- Check `{arch_info.path}`. If the file exists, load it into conversation context. If absent, emit (non-fatal) and continue:
+
+  > ⚠️ **Planning artifact missing — review context reduced**
+  >
+  > `<data.architecture.path>` [`<data.architecture.layer>`] was not found. The review will proceed without it, but acceptance-criteria and design-conformance checks will be limited to the task description only.
+  >
+  > **How to configure doc paths:**
+  > 1. Per-project (highest priority): add `[docs].prd_path` / `[docs].architecture_path` to `.bmadmcp/config.toml`
+  > 2. BMAD-config: set `[bmm].planning_artifacts` in `_bmad/config.toml`
+  > 3. Default (no config needed): place file at `planning-artifacts/PRD.md` / `planning-artifacts/architecture.md`
 
 Layer tags MUST be exactly the resolver strings: `bmadmcp-config`, `bmad-config`, or `default`.
 
 ### 6. Confirm and continue
+
+**If the `resolve-doc-paths` call failed** (op error path from section 5), use `N/A (op failed)` for both planning artifact lines in the summary below.
 
 Emit the success summary block and continue to step 4.
 
