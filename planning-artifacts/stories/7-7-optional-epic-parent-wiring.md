@@ -388,12 +388,15 @@ and confirms step-05 picks up the change automatically with no edits.
 ## Dev Agent Record
 
 ### Agent Model Used
+
 Kimi Code CLI
 
 ### Debug Log References
+
 N/A — markdown-only story, no runtime debug logs generated.
 
 ### Completion Notes List
+
 - Implemented step-03-epic-picker.md with 3 RULES (optional, read-only, no-fabrication) and 8 INSTRUCTIONS (pinned-config short-circuit, skip prompt, Backlog-list cascade, Backlog-not-found fallback, enumerate epics with root-level filter, no-epics fallback, present epic list, parse selection).
 - Front-matter (`epic_id`, `epic_name`) and `## NEXT` link preserved byte-for-byte.
 - Added `pinned_epic_id` and `pinned_epic_name` comment lines to `.bmadmcp/config.example.toml` under `[clickup_create_bug]`.
