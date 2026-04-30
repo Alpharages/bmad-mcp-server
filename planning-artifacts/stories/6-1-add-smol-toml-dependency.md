@@ -152,14 +152,14 @@ so that subsequent EPIC-6 stories can import a TOML parser to read `.bmadmcp/con
 
 EPIC-6 §Open questions explicitly flagged this as a decision to resolve before coding. The factors:
 
-| Factor               | `smol-toml`                           | `@iarna/toml`                               |
-| -------------------- | ------------------------------------- | ------------------------------------------- |
-| Module system        | ESM-native (`"type": "module"`)       | CJS only — would force `createRequire` shim |
-| Last release         | Active (multiple in 2024–2025)        | Stale since 2022                            |
-| Bundle size          | ~5 kB                                 | ~30 kB                                      |
-| TOML 1.0 conformance | Yes                                   | Yes                                         |
-| License              | BSD-3-Clause (verified post-install)  | ISC                                         |
-| Transitive deps      | Zero (verified post-install)          | Zero                                        |
+| Factor               | `smol-toml`                          | `@iarna/toml`                               |
+| -------------------- | ------------------------------------ | ------------------------------------------- |
+| Module system        | ESM-native (`"type": "module"`)      | CJS only — would force `createRequire` shim |
+| Last release         | Active (multiple in 2024–2025)       | Stale since 2022                            |
+| Bundle size          | ~5 kB                                | ~30 kB                                      |
+| TOML 1.0 conformance | Yes                                  | Yes                                         |
+| License              | BSD-3-Clause (verified post-install) | ISC                                         |
+| Transitive deps      | Zero (verified post-install)         | Zero                                        |
 
 This repo's `package.json` declares `"type": "module"` and every existing import in `src/` uses ES module syntax. A CJS-only TOML lib would require boilerplate to load (`import { createRequire } from 'node:module'; const require = createRequire(import.meta.url); const toml = require('@iarna/toml');`) and that's exactly the kind of friction story 6.2's "thin loader" should not be carrying.
 

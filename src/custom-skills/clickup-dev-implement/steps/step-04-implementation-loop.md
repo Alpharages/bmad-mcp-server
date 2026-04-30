@@ -40,11 +40,13 @@ Project context (project-context.md): {loaded or not found}
 Execute the `bmad-dev-story` workflow via the `bmad` tool with the following overrides so upstream steps resolve without local file access:
 
 **Skip (ClickUp handles these):**
+
 - Step 1 story discovery — story content is pre-supplied above; treat it as the loaded story file. Set `story_key` = `{task_id}`, `story_path` = virtual (in-memory).
 - Step 4 sprint-status update — skip entirely; ClickUp task status is managed by step 6 of this skill.
 - Step 9 local story file status update — skip the `sprint-status.yaml` write; the ClickUp status transition in step 6 is the equivalent.
 
 **Run in full (unchanged from upstream):**
+
 - Step 2: Load project context
 - Step 3: Detect review continuation — use ClickUp task comments from step 2's `getTaskById` response to detect "CHANGES REQUESTED" from a prior `clickup-code-review` run
 - Step 5: Implement task following red-green-refactor cycle

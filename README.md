@@ -132,7 +132,7 @@ This walkthrough is the canonical happy path from "I just installed the server" 
 
 **Expected.** A structured analyst-style response in Mary's voice — competitive landscape, axes of differentiation, recommendation.
 
-**Fix.** If the model answers in its default voice (no analyst framing), it likely didn't call the bmad tool. Tell it explicitly: *"Use the bmad tool to execute the analyst agent."*
+**Fix.** If the model answers in its default voice (no analyst framing), it likely didn't call the bmad tool. Tell it explicitly: _"Use the bmad tool to execute the analyst agent."_
 
 ---
 
@@ -144,7 +144,7 @@ This walkthrough is the canonical happy path from "I just installed the server" 
 
 **Expected.** John (PM) walks you through goals, users, requirements, and acceptance criteria interactively — it's a conversation, not a one-shot answer. Stop whenever you've gathered what you need.
 
-**Fix.** If nothing happens, ask: *"Use the bmad tool to execute the prd workflow."*
+**Fix.** If nothing happens, ask: _"Use the bmad tool to execute the prd workflow."_
 
 > ✋ **Stop here if you only wanted AI-assisted thinking.** Steps 4–12 set up the full team workflow — only continue if you want BMAD to create ClickUp tasks and ship code for you.
 
@@ -166,7 +166,7 @@ touch planning-artifacts/architecture.md
 Fill in the content one of two ways:
 
 - **By hand.** Use headings like `## Goals`, `## Non-goals`, `## Requirements`, `## Acceptance criteria`.
-- **Drafted by BMAD.** Ask: *"Have John draft `planning-artifacts/PRD.md` for [feature]. Then have Winston draft `planning-artifacts/architecture.md`."*
+- **Drafted by BMAD.** Ask: _"Have John draft `planning-artifacts/PRD.md` for [feature]. Then have Winston draft `planning-artifacts/architecture.md`."_
 
 **Expected.** Both files exist and contain real content describing your project / feature.
 
@@ -175,10 +175,12 @@ Fill in the content one of two ways:
 ### Step 5 — Get your ClickUp credentials
 
 **Action.**
+
 1. ClickUp → click your avatar (top right) → **Settings** → **Apps** → **API Token** → **Generate**. Copy the token (starts with `pk_`).
 2. Note your **Team ID**: it's the 7–10 digit number in any ClickUp settings page URL (e.g. `app.clickup.com/12345678/settings/...`).
 
 **Expected.** You have two values:
+
 - `CLICKUP_API_KEY=pk_...`
 - `CLICKUP_TEAM_ID=12345678`
 
@@ -237,9 +239,9 @@ The server reads `X-ClickUp-Api-Key`, `X-ClickUp-Team-Id`, and `X-ClickUp-Mode` 
 
 Restart your AI client.
 
-**Expected.** Ask: *"List my ClickUp spaces."* You should get the list back.
+**Expected.** Ask: _"List my ClickUp spaces."_ You should get the list back.
 
-**Fix.** If you see *"ClickUp tools disabled — missing required environment variables,"* the credentials didn't reach the server. For stdio: check JSON syntax, restart the client, and confirm the values are in the `env:` block (not just your shell). For HTTP: confirm the three `X-ClickUp-*` headers are present in the `headers:` block.
+**Fix.** If you see _"ClickUp tools disabled — missing required environment variables,"_ the credentials didn't reach the server. For stdio: check JSON syntax, restart the client, and confirm the values are in the `env:` block (not just your shell). For HTTP: confirm the three `X-ClickUp-*` headers are present in the `headers:` block.
 
 ---
 
@@ -248,9 +250,10 @@ Restart your AI client.
 The skills assume a specific layout. Set this up once per workspace.
 
 **Action.** In ClickUp UI, in the space you'll work in:
+
 1. Ensure a list named `Backlog` (or containing "Backlog") exists.
 2. Ensure a folder containing `sprint` in its name exists, with at least one non-archived sprint list inside.
-3. *(Optional — only if you want stories in the Sprint list with parent epics in Backlog)* Workspace **Settings** → **ClickApps** → enable **"Tasks in Multiple Lists"**.
+3. _(Optional — only if you want stories in the Sprint list with parent epics in Backlog)_ Workspace **Settings** → **ClickApps** → enable **"Tasks in Multiple Lists"**.
 
 **Expected.** You can see both the Backlog list and the sprint folder/list in the ClickUp sidebar.
 
@@ -275,7 +278,7 @@ git commit -m "chore: add BMAD pilot marker"
 
 **Expected.** `cat .bmad-pilot-marker` shows the two-line content. The file is committed.
 
-**Fix.** If you forget this and run a skill, you'll see *"❌ cwd assertion failed."* Create the file and retry.
+**Fix.** If you forget this and run a skill, you'll see _"❌ cwd assertion failed."_ Create the file and retry.
 
 ---
 
@@ -286,8 +289,9 @@ git commit -m "chore: add BMAD pilot marker"
 ### Step 9 — Create an epic in ClickUp
 
 **Action.** In ClickUp UI:
+
 1. Open your Backlog list.
-2. Click **+ New task**, give it a title (e.g. *"Add user authentication"*).
+2. Click **+ New task**, give it a title (e.g. _"Add user authentication"_).
 3. Open the task and copy the **Task ID** from its URL — it looks like `86excfrge`.
 
 **Expected.** A root-level task exists in Backlog. You have its ID.
@@ -321,12 +325,14 @@ Replace `<epic-id>` with the value from Step 9.
 **What runs.** Seven sub-steps: ① cwd + PAT preflight on git remotes → ② fetch the task + parent epic → ③ load PRD, architecture, optional tech-spec → ④ post a "starting work" comment on the ClickUp task → ⑤ implement the code (Edit/Write/Bash tools) → ⑥ open a PR via `gh pr create` → ⑦ post an "implementation complete" comment with the PR URL, transition task status to a review state.
 
 **Expected.**
+
 - The ClickUp task has **two new comments** (the M1 "starting" one and the M2 "complete" one with the PR URL).
 - The task is in a **review status** (one of: `in review`, `ready for review`, `code review`, `pending review`, `awaiting review`).
 - A **PR exists** in your repo from a new dev branch.
 - The dev branch contains the implementation commits.
 
 **Fix.**
+
 - If the PAT preflight fails: your git remote URL contains a token. Run `git remote -v | grep -E 'ghp_|github_pat_|ghs_|ghu_|ghr_'` — if anything matches, rewrite the remote (`git remote set-url origin git@github.com:org/repo.git`) and rotate the leaked token.
 - If `gh pr create` fails with an org-access error: wrong `gh` account. Run `gh auth status`, then `gh auth switch --user <handle>`.
 - If the status transition emits a `⚠️` warning instead of moving the task: your sprint list's review-state name isn't in the match set. Rename it to one of the five listed above, or run `updateTask({ status: "<your-name>" })` manually.
@@ -347,15 +353,15 @@ For the comprehensive runbook with every edge case, escape hatch, and historical
 
 ### Troubleshooting reference
 
-| Symptom                                              | Likely cause                                                  | Fix                                                                                                                            |
-| ---------------------------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| Client doesn't see the bmad tool                     | Server didn't start                                           | Run the binary directly: `node /path/to/build/index.js`. Watch stderr for the error.                                           |
-| "ClickUp tools disabled — missing required env vars" | Credentials not reaching the server | **stdio:** add to `env:` block in MCP config, not just your shell. **HTTP:** add `X-ClickUp-Api-Key` and `X-ClickUp-Team-Id` to the `headers:` block. Restart the client. |
-| Skill stops at step 1 with "cwd assertion failed"    | Running the skill outside the pilot repo                      | `cd` into the pilot repo before invoking, or create `.bmad-pilot-marker` if missing.                                           |
-| `createTask` returns `400 ITEM_137`                  | Cross-list layout but "Tasks in Multiple Lists" is OFF        | Either turn the ClickApp on, or use same-list layout (epic + story in Backlog).                                                |
-| `gh pr create` fails with org-access error           | Wrong `gh` account active                                     | `gh auth status`, then `gh auth switch --user <handle>`.                                                                       |
-| Status didn't transition after implement             | Sprint list's review-state name isn't in the match set        | Rename the status to one of: `in review`, `ready for review`, `code review`, `pending review`, `awaiting review`. Or update manually. |
-| PAT preflight `❌` at step-01 of `clickup-dev-implement` | Git remote URL embeds a GitHub token                       | `git remote set-url origin <clean-url>`. Rotate the leaked token.                                                              |
+| Symptom                                                  | Likely cause                                           | Fix                                                                                                                                                                       |
+| -------------------------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Client doesn't see the bmad tool                         | Server didn't start                                    | Run the binary directly: `node /path/to/build/index.js`. Watch stderr for the error.                                                                                      |
+| "ClickUp tools disabled — missing required env vars"     | Credentials not reaching the server                    | **stdio:** add to `env:` block in MCP config, not just your shell. **HTTP:** add `X-ClickUp-Api-Key` and `X-ClickUp-Team-Id` to the `headers:` block. Restart the client. |
+| Skill stops at step 1 with "cwd assertion failed"        | Running the skill outside the pilot repo               | `cd` into the pilot repo before invoking, or create `.bmad-pilot-marker` if missing.                                                                                      |
+| `createTask` returns `400 ITEM_137`                      | Cross-list layout but "Tasks in Multiple Lists" is OFF | Either turn the ClickApp on, or use same-list layout (epic + story in Backlog).                                                                                           |
+| `gh pr create` fails with org-access error               | Wrong `gh` account active                              | `gh auth status`, then `gh auth switch --user <handle>`.                                                                                                                  |
+| Status didn't transition after implement                 | Sprint list's review-state name isn't in the match set | Rename the status to one of: `in review`, `ready for review`, `code review`, `pending review`, `awaiting review`. Or update manually.                                     |
+| PAT preflight `❌` at step-01 of `clickup-dev-implement` | Git remote URL embeds a GitHub token                   | `git remote set-url origin <clean-url>`. Rotate the leaked token.                                                                                                         |
 
 For deeper diagnosis, set `BMAD_DEBUG=1` in your env block — verbose logs go to stderr.
 
@@ -382,17 +388,17 @@ A single MCP tool with four operations replaces what would otherwise be dozens o
 
 ### Specialized agents
 
-| Agent     | Role             | Load with     |
-| --------- | ---------------- | ------------- |
-| Mary      | Business Analyst | `analyst`     |
-| Winston   | System Architect | `architect`   |
-| Amelia    | Developer        | `dev`         |
-| Sally     | UX Designer      | `ux-designer` |
-| Murat     | Test Architect   | `qa`          |
-| John      | Product Manager  | `pm`          |
-| Bob       | Scrum Master     | `sm`          |
-| Diana     | Debug Specialist | `debug`       |
-| (writer)  | Tech Writer      | `tech-writer` |
+| Agent    | Role             | Load with     |
+| -------- | ---------------- | ------------- |
+| Mary     | Business Analyst | `analyst`     |
+| Winston  | System Architect | `architect`   |
+| Amelia   | Developer        | `dev`         |
+| Sally    | UX Designer      | `ux-designer` |
+| Murat    | Test Architect   | `qa`          |
+| John     | Product Manager  | `pm`          |
+| Bob      | Scrum Master     | `sm`          |
+| Diana    | Debug Specialist | `debug`       |
+| (writer) | Tech Writer      | `tech-writer` |
 
 Run `npm run cli:list-agents` for the live list.
 
@@ -481,42 +487,42 @@ ClickUp tools are **additive** — the `bmad` tool keeps working with or without
 
 Credential delivery differs by transport:
 
-| Transport | How to supply credentials |
-| --------- | ------------------------- |
-| **stdio** (local / npx) | `env` block in the MCP client config — injected into the server process at startup |
-| **HTTP** (self-hosted shared server) | `X-ClickUp-*` request headers — per-session, never stored server-side |
+| Transport                            | How to supply credentials                                                          |
+| ------------------------------------ | ---------------------------------------------------------------------------------- |
+| **stdio** (local / npx)              | `env` block in the MCP client config — injected into the server process at startup |
+| **HTTP** (self-hosted shared server) | `X-ClickUp-*` request headers — per-session, never stored server-side              |
 
 This means a shared HTTP server requires **no ClickUp credentials in its `.env`**. Every user brings their own key via headers, so different users can authenticate independently to ClickUp from the same server instance.
 
 ### stdio — env vars
 
-| Variable          | Purpose                                                                                   |
-| ----------------- | ----------------------------------------------------------------------------------------- |
-| `CLICKUP_API_KEY` | Personal token from ClickUp → Settings → Apps (starts with `pk_`)                         |
-| `CLICKUP_TEAM_ID` | Workspace / team ID (7–10 digits, visible in any settings page URL)                       |
-| `CLICKUP_MCP_MODE` | Tool-surface scope: `read-minimal`, `read`, or `write` (default: `write`)               |
-| `CLICKUP_PRIMARY_LANGUAGE` | Tool-description language: `de`, `en`, `fr`, `es`, `it` (default: `$LANG`)   |
-| `BMAD_REQUIRE_CLICKUP`     | `1`/`true` → hard-fail at boot if ClickUp vars are missing                    |
-| `MAX_IMAGES`               | Max inline images per ClickUp tool response (default: `4`)                    |
-| `MAX_RESPONSE_SIZE_MB`     | Max ClickUp response payload (default: `1`)                                   |
+| Variable                   | Purpose                                                                    |
+| -------------------------- | -------------------------------------------------------------------------- |
+| `CLICKUP_API_KEY`          | Personal token from ClickUp → Settings → Apps (starts with `pk_`)          |
+| `CLICKUP_TEAM_ID`          | Workspace / team ID (7–10 digits, visible in any settings page URL)        |
+| `CLICKUP_MCP_MODE`         | Tool-surface scope: `read-minimal`, `read`, or `write` (default: `write`)  |
+| `CLICKUP_PRIMARY_LANGUAGE` | Tool-description language: `de`, `en`, `fr`, `es`, `it` (default: `$LANG`) |
+| `BMAD_REQUIRE_CLICKUP`     | `1`/`true` → hard-fail at boot if ClickUp vars are missing                 |
+| `MAX_IMAGES`               | Max inline images per ClickUp tool response (default: `4`)                 |
+| `MAX_RESPONSE_SIZE_MB`     | Max ClickUp response payload (default: `1`)                                |
 
 ### HTTP — request headers
 
-| Header                | Equivalent env var    | Required |
-| --------------------- | --------------------- | -------- |
-| `X-ClickUp-Api-Key`   | `CLICKUP_API_KEY`     | Yes      |
-| `X-ClickUp-Team-Id`   | `CLICKUP_TEAM_ID`     | Yes      |
-| `X-ClickUp-Mode`      | `CLICKUP_MCP_MODE`    | No (default: `write`) |
+| Header              | Equivalent env var | Required              |
+| ------------------- | ------------------ | --------------------- |
+| `X-ClickUp-Api-Key` | `CLICKUP_API_KEY`  | Yes                   |
+| `X-ClickUp-Team-Id` | `CLICKUP_TEAM_ID`  | Yes                   |
+| `X-ClickUp-Mode`    | `CLICKUP_MCP_MODE` | No (default: `write`) |
 
 Headers are read on session init and stored in-memory for the lifetime of that session only — they are never logged or written to disk.
 
 ### Mode → tool surface
 
-| Mode             | Tools registered                                                                                                                       |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `read-minimal`   | `getTaskById`, `searchTasks` (2)                                                                                                       |
-| `read`           | above + `searchSpaces`, `getListInfo`, `getTimeEntries`, `readDocument` (6)                                                            |
-| `write` (default)| above + `addComment`, `updateTask`, `createTask`, `updateListInfo`, `createTimeEntry`, `updateDocumentPage`, `createDocumentOrPage` (13) |
+| Mode              | Tools registered                                                                                                                         |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `read-minimal`    | `getTaskById`, `searchTasks` (2)                                                                                                         |
+| `read`            | above + `searchSpaces`, `getListInfo`, `getTimeEntries`, `readDocument` (6)                                                              |
+| `write` (default) | above + `addComment`, `updateTask`, `createTask`, `updateListInfo`, `createTimeEntry`, `updateDocumentPage`, `createDocumentOrPage` (13) |
 
 A session-scoped picker (`pickSpace`, `getCurrentSpace`, `clearCurrentSpace`) is registered in **all** modes; the first call caches the chosen space and resets on process restart.
 
@@ -576,11 +582,11 @@ Stories in the active sprint list can have a parent epic in a separate backlog l
 
 Custom skills are **ClickUp-integrated workflows** built on top of the standard BMAD agent/workflow layer. They are distinct from the BMAD built-in workflows (like `bmad-sprint-planning`, `prd`, `architecture`):
 
-| | BMAD built-in workflows | Custom skills |
-|---|---|---|
-| Source of truth | Local filesystem (YAML / Markdown files) | ClickUp |
-| Output | Files written to `planning-artifacts/` | ClickUp tasks, comments, status transitions |
-| Example trigger | "start sprint planning" | "invoke `clickup-create-epic`", "invoke `clickup-create-story`", "review task `<id>`" |
+|                 | BMAD built-in workflows                  | Custom skills                                                                         |
+| --------------- | ---------------------------------------- | ------------------------------------------------------------------------------------- |
+| Source of truth | Local filesystem (YAML / Markdown files) | ClickUp                                                                               |
+| Output          | Files written to `planning-artifacts/`   | ClickUp tasks, comments, status transitions                                           |
+| Example trigger | "start sprint planning"                  | "invoke `clickup-create-epic`", "invoke `clickup-create-story`", "review task `<id>`" |
 
 > **Important:** If your project uses ClickUp as the source of truth, use the custom skills below — not `bmad-sprint-planning` or other file-system workflows. Invoking `bmad-sprint-planning` on a ClickUp project will write a local `sprint-status.yaml` instead of touching ClickUp.
 
@@ -593,6 +599,7 @@ All custom skills require `CLICKUP_MCP_MODE=write` and `planning-artifacts/PRD.m
 Creates a root-level ClickUp task (epic) in the Backlog list of the active space. Reads your local `epics-and-stories.md`, lets you pick which epic to create, and synthesizes the description from PRD, architecture, and the local epic content. No local files are written.
 
 **Trigger:**
+
 > Invoke the `clickup-create-epic` skill for Epic [number/name].
 
 **Steps:** prereq + auth check → space + Backlog list picker → local epic picker → description composer → `createTask`
@@ -606,6 +613,7 @@ Creates a root-level ClickUp task (epic) in the Backlog list of the active space
 Creates a ClickUp task (story) as a subtask of a chosen epic in the active sprint list. Delegates to `bmad-create-story` for exhaustive description composition: BDD acceptance criteria, task/subtask checklist, architecture guardrails, previous-story intelligence from git, and web research. When `bmad-create-story` improves upstream, this skill inherits those improvements automatically.
 
 **Trigger:**
+
 > Invoke the `clickup-create-story` skill against epic `<epic-id>`.
 
 **Steps:** prereq + auth check → epic picker → sprint-list picker → `bmad-create-story` (description composition only, no file write) → review (Y/n/edit) → `createTask`
@@ -619,6 +627,7 @@ Creates a ClickUp task (story) as a subtask of a chosen epic in the active sprin
 Implements a story given a ClickUp task ID. Fetches the task and parent epic for context, loads planning artifacts, then delegates the full implementation loop to `bmad-dev-story` (TDD red-green-refactor, per-task DoD validation, review-continuation detection). Posts progress comments on the ClickUp task and transitions status to "in review" when done. No local story files or `sprint-status.yaml` are written.
 
 **Trigger:**
+
 > Invoke the `clickup-dev-implement` skill against task `<task-id>`.
 
 **Steps:** PAT preflight → task fetch → context builder → `bmad-dev-story` (implementation loop, no file writes) → M1/M2 progress comments → status transition
@@ -630,6 +639,7 @@ Implements a story given a ClickUp task ID. Fetches the task and parent epic for
 Reviews a story implementation given a ClickUp task ID. Fetches the task requirements and acceptance criteria, reads the git diff, then delegates the full adversarial review to `bmad-code-review` (Blind Hunter, Edge Case Hunter, Acceptance Auditor + triage). Posts a structured review comment to ClickUp and transitions status to approved or back to in-progress based on the verdict.
 
 **Trigger:**
+
 > Invoke the `clickup-code-review` skill against task `<task-id>`.
 > — or — review task `<task-id>`
 
@@ -697,12 +707,12 @@ The server starts on `http://localhost:3000`. BMAD content is fetched on first s
 
 ### HTTP endpoints
 
-| Endpoint      | Auth | Purpose                                          |
-| ------------- | ---- | ------------------------------------------------ |
-| `GET /health` | No   | Health check — returns `{"status":"ok",...}`     |
-| `POST /mcp`   | Yes  | MCP Streamable HTTP transport                    |
-| `GET /mcp`    | Yes  | SSE stream for server-to-client notifications    |
-| `DELETE /mcp` | Yes  | Close MCP session                                |
+| Endpoint      | Auth | Purpose                                       |
+| ------------- | ---- | --------------------------------------------- |
+| `GET /health` | No   | Health check — returns `{"status":"ok",...}`  |
+| `POST /mcp`   | Yes  | MCP Streamable HTTP transport                 |
+| `GET /mcp`    | Yes  | SSE stream for server-to-client notifications |
+| `DELETE /mcp` | Yes  | Close MCP session                             |
 
 Authenticate with either `Authorization: Bearer <key>` or `X-API-Key: <key>`. If `BMAD_API_KEY` is unset, the server runs in open mode (development only).
 
@@ -716,9 +726,11 @@ Authenticate with either `Authorization: Bearer <key>` or `X-API-Key: <key>`. If
     "bmad": {
       "command": "npx",
       "args": [
-        "-y", "mcp-remote",
+        "-y",
+        "mcp-remote",
         "https://your-domain.com/mcp",
-        "--header", "Authorization: Bearer YOUR_KEY"
+        "--header",
+        "Authorization: Bearer YOUR_KEY"
       ]
     }
   }
@@ -769,22 +781,25 @@ To pin BMAD content to a specific version, override the container `command` in `
 
 ```yaml
 command:
-  ['node', 'build/index-http.js',
-   'git+https://github.com/Alpharages/BMAD-METHOD.git#v6.0.0']
+  [
+    'node',
+    'build/index-http.js',
+    'git+https://github.com/Alpharages/BMAD-METHOD.git#v6.0.0',
+  ]
 ```
 
 ---
 
 ## Configuration reference
 
-| Variable               | Default       | Purpose                                                    |
-| ---------------------- | ------------- | ---------------------------------------------------------- |
-| `BMAD_ROOT`            | auto          | Override BMAD installation root                            |
-| `BMAD_DEBUG`           | `false`       | Verbose logging via `src/utils/logger.ts`                  |
-| `BMAD_GIT_AUTO_UPDATE` | `true`        | Auto-refresh Git-cached BMAD content (CI sets `false`)     |
-| `BMAD_API_KEY`         | unset         | API key for HTTP transport                                 |
-| `PORT`                 | `3000`        | HTTP port                                                  |
-| `NODE_ENV`             | `development` | `test` / `development` / `production`                      |
+| Variable               | Default       | Purpose                                                |
+| ---------------------- | ------------- | ------------------------------------------------------ |
+| `BMAD_ROOT`            | auto          | Override BMAD installation root                        |
+| `BMAD_DEBUG`           | `false`       | Verbose logging via `src/utils/logger.ts`              |
+| `BMAD_GIT_AUTO_UPDATE` | `true`        | Auto-refresh Git-cached BMAD content (CI sets `false`) |
+| `BMAD_API_KEY`         | unset         | API key for HTTP transport                             |
+| `PORT`                 | `3000`        | HTTP port                                              |
+| `NODE_ENV`             | `development` | `test` / `development` / `production`                  |
 
 ClickUp env vars are listed in the [ClickUp section](#clickup-integration). The canonical list lives in `.env.example`.
 

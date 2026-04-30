@@ -35,6 +35,7 @@ Run `git diff main...HEAD` (or the same fallback as above). This is the primary 
 ### 4. Read changed source files
 
 For each file in `{changed_files}` (status `M` or `A`):
+
 - If the file exists and is ≤ 500 lines, read it in full.
 - If the file is > 500 lines, read only the sections identified in the diff (use line numbers from `git diff` output).
 - Skip deleted files (status `D`) — the diff is sufficient.
@@ -45,6 +46,7 @@ For each file in `{changed_files}` (status `M` or `A`):
 Resolve `{project-root}` from the current working directory.
 
 Check and load:
+
 - `{project-root}/planning-artifacts/PRD.md` — required for acceptance criteria
 - `{project-root}/planning-artifacts/architecture.md` — required for design conformance
 

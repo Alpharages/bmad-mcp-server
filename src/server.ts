@@ -42,7 +42,11 @@ export class BMADServerLiteMultiToolGit {
   private readonly clickUpSession = new ClickUpSessionState();
   private readonly sessionCredentials?: ClickUpSessionCredentials;
 
-  constructor(projectRoot?: string, gitRemotes?: string[], sessionCredentials?: ClickUpSessionCredentials) {
+  constructor(
+    projectRoot?: string,
+    gitRemotes?: string[],
+    sessionCredentials?: ClickUpSessionCredentials,
+  ) {
     this.sessionCredentials = sessionCredentials;
     this.engine = new BMADEngine(projectRoot, gitRemotes);
     this.server = new McpServer(

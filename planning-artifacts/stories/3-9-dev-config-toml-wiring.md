@@ -170,15 +170,15 @@ Merge rules (from upstream SKILL.md):
 
 The third rule is critical: `[[agent.menu]]` blocks keyed by `code` in the project override replace the upstream entry with the same `code` in place, leaving order and all other entries untouched. After 2.7 + 3.9:
 
-| Code | Upstream skill   | Project override     | Resolved skill        |
-| ---- | ---------------- | -------------------- | --------------------- |
-| DS   | bmad-dev-story   | clickup-dev-implement | clickup-dev-implement |
-| QD   | bmad-quick-dev   | (none)               | bmad-quick-dev        |
-| QA   | bmad-qa-generate-e2e-tests | (none)     | bmad-qa-generate-e2e-tests |
-| CR   | bmad-code-review | (none)               | bmad-code-review      |
-| SP   | bmad-sprint-planning | (none)           | bmad-sprint-planning  |
-| CS   | bmad-create-story | clickup-create-story | clickup-create-story  |
-| ER   | bmad-retrospective | (none)             | bmad-retrospective    |
+| Code | Upstream skill             | Project override      | Resolved skill             |
+| ---- | -------------------------- | --------------------- | -------------------------- |
+| DS   | bmad-dev-story             | clickup-dev-implement | clickup-dev-implement      |
+| QD   | bmad-quick-dev             | (none)                | bmad-quick-dev             |
+| QA   | bmad-qa-generate-e2e-tests | (none)                | bmad-qa-generate-e2e-tests |
+| CR   | bmad-code-review           | (none)                | bmad-code-review           |
+| SP   | bmad-sprint-planning       | (none)                | bmad-sprint-planning       |
+| CS   | bmad-create-story          | clickup-create-story  | clickup-create-story       |
+| ER   | bmad-retrospective         | (none)                | bmad-retrospective         |
 
 Five upstream entries pass through unchanged; two are replaced by project overrides.
 
@@ -291,7 +291,7 @@ Claude Opus 4.7 (1M) via `bmad-dev-story` skill.
 - AC #3 — `skill = "clickup-dev-implement"` matches `name` key in `src/custom-skills/clickup-dev-implement/SKILL.md`. ✓
 - AC #4 — `bmad({ operation: "read", workflow: "clickup-dev-implement" })` returns concatenated SKILL.md + workflow.md content with all expected headings. ✓
 - AC #5 — `git diff` shows exactly: (a) replaced routing line, (b) appended `# See:` line, (c) appended DS block + blank separator, (d) zero other edits. CS block byte-unchanged. ✓
-- AC #6–#11 — All protected-path diffs empty (resource-loader, lite-resource-loader.test, src/**/*.ts, BMAD-METHOD/, src/tools/clickup/, src/custom-skills/). ✓
+- AC #6–#11 — All protected-path diffs empty (resource-loader, lite-resource-loader.test, src/\*_/_.ts, BMAD-METHOD/, src/tools/clickup/, src/custom-skills/). ✓
 - AC #12 — `.gitignore` byte-unchanged. ✓
 - AC #13 — `npm run build` clean; `npm run lint` 0 errors (7 pre-existing warnings in `tests/support/litellm-helper.mjs` unchanged); `npm run format` clean on TOML (prettier has no TOML parser by design) and on `planning-artifacts/sprint-status.yaml`; `npm test` 234 passing / 0 failing (baseline preserved vs. story 3.8 merge commit). ✓
 - AC #14 — Vendor-tree exclusions unchanged. ✓
@@ -323,9 +323,9 @@ Code review 2026-04-23 via `bmad-code-review` (Blind Hunter + Edge Case Hunter +
 
 ## Change Log
 
-| Date       | Change                                                                                                                                                                                                                    |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-04-23 | Story drafted from EPIC-3 bullet 9 via `bmad-create-story` workflow. Status → ready-for-dev.                                                                                                                              |
+| Date       | Change                                                                                                                                                                                                                                                                                                                                                                                       |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-04-23 | Story drafted from EPIC-3 bullet 9 via `bmad-create-story` workflow. Status → ready-for-dev.                                                                                                                                                                                                                                                                                                 |
 | 2026-04-23 | Validation pass (`bmad-create-story` checklist): promoted the header-comment update from Out of Scope → AC #1 and AC #5 so the file's docstring stays in sync with its routing (E1); added `npm run cli:list-workflows` as a terminal-friendly verification step to Task 2 (E2); added a Dev Notes section + commit-body sentence framing 3.9 as the final EPIC-3 implementation story (E3). |
-| 2026-04-23 | Implementation complete via `bmad-dev-story`: appended DS `[[agent.menu]]` block to `_bmad/custom/bmad-agent-dev.toml` routing DS → `clickup-dev-implement`; broadened header routing line + appended second `# See:` pointer; CS block byte-unchanged. Build, lint, prettier, and test gates all green (234 passing, 0 failing — baseline preserved). Status → review. |
-| 2026-04-23 | Code review complete via `bmad-code-review` (Blind Hunter + Edge Case Hunter + Acceptance Auditor). All 16 ACs confirmed satisfied by the Auditor. Triage: 0 decision-needed, 0 patch, 2 defer (pre-existing cross-story concerns — `findBmmSkillsRoot` probe ordering and upstream auto-update drift window — both filed in `deferred-work.md`), 7 dismissed. Status → done. |
+| 2026-04-23 | Implementation complete via `bmad-dev-story`: appended DS `[[agent.menu]]` block to `_bmad/custom/bmad-agent-dev.toml` routing DS → `clickup-dev-implement`; broadened header routing line + appended second `# See:` pointer; CS block byte-unchanged. Build, lint, prettier, and test gates all green (234 passing, 0 failing — baseline preserved). Status → review.                      |
+| 2026-04-23 | Code review complete via `bmad-code-review` (Blind Hunter + Edge Case Hunter + Acceptance Auditor). All 16 ACs confirmed satisfied by the Auditor. Triage: 0 decision-needed, 0 patch, 2 defer (pre-existing cross-story concerns — `findBmmSkillsRoot` probe ordering and upstream auto-update drift window — both filed in `deferred-work.md`), 7 dismissed. Status → done.                |

@@ -32,6 +32,7 @@ Call `getTaskById` with `id: "{epic_id}"`. Extract the epic description text (st
 Execute the `bmad-create-story` workflow via the `bmad` tool with the following pre-supplied context and overrides:
 
 **Pre-supplied context (skip upstream discovery steps):**
+
 ```
 Story title: {story_title}
 Epic: {epic_name} ({epic_id})

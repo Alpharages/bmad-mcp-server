@@ -18,7 +18,6 @@ epic_name: ''
 ## INSTRUCTIONS
 
 0. **Pinned-config short-circuit.** Read `{project-root}/.bmadmcp/config.toml` if it exists. Inside, look for the `[clickup_create_story]` table and read the optional keys `pinned_space_id`, `pinned_space_name`, and `pinned_backlog_list_id`. Treat any missing file, missing table, or missing key as unset.
-
    - **If both `pinned_space_id` AND `pinned_backlog_list_id` are set to non-empty values:** skip the space and backlog discovery calls below. Set `{space_id}` = `pinned_space_id`, `{space_name}` = `pinned_space_name` (fall back to `(pinned)` if that key is unset), `{backlog_list_id}` = `pinned_backlog_list_id`. Confirm to the user: `✅ Space + backlog list pinned via .bmadmcp/config.toml — skipping picker.` Proceed directly to instruction 7 below (`searchTasks`) using the pinned `{backlog_list_id}`. If `searchTasks` returns "list not found" or a similar error, surface it verbatim and instruct the user to update or remove the pinned IDs in `.bmadmcp/config.toml`.
    - **If only `pinned_space_id` is set:** skip `getCurrentSpace` and `pickSpace`. Set `{space_id}` = `pinned_space_id`, `{space_name}` = `pinned_space_name` (or `(pinned)`). Continue to instruction 5 below (`searchSpaces`).
    - **If only `pinned_backlog_list_id` is set (no `pinned_space_id`):** continue to instruction 1 below; the list-pin will be applied at instruction 6.
