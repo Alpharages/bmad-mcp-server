@@ -1,8 +1,9 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { mkdtempSync, writeFileSync, rmSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { resolveDocPaths } from '@/utils/doc-path-resolver.js';
+import * as tomlLoader from '@/utils/toml-loader.js';
 
 describe('resolveDocPaths', () => {
   let projectRoot: string;
@@ -320,6 +321,20 @@ describe('resolveDocPaths', () => {
     expect(r.warnings[0]).toContain('expected non-empty string, got number');
   });
 
+  it('[docs].prd_path of wrong type with planning_dir still emits warning', () => {
+    // Regression for AC #3: warning must fire even when planning_dir fills the
+    // slot for the same key — prd_path typo must not be silently masked.
+    writeBmadmcp('[docs]\nprd_path = 42\nplanning_dir = "docs"\n');
+    const r = resolveDocPaths(projectRoot);
+    // planning_dir fills prd since prd_path is invalid
+    expect(r.prd.layer).toBe('bmadmcp-config');
+    expect(r.prd.path).toBe(join(projectRoot, 'docs', 'PRD.md'));
+    // warning still emitted for the bad prd_path
+    expect(r.warnings.length).toBe(1);
+    expect(r.warnings[0]).toContain('[docs].prd_path');
+    expect(r.warnings[0]).toContain('expected non-empty string, got number');
+  });
+
   it('[docs].planning_dir of wrong type (array)', () => {
     writeBmadmcp('[docs]\nplanning_dir = ["a", "b"]\n');
     const r = resolveDocPaths(projectRoot);
@@ -341,6 +356,8 @@ describe('resolveDocPaths', () => {
     expect(r.warnings.length).toBe(1);
     expect(r.warnings[0]).toContain('[bmm].planning_artifacts');
     expect(r.warnings[0]).toContain('expected non-empty string');
+    expect(r.warnings[0]).toContain('got boolean');
+    expect(r.warnings[0]).toContain('falling back to default');
   });
 
   it('empty string treated as unset', () => {
@@ -377,15 +394,22 @@ describe('resolveDocPaths', () => {
     );
   });
 
-  it('no filesystem reads beyond what is necessary (tolerance)', () => {
-    // ESM modules do not allow vi.spyOn on namespace exports, so we verify
-    // behaviour indirectly: a project with no config layers resolves to
-    // defaults with zero warnings and no thrown errors.
-    const r = resolveDocPaths(projectRoot);
-    expect(r.prd.layer).toBe('default');
-    expect(r.architecture.layer).toBe('default');
-    expect(r.epics.layer).toBe('default');
-    expect(r.warnings).toEqual([]);
+  it('no filesystem reads beyond what is necessary (tolerance ≤ 5)', () => {
+    // Spy on loadToml to count resolver I/O calls. For a default-only project,
+    // exactly one call is expected (.bmadmcp/config.toml → 'missing'), plus at
+    // most two existsSync probes for bmad/config.toml and _bmad/config.toml
+    // which are not observable here. Tolerance: ≤ 5 loadToml invocations total.
+    const spy = vi.spyOn(tomlLoader, 'loadToml');
+    try {
+      const r = resolveDocPaths(projectRoot);
+      expect(r.prd.layer).toBe('default');
+      expect(r.architecture.layer).toBe('default');
+      expect(r.epics.layer).toBe('default');
+      expect(r.warnings).toEqual([]);
+      expect(spy.mock.calls.length).toBeLessThanOrEqual(5);
+    } finally {
+      spy.mockRestore();
+    }
   });
 
   it('per-key independence (mixed cascade)', () => {

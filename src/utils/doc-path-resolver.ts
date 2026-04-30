@@ -1,6 +1,6 @@
 import { join, isAbsolute } from 'node:path';
 import { existsSync } from 'node:fs';
-import { loadToml } from './toml-loader.js';
+import { loadToml, type TomlLoadResult } from './toml-loader.js';
 
 /**
  * The three documented keys that the resolver handles.
@@ -38,7 +38,7 @@ export interface ResolvedDocPaths {
   warnings: readonly string[];
 }
 
-const DOC_KEYS: DocKey[] = ['prd', 'architecture', 'epics'];
+const DOC_KEYS: readonly DocKey[] = ['prd', 'architecture', 'epics'];
 
 const DEFAULT_FILENAMES: Record<DocKey, string> = {
   prd: 'PRD.md',
@@ -137,7 +137,7 @@ export function resolveDocPaths(projectRoot: string): ResolvedDocPaths {
 
   // Layer 1: .bmadmcp/config.toml [docs]
   const bmadmcpPath = join(projectRoot, '.bmadmcp', 'config.toml');
-  const bmadmcpResult = loadToml(bmadmcpPath);
+  const bmadmcpResult: TomlLoadResult = loadToml(bmadmcpPath);
 
   if (bmadmcpResult.kind === 'malformed') {
     warnings.push(
@@ -147,6 +147,23 @@ export function resolveDocPaths(projectRoot: string): ResolvedDocPaths {
     const docs = (bmadmcpResult.data as { docs?: unknown }).docs;
     if (typeof docs === 'object' && docs !== null && !Array.isArray(docs)) {
       const docsTable = docs as Record<string, unknown>;
+
+      // Emit warnings for wrong-type per-key values BEFORE the resolution
+      // loops so the warning fires even when planning_dir later fills the
+      // same key (per AC #3 — warning must be unconditional on detection).
+      for (const key of DOC_KEYS) {
+        const perKeyPathKey = PER_KEY_PATH_KEYS[key];
+        const perKeyValue = docsTable[perKeyPathKey];
+        if (
+          perKeyPathKey in docsTable &&
+          perKeyValue !== undefined &&
+          !isNonEmptyString(perKeyValue)
+        ) {
+          warnings.push(
+            `${bmadmcpPath} [docs].${perKeyPathKey}: expected non-empty string, got ${typeof perKeyValue}; ignoring this layer for key '${key}'`,
+          );
+        }
+      }
 
       for (const key of DOC_KEYS) {
         if (resolved[key] !== undefined) continue;
@@ -178,29 +195,12 @@ export function resolveDocPaths(projectRoot: string): ResolvedDocPaths {
         planningDir !== undefined &&
         !isNonEmptyString(planningDir)
       ) {
-        // planning_dir is present but not a non-empty string
         const typeName = Array.isArray(planningDir)
           ? 'object'
           : typeof planningDir;
         warnings.push(
           `${bmadmcpPath} [docs].planning_dir: expected non-empty string, got ${typeName}; ignoring this layer`,
         );
-      }
-
-      // Warn for any per-key path that is present but not a non-empty string
-      for (const key of DOC_KEYS) {
-        if (resolved[key] !== undefined) continue;
-
-        const perKeyValue = docsTable[PER_KEY_PATH_KEYS[key]];
-        if (
-          PER_KEY_PATH_KEYS[key] in docsTable &&
-          perKeyValue !== undefined &&
-          !isNonEmptyString(perKeyValue)
-        ) {
-          warnings.push(
-            `${bmadmcpPath} [docs].${PER_KEY_PATH_KEYS[key]}: expected non-empty string, got ${typeof perKeyValue}; ignoring this layer for key '${key}'`,
-          );
-        }
       }
     }
   }
