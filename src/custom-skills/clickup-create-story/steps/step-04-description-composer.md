@@ -14,6 +14,7 @@ task_description: ''
 - **Skip file-system side-effects.** Skip steps 5 (write story file) and 6 (update sprint-status.yaml) of `bmad-create-story`. ClickUp is the record.
 - **No fabrication.** `bmad-create-story` must not invent requirements not traceable to planning artifacts or the epic ClickUp task.
 - **Blocking.** MUST NOT continue to step 5 if `{task_description}` is empty at the end of this step.
+- **No-epic override.** When `{epic_id}` is `''`, instruction 3 MUST use branch 3b (the no-epic override block). The composed description MUST NOT contain an "Epic:" or "Parent epic:" field or reference.
 
 ## INSTRUCTIONS
 
@@ -29,6 +30,8 @@ Parse into `{story_title}`. If empty, re-ask. Accept optional follow-up: "Any ad
 - When `{epic_id}` is `''`: skip `getTaskById`. Set `{epic_description}` = `''`. Emit: `ℹ️ No epic parent — epic context will be empty in the story description.`
 
 ### 3. Invoke bmad-create-story in content-composition mode
+
+#### Branch 3a — Epic path (`{epic_id}` is non-empty)
 
 Execute the `bmad-create-story` workflow via the `bmad` tool with the following pre-supplied context and overrides:
 
@@ -52,6 +55,33 @@ Scope notes: {scope_notes or empty}
 - **Step 4 (Web research):** Run in full.
 - **Step 5 (Create comprehensive story file):** Run the COMPOSITION only — produce the full story document content. Do NOT write to any local file. Return the composed content.
 - **Step 6 (Update sprint status):** Skip entirely. ClickUp task creation (step 5 of this skill) is the equivalent.
+
+#### Branch 3b — No-epic path (`{epic_id}` is `''`)
+
+Execute `bmad-create-story` with the following no-epic pre-supplied context and override instructions:
+
+**Pre-supplied context:**
+
+```
+Story title: {story_title}
+Epic: (none — standalone task)
+Epic description: (none)
+PRD content: already loaded in conversation context (from step 1: prereq check)
+Architecture content: already loaded in conversation context
+Epics-and-stories content: {epics_content — available for general technical context only; do NOT look for an epic-specific section}
+Scope notes: {scope_notes or empty}
+```
+
+**Override instructions for bmad-create-story:**
+
+- **Step 1 (Determine target story):** Skip discovery from sprint-status. Story is pre-supplied: `story_title` = `{story_title}`. No epic parent — set `epic_num` to none; set `story_key` = kebab-case of `{story_title}`.
+- **Step 2 (Load and analyze core artifacts):** Run in full — but do NOT extract epic-specific content from `{epics_content}` (there is no epic parent for this story). Use PRD and architecture as the primary context. Epics content is available for general technical reference only (e.g., cross-cutting constraints, shared terminology).
+- **Step 3 (Architecture analysis):** Run in full.
+- **Step 4 (Web research):** Run in full.
+- **Step 5 (Create comprehensive story file):** Run COMPOSITION only — produce the full story document content. **Do NOT include an "Epic:" or "Parent epic:" field anywhere in the document.** Do NOT write to any local file. Return the composed content.
+- **Step 6 (Update sprint status):** Skip entirely. ClickUp task creation (step 5 of this skill) is the equivalent.
+
+> **Convention:** `{epic_id}` = `''` is the sentinel for "no parent". It is intentionally passed to `bmad-create-story` as an empty epic block so the workflow's full artifact analysis (PRD, architecture) still runs but the resulting description contains no epic association.
 
 ### 4. Capture the composed content
 
