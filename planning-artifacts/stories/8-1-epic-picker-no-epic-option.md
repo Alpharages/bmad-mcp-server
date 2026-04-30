@@ -335,6 +335,7 @@ planning-artifact epics file if relevant context exists there.
 ## Dev Agent Record
 
 ### Implementation Plan
+
 - Story 8-1 is a markdown-only change (no TypeScript).
 - Sentinel for "no epic" is `''` (empty string), consistent with bug skill story 7-7.
 - `allow_no_epic` defaults to `true`; teams can set `false` in `.bmadmcp/config.toml`.
@@ -343,6 +344,7 @@ planning-artifact epics file if relevant context exists there.
 - Step-05 relaxes required-check, conditionalises `parent_task_id`, and updates summaries.
 
 ### Completion Notes
+
 - All ACs satisfied.
 - Build, lint, format pass. Tests pass (one pre-existing dependency-audit failure unrelated).
 - Sprint status and story file updated to `done`.
@@ -353,3 +355,13 @@ planning-artifact epics file if relevant context exists there.
 | ---------- | -------------------------------------- |
 | 2026-05-01 | Story drafted. Status → ready-for-dev. |
 | 2026-05-01 | Story implemented. Status → done.      |
+| 2026-05-01 | Code review complete. 4 patches, 2 deferred. |
+
+### Review Findings
+
+- [x] [Review][Patch] step-05 dual "Parent epic:" bullets emit ambiguously without conditional fence [`step-05-create-task.md`:49–50, :100–101]
+- [x] [Review][Patch] sprint-status.yaml body `last_updated` says `ready-for-dev` instead of `done` — resolved by subsequent commits
+- [x] [Review][Patch] Instruction 12: input `0` when `allow_no_epic=false` has no explicit rejection [`step-02-epic-picker.md`:instruction 12]
+- [x] [Review][Patch] step-04 Branch 3a: `→ "(no epic)"` annotation is dead/misleading in the epic path [`step-04-description-composer.md`:42]
+- [x] [Review][Defer] Non-boolean `allow_no_epic` TOML value (string/int) — coercion undefined — deferred, pre-existing pattern; smol-toml loader handles parsing uniformly across all flags
+- [x] [Review][Defer] Instruction 9 / instruction 12: non-Y/N/number inputs unhandled — deferred, pre-existing pattern across the skill's [Y/n] prompts; not introduced here

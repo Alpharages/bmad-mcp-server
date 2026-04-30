@@ -112,6 +112,7 @@ epic_name: ''
 
 12. Parse the user's response:
     - Input `0` (when `effective_allow_no_epic` is `true`): set `{epic_id}` = `''`, `{epic_name}` = `''`. Emit `⏭️ **No epic selected — story will be created as a standalone task.**` Proceed to sprint-list picker (`## NEXT`).
+    - Input `0` (when `effective_allow_no_epic` is `false`): treat as invalid — `0` is not in the pick-list. Re-present the list and re-ask.
     - All other valid numeric inputs: set `{epic_id}` and `{epic_name}` from selection. Confirm: "Selected epic: **{epic_name}** (`{epic_id}`). Continuing to sprint-list picker…"
 
 ## NEXT

@@ -46,8 +46,8 @@ created_task_url: ''
    >
    > - Title: **{story_title}**
    > - List: **{sprint_list_name}** (`{sprint_list_id}`)
-   > - Parent epic: **{epic_name}** (`{epic_id}`) ← existing line (epic chosen)
-   > - Parent epic: _(none — standalone task)_ ← shown when {epic_id} is ''
+   > - Parent epic: **{epic_name}** (`{epic_id}`) — when `{epic_id}` is non-empty
+   > - Parent epic: _(none — standalone task)_ — when `{epic_id}` is `''`
    > - Description: composed ✓
 
 3. **Check for duplicate tasks.** Call `searchTasks` with `terms: ["{story_title}"]` and `list_ids: ["{sprint_list_id}"]`. Scan the returned tasks for a name that matches `{story_title}` case-insensitively.
@@ -97,8 +97,8 @@ created_task_url: ''
    > - Task: **{story_title}**
    > - Task ID: `{created_task_id}`
    > - URL: {created_task_url}
-   > - Parent epic: **{epic_name}** (`{epic_id}`) ← existing (epic chosen)
-   > - Parent epic: _(none — standalone task)_ ← when {epic_id} is ''
+   > - Parent epic: **{epic_name}** (`{epic_id}`) — when `{epic_id}` is non-empty
+   > - Parent epic: _(none — standalone task)_ — when `{epic_id}` is `''`
    > - Sprint list: **{sprint_list_name}**
    >
    > Open the task in ClickUp: {created_task_url}

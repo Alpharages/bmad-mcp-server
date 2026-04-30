@@ -39,7 +39,7 @@ Execute the `bmad-create-story` workflow via the `bmad` tool with the following 
 
 ```
 Story title: {story_title}
-Epic: {epic_name} ({epic_id})  →  "(no epic)" when both are empty
+Epic: {epic_name} ({epic_id})
 Epic description: {epic_description}
 PRD content: already loaded in conversation context (from step 1: prereq check)
 Architecture content: already loaded in conversation context
