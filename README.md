@@ -649,11 +649,11 @@ Reviews a story implementation given a ClickUp task ID. Fetches the task require
 
 ### Project-local config (`.bmadmcp/config.toml`)
 
-`clickup-create-epic` and `clickup-create-story` discover the active space, the
-Backlog list, and (for the story skill) the sprint folder by calling ClickUp on
-every invocation — typically `getCurrentSpace` → `pickSpace` → `searchSpaces`,
-then a tree scan. To pin those IDs and skip the round-trips, drop a project-
-local `.bmadmcp/config.toml` at the project root:
+All four custom skills discover the active space, the Backlog list, and (for the
+story skill) the sprint folder by calling ClickUp on every invocation — typically
+`getCurrentSpace` → `pickSpace` → `searchSpaces`, then a tree scan. To pin those
+IDs and skip the round-trips, drop a project-local `.bmadmcp/config.toml` at the
+project root:
 
 ```toml
 [clickup_create_epic]
@@ -677,12 +677,26 @@ The file is intended to be gitignored at the project level (per-developer or
 per-project IDs aren't checked in). See
 [`.bmadmcp/config.example.toml`](./.bmadmcp/config.example.toml) for the full
 schema. The `.bmadmcp/` directory is the home for additional project-local
-MCP-server configs; current users are the two skills above, future configs
+MCP-server configs; current users are the four skills above, future configs
 will land alongside.
 
-> Does **not** apply to `clickup-dev-implement` or `clickup-code-review` —
-> those skills operate off a known task ID and don't run the space/list
-> pickers.
+#### Doc-path cascade (`[docs]` table)
+
+All four custom skills call `resolve-doc-paths` at startup to locate the PRD,
+architecture document, and epics directory. By default they look under
+`planning-artifacts/`, but projects with non-standard layouts can override
+individual paths via the `[docs]` table in `.bmadmcp/config.toml`:
+
+```toml
+[docs]
+prd_path          = "docs/specs/PRD.md"
+architecture_path = "docs/architecture/overview.md"
+```
+
+Resolution is **per-key**: overriding only `prd_path` leaves `architecture_path`
+and `epics_path` to be resolved by the BMAD config chain or the hardcoded
+default. See [`CLAUDE.md`](./CLAUDE.md#doc-path-cascade) for the full cascade
+order and contributor-level detail.
 
 ---
 

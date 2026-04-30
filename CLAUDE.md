@@ -66,7 +66,7 @@ AI Client → MCP Transport → Server Layer → BMADEngine → ResourceLoader �
 
 ### Unified Tool Design
 
-A single `bmad` MCP tool with four operations (`list`, `read`, `execute`, `search`) rather than one tool per agent. See `src/tools/bmad-unified.ts` and `src/tools/operations/`.
+A single `bmad` MCP tool with five operations (`list`, `read`, `execute`, `search`, `resolve-doc-paths`) rather than one tool per agent. See `src/tools/bmad-unified.ts` and `src/tools/operations/`.
 
 ---
 
@@ -113,6 +113,40 @@ tests/
 | `CLICKUP_MCP_MODE`     | Tool surface: `read-minimal`, `read`, `write`             | `write`                  |
 | `PORT`                 | HTTP port for `src/http-server.ts`                        | `3000`                   |
 | `BMAD_API_KEY`         | API key for HTTP-transport authentication                 | `unset`                  |
+
+---
+
+## Doc-Path Cascade
+
+BMAD custom skills (`clickup-create-story`, `clickup-dev-implement`, `clickup-code-review`) need to read the project's PRD, architecture document, and epics directory on every invocation. Before EPIC-6, these paths were hardcoded to `planning-artifacts/`, which caused a hard prereq failure for projects with non-standard layouts. The doc-path cascade introduced in EPIC-6 resolves each path through a three-layer fallback (highest → lowest priority):
+
+1. **`.bmadmcp/config.toml` `[docs]` table** — per-project escape hatch. Set `prd_path`, `architecture_path`, or `epics_path` to override that specific key.
+2. **BMAD config chain** — reads `_bmad/config.toml` → `_bmad/config.user.toml` → `_bmad/custom/config.toml` → `_bmad/custom/config.user.toml` and uses `[bmm].planning_artifacts` as the base directory.
+3. **Hardcoded default** — `{project-root}/planning-artifacts/` (preserves pre-EPIC-6 behavior).
+
+The four per-key overrides available in `.bmadmcp/config.toml [docs]` are:
+
+| Key | Resolves | Default |
+|-----|----------|---------|
+| `prd_path` | Absolute or project-root-relative path to PRD | `planning-artifacts/PRD.md` |
+| `architecture_path` | Absolute or project-root-relative path to architecture doc | `planning-artifacts/architecture.md` |
+| `epics_path` | Path to epics file or directory | `planning-artifacts/epics/` |
+| `planning_dir` | Directory used to derive default filenames (applies to all three) | `planning-artifacts/` |
+
+Resolution is **per-key**: overriding only `prd_path` leaves `architecture_path` and `epics_path` to be resolved by the BMAD config or default layers.
+
+Worked example for a project whose docs live under `docs/`:
+
+```toml
+[docs]
+prd_path          = "docs/specs/PRD.md"
+architecture_path = "docs/architecture/overview.md"
+epics_path        = "docs/epics/"
+```
+
+The cascade is invoked via `bmad({ operation: 'resolve-doc-paths' })` and is consumed by all three custom skills (`clickup-create-story`, `clickup-dev-implement`, `clickup-code-review`).
+
+> **This project's override.** This repo's architecture document lives at `docs/architecture.md` (not `planning-artifacts/architecture.md`), so a project-local `.bmadmcp/config.toml` must set `architecture_path = "docs/architecture.md"`. The gitignored `.bmadmcp/config.toml` is the right place for this; `.bmadmcp/config.example.toml` (tracked) shows the full schema.
 
 ---
 

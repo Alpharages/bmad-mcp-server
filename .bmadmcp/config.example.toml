@@ -5,7 +5,8 @@
 # `config.example.toml` (this file) is committed as the schema reference.
 #
 # Path: `{project-root}/.bmadmcp/config.toml`
-# Read by: clickup-create-epic / clickup-create-story custom skills.
+# Read by: clickup-create-epic / clickup-create-story / clickup-dev-implement
+# / clickup-code-review custom skills.
 #
 # All keys are optional. Unset keys preserve the original picker behaviour
 # (interactive space + list + folder selection on every invocation).
@@ -35,3 +36,24 @@
 # pinned_space_name       = ""
 # pinned_backlog_list_id  = ""
 # pinned_sprint_folder_id = ""
+
+# ---------------------------------------------------------------------------
+# Doc-path cascade
+# ---------------------------------------------------------------------------
+# All four custom skills call `resolve-doc-paths` at startup to locate the
+# PRD, architecture document, and epics directory. By default they look under
+# `planning-artifacts/`. If your project stores these files elsewhere, uncomment
+# the keys below and set the correct paths (relative to project root or
+# absolute). Resolution is per-key: overriding only one key leaves the others
+# to be resolved by the BMAD config chain or the default layer.
+
+[docs]
+# prd_path          = ""    # Path to PRD (default: planning-artifacts/PRD.md)
+# architecture_path = ""    # Path to architecture doc (default: planning-artifacts/architecture.md)
+# epics_path        = ""    # Path to epics file or directory (default: planning-artifacts/epics/)
+# planning_dir      = ""    # Base directory for default filenames (default: planning-artifacts/)
+
+# Example for a project with docs in docs/ rather than planning-artifacts/:
+# prd_path          = "docs/specs/PRD.md"
+# architecture_path = "docs/architecture/overview.md"
+# epics_path        = "docs/epics/"
