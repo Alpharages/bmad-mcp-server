@@ -1,6 +1,6 @@
 # Story 6.6: Migrate `clickup-dev-implement` step-03 to consume `resolve-doc-paths` operation
 
-Status: review
+Status: done
 
 Epic: [EPIC-6: Configurable doc-path resolution (cascade)](../epics/EPIC-6-configurable-doc-path-resolution.md)
 
