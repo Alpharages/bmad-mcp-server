@@ -233,6 +233,13 @@ consistent across:
 - Story 8-2 out-of-scope note (step-05 changes attributed to 8-1) [Source: planning-artifacts/stories/8-2-description-composer-no-epic-handling.md#out-of-scope]
 - Current step-05 [Source: src/custom-skills/clickup-create-story/steps/step-05-create-task.md]
 
+### Review Findings
+
+- [x] [Review][Patch] Italic delimiter mismatch: `_(none — standalone task)_` uses underscores but AC1/AC2 specify `*(none — standalone task)*` (asterisks) as verbatim output [step-05-create-task.md: instructions 2 and 8, no-epic branches]
+- [x] [Review][Defer] Condition gap: `{epic_id}` whitespace/null/undefined falls into epic branch or neither branch [step-05-create-task.md: instructions 2 and 8] — deferred, pre-existing design limitation of the no-epic feature (originates in story 8-1)
+- [x] [Review][Defer] `{epic_name}` not validated when `{epic_id}` is non-empty — blank name emits silently in epic branch [step-05-create-task.md: instructions 2 and 8, epic branch] — deferred, pre-existing; instruction 1 intentionally exempts `{epic_name}` from required check by design (story 8-1)
+- [x] [Review][Defer] `{created_task_url}` duplicated in success block (URL line + "Open the task" line) [step-05-create-task.md: instruction 8] — deferred, pre-existing design
+
 ## Dev Agent Record
 
 ### Agent Model Used

@@ -17,6 +17,12 @@
 - Rule (f) assumes all assumption posts precede the M2 summary, but "WHEN TO POST" permits any point between step 3 and step 5 — including post-M2 / pre-step-5. Such late-stage assumptions will post to ClickUp but will not appear in any summary. Either tighten "WHEN TO POST" to pre-M2, or add a "late-assumption trailer" to step 5's status-transition comment.
 - Frontmatter default `{assumption_count}: ''` collides with the workflow.md-documented state "write mode was active but no assumption was successfully posted." A reviewer cannot distinguish "step 6 never invoked" from "step 6 invoked and all posts failed." No current downstream step reads `{assumption_count}`, so this is latent; resolve when the M2 summary starts consuming the counter by introducing a dedicated sentinel (e.g., `'-'` for never-invoked, `''` for invoked-no-success).
 
+## Deferred from: code review of 8-3-create-task-omit-parent (2026-05-01)
+
+- Condition gap in `{epic_id}` conditionals (instructions 2 and 8): whitespace-only or null/undefined `{epic_id}` falls into the epic branch (truthy) or neither branch, risking a corrupt API call or missing output. Pre-existing design limitation of the no-epic feature from story 8-1; apply a project-wide guard when formalising the variable-type contract for step frontmatter.
+- `{epic_name}` not validated when `{epic_id}` is non-empty: instruction 1 intentionally exempts `{epic_name}` from required-variable check (story 8-1 design), but a blank `{epic_name}` with a set `{epic_id}` emits `**<nothing>** (\`abc123\`)` in the pre-creation and success summaries with no warning. Address when adding per-variable format validation to the skill.
+- `{created_task_url}` duplicated in the success block (instruction 8): both the `- URL:` line and the "Open the task in ClickUp:" line reference the same variable. Each conditional branch must be updated twice for any URL-line change. Pre-existing design; consider consolidating in a future step-05 refactor.
+
 ## Deferred from: code review of 3-9-dev-config-toml-wiring (2026-04-23)
 
 - `findBmmSkillsRoot` in `src/core/resource-loader.ts` probes `['src/bmm-skills', 'bmm-skills', 'src/custom-skills', 'custom-skills']` in order and stops at the first hit. If anyone later vendors an upstream skill into `src/bmm-skills/`, the scanner will stop there and silently stop finding `clickup-create-story` / `clickup-dev-implement`. Pre-existing from story 2.7; fix by scanning all matched roots and unioning, or by pinning custom-skills to a non-ambiguous root.
