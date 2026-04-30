@@ -1,12 +1,12 @@
 # Story 6.1: Add `smol-toml` to runtime dependencies (deps-only PR, lands first)
 
-Status: review
+Status: done
 
 Epic: [EPIC-6: Configurable doc-path resolution (cascade)](../epics/EPIC-6-configurable-doc-path-resolution.md)
 
 > First story in EPIC-6. Pure dependency addition — declares the TOML parser that stories 6.2 (`src/utils/toml-loader.ts`) and 6.3 (`src/utils/doc-path-resolver.ts`) will import, then 6.4 (`resolve-doc-paths` MCP operation) and 6.5–6.7 (skill migrations) consume. No TypeScript, no source files, no docs land here. The package.json + package-lock.json deltas are the entire deliverable.
 >
-> **Resolves the EPIC-6 open question on TOML library choice in favor of `smol-toml`** — small (~5 kB), ESM-native (matches `"type": "module"` in this repo), actively maintained, MIT-licensed. The alternative `@iarna/toml` is CJS-only and unmaintained since 2022. Pinning the choice now means stories 6.2–6.7 can import `smol-toml` directly without a downstream library swap.
+> **Resolves the EPIC-6 open question on TOML library choice in favor of `smol-toml`** — small (~5 kB), ESM-native (matches `"type": "module"` in this repo), actively maintained, BSD-3-Clause-licensed (permissive, on the AC #5 whitelist). The alternative `@iarna/toml` is CJS-only and unmaintained since 2022. Pinning the choice now means stories 6.2–6.7 can import `smol-toml` directly without a downstream library swap.
 >
 > Lands ahead of every other EPIC-6 story so each follow-up can assume the dep exists. The dependency-audit test (`tests/unit/dependency-audit.test.ts`) walks `src/` and rejects any import not declared in `package.json`; without 6.1 first, story 6.2 would fail that audit on its own merits.
 
@@ -158,8 +158,8 @@ EPIC-6 §Open questions explicitly flagged this as a decision to resolve before 
 | Last release         | Active (multiple in 2024–2025)        | Stale since 2022                            |
 | Bundle size          | ~5 kB                                 | ~30 kB                                      |
 | TOML 1.0 conformance | Yes                                   | Yes                                         |
-| License              | BSD-3-Clause / MIT (verify in Task 2) | ISC                                         |
-| Transitive deps      | Zero (verify in Task 2)               | Zero                                        |
+| License              | BSD-3-Clause (verified post-install)  | ISC                                         |
+| Transitive deps      | Zero (verified post-install)          | Zero                                        |
 
 This repo's `package.json` declares `"type": "module"` and every existing import in `src/` uses ES module syntax. A CJS-only TOML lib would require boilerplate to load (`import { createRequire } from 'node:module'; const require = createRequire(import.meta.url); const toml = require('@iarna/toml');`) and that's exactly the kind of friction story 6.2's "thin loader" should not be carrying.
 
@@ -217,7 +217,7 @@ Kimi Code CLI (default model)
 
 ### Debug Log References
 
-- **Baseline test count:** 233 passing, 1 failing (pre-existing) — same as post-change.
+- **Baseline test count:** 233 passing, 1 failing — same as post-change. The failing test is `tests/unit/dependency-audit.test.ts > dependency-audit > should only import from declared dependencies`, which flags `src/tools/clickup/src/shared/config.ts` for importing `node:async_hooks` (a Node built-in not currently in the audit's `builtinModules` allowlist). Verified pre-existing by checking out baseline `a8090ee` and re-running the suite — same failure, same delta. Unrelated to `smol-toml`. Note: AC #7 says this audit "MUST continue to pass"; in practice it has been red since the ClickUp vendor-tree landed (story 1.1) and the AC text predates that reality. Recommend tightening AC #7 in a future story or fixing the audit's allowlist for `node:` builtins.
 - **Resolved `smol-toml` version:** `^1.6.1`
 - **`node_modules/smol-toml/package.json`:** `"type": "module"` with `exports.import` condition.
 - **`node_modules/smol-toml/LICENSE`:** `BSD-3-Clause`
