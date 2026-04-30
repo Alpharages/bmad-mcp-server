@@ -164,6 +164,20 @@ and `pinned_backlog_list_id` produces the full short-circuit (zero ClickUp
 calls in the picker). Pinning only one yields a partial short-circuit; see
 the step-02 files for the precise behaviour.
 
+**`[clickup_create_bug]` keys:**
+
+| Key                | Description                                               |
+| ------------------ | --------------------------------------------------------- |
+| `target_list_id`   | Skip the list picker; the bug is created in this list     |
+| `default_priority` | Override severity-inferred priority (1 = urgent, 4 = low) |
+| `default_tags`     | Additional tags beyond the automatic `bug` tag            |
+| `pinned_epic_id`   | Skip the epic picker; the bug is attached to this epic    |
+| `pinned_epic_name` | Display label for the pinned epic                         |
+
+Auto-save behaviour: after the first interactive list selection in step 2,
+`target_list_id` is written to `.bmadmcp/config.toml` automatically — future
+runs skip the list picker.
+
 ## Multi-repo Claude Code sessions
 
 > Addresses the other half of:
@@ -383,6 +397,109 @@ without it. See
 - Task status transitioned to a review state (or a `⚠️` warning if no synonym
   matched — see broadened match set above).
 
+## Invoke clickup-create-bug
+
+The `clickup-create-bug` skill creates a ClickUp task from a free-form bug report,
+with a structured description and an optional parent epic. See
+[`src/custom-skills/clickup-create-bug/SKILL.md`](../src/custom-skills/clickup-create-bug/SKILL.md)
+and
+[`workflow.md`](../src/custom-skills/clickup-create-bug/workflow.md)
+for the full skill contract.
+
+### Invocation path A — `CB` trigger via Cursor / VS Code
+
+In an IDE-integrated invocation (Cursor, VS Code Copilot, Cline), type `CB` in
+the Dev agent's input to dispatch the `clickup-create-bug` skill. The trigger is
+defined in [`_bmad/custom/bmad-agent-dev.toml`](../_bmad/custom/bmad-agent-dev.toml)
+under the `[[agent.menu]]` entry with `code = "CB"`:
+
+```toml
+[[agent.menu]]
+code = "CB"
+description = "Create a ClickUp bug ticket from a free-form bug report"
+skill = "clickup-create-bug"
+```
+
+### Invocation path B — manual walk via Claude Code CLI
+
+Same documented-not-fixed framing as `clickup-create-story` and
+`clickup-dev-implement` path B. The agent walks five steps directly:
+
+1. `step-01-prereq-check` — permission gate (write mode + token); soft-loads PRD /
+   architecture / epics via `resolve-doc-paths` cascade
+2. `step-02-list-picker` — presents lists in the chosen space; operator picks
+   target list (active sprint or dedicated bugs list); auto-saves to
+   `.bmadmcp/config.toml`
+3. `step-03-epic-picker` — optional; operator can skip to create the bug without
+   a parent epic, or browse Backlog epics if desired
+4. `step-04-description-composer` — operator pastes free-form report; composer
+   parses into Summary / Repro / Expected / Actual / Impact / Suspected area /
+   Environment / Related links; infers severity
+5. `step-05-create-task` — pre-creation summary shown; duplicate check via
+   `searchTasks`; operator confirms; `createTask` called; URL returned
+
+**Conversational invocation patterns:**
+
+> Invoke the `clickup-create-bug` skill and report a bug.
+
+Or with inline report:
+
+> Create a bug: [paste bug description here]
+
+### Step-by-step expectations
+
+At the end of step 1, you should see the following verbatim message:
+
+> ✅ Permission gate passed — write mode active, token authenticated.
+
+Capture this line verbatim in the Dev Agent Record (§Debug Log References or
+§Completion Notes). Functional equivalents are not a substitute — downstream
+automation greps for the exact phrase.
+
+If any planning artifacts are absent, the skill emits soft-load `⚠️` warnings and
+continues regardless. The three possible warning wordings are:
+
+**PRD missing:**
+
+> ⚠️ PRD not found at `<prd_info.path>` [`<prd_info.layer>`] — proceeding without PRD context. Bug description will be based on the user's report only.
+
+**Architecture missing:**
+
+> ⚠️ Architecture doc not found at `<arch_info.path>` [`<arch_info.layer>`] — proceeding without architecture context.
+
+**Epics missing:**
+
+> ⚠️ Epics path not found at `<epics_info.path>` [`<epics_info.layer>`] — story detail will be derived from bug report only.
+
+All three warnings are non-fatal; the skill continues and creates the ticket
+using the operator's bug report as the sole context source.
+
+### Severity-to-priority mapping
+
+The skill infers ClickUp priority from severity keywords in the bug report:
+
+| Severity | ClickUp priority |
+| -------- | ---------------- |
+| Critical | 1 (urgent)       |
+| High     | 2 (high)         |
+| Medium   | 2 (high)         |
+| Low      | 4 (low)          |
+| Unknown  | 2 (high)         |
+
+Medium severity defaults to `high` priority (not `normal`) — this is intentional
+per EPIC-7 requirements.
+
+### What success looks like
+
+- A new ClickUp task in the target list with the tag `bug`.
+- Description structured as: Summary / Steps to Reproduce / Expected Behaviour /
+  Actual Behaviour / Impact/Severity / Suspected Area / Environment / Related
+  Links / (optional Tech Context).
+- Priority inferred from severity keywords (or overridden by
+  `[clickup_create_bug].default_priority`).
+- Optional parent epic if operator chose one in step 3.
+- Task URL printed in the conversation at the end of step 5.
+
 ## Where things live
 
 <!-- prettier-ignore-start -->
@@ -507,6 +624,18 @@ Then rotate the leaked PAT in GitHub Settings → Developer settings → Persona
 access tokens — even if the repo is private, treat any leaked token as
 compromised.
 
+### Planning artifacts missing or at non-default paths
+
+**Symptom:** One or more `⚠️` soft-load warning lines during step 1; the bug
+ticket is created without PRD / architecture context.
+
+**Pre-empt:** Confirm that `planning-artifacts/PRD.md` and
+`planning-artifacts/architecture.md` exist, or configure the doc-path cascade in
+`.bmadmcp/config.toml` `[docs]` if the files live elsewhere.
+
+**Recovery:** Re-invoke the skill; the `⚠️` warnings are informational only —
+the ticket was created correctly despite them.
+
 ## Change log
 
 <!-- prettier-ignore-start -->
@@ -514,5 +643,6 @@ compromised.
 | Date       | Status        | Change                                                                                                                                                                                 |
 | ---------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 2026-04-28 | ready-for-dev | Initial quickstart created via story 5-8. Covers post-5-7 skill contract: cwd-assertion, both invocation paths, broadened review-status match set, Template B PR field, PAT-prefix preflight, pinned-ID config knobs. Lands `gh-auth-prerequisite-undocumented` and `multi-repo-cwd-handling-undocumented` friction-log entries. |
+| 2026-05-01 | ready-for-dev | Added `Invoke clickup-create-bug` section (CB trigger, five-step walkthrough, soft-load warning wording). Added Planning-artifacts-missing pitfall entry. Added `[clickup_create_bug]` config keys to pinned-ID reference. |
 
 <!-- prettier-ignore-end -->
