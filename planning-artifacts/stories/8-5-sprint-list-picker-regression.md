@@ -1,6 +1,6 @@
 # Story 8.5: Sprint-List Picker Regression — Confirm Step-03 Is Epic-Agnostic
 
-Status: review
+Status: done
 
 Epic: [EPIC-8: No-epic stories (standalone tasks)](../epics/EPIC-8-no-epic-stories.md)
 
