@@ -182,6 +182,34 @@ describe('dependency-audit', () => {
     }
   });
 
+  it('should use smol-toml consistently (not @iarna/toml, toml, or @ltd/j-toml)', () => {
+    const sourceFiles = findTsFiles(SRC_ROOT);
+
+    const violations: string[] = [];
+    const forbidden = ['@iarna/toml', 'toml', '@ltd/j-toml'];
+
+    for (const filePath of sourceFiles) {
+      const content = readFileSync(filePath, 'utf-8');
+
+      for (const lib of forbidden) {
+        const fromRegex = new RegExp(`from\\s+['"]${lib}['"]`);
+        const importRegex = new RegExp(`import\\(['"]${lib}['"]\\)`);
+
+        if (fromRegex.test(content) || importRegex.test(content)) {
+          violations.push(
+            `${filePath}: imports from '${lib}' instead of 'smol-toml'`,
+          );
+        }
+      }
+    }
+
+    if (violations.length > 0) {
+      throw new Error(
+        `Found ${violations.length} file(s) importing forbidden TOML library:\n  ${violations.join('\n  ')}\n\nUse 'smol-toml' instead of '@iarna/toml', 'toml', or '@ltd/j-toml'`,
+      );
+    }
+  });
+
   // Tripwire: the vendor upgrade procedure (see VENDOR.md) is manual, and the
   // exclusion rationale in VENDOR.md calls out exactly these files as hazards
   // for nearest-ancestor config discovery (Node module resolution, ESLint flat
