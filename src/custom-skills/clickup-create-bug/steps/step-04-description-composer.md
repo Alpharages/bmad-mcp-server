@@ -23,7 +23,7 @@ bug_description: ''
 
    > "Please describe the bug. You can paste a free-form report, a stack trace, or a brief description."
 
-   Accept any multi-line input; store as `{raw_bug_report}`. If the user provides an empty response, re-ask once; if still empty, stop with:
+   Accept any multi-line input; store as `{raw_bug_report}`. If the user provides an empty response (or whitespace-only after trimming), re-ask once; if still empty, stop with:
 
    > ❌ **Description composer failed — no bug report provided.**
    >
@@ -129,7 +129,7 @@ bug_description: ''
 
    - `Y` or Enter → proceed.
    - `n` → ask "What would you like to change?", accept feedback, regenerate applying the requested changes, re-present. Repeat until confirmed.
-   - `edit` → instruct the user to paste the full revised description terminated by a line containing only `---END---`. Parse the pasted text as the new `{bug_description}`; extract the content of the `## Summary` section as the new `{bug_title}` (single line). Confirm back to the user before proceeding.
+   - `edit` → instruct the user to paste the full revised description terminated by a line containing only `---END---`. Parse the pasted text as the new `{bug_description}`; extract the first line of the `## Summary` section as the new `{bug_title}` (single line, max ~80 characters). Confirm back to the user before proceeding.
 
    The loop MUST NOT auto-approve. It runs until the user explicitly types `Y` or abandons the skill.
 
@@ -137,7 +137,7 @@ bug_description: ''
 
    > ✅ Bug description set for "{bug_title}". Continuing to task creation…
 
-   Then proceed to the next step. If `{bug_title}` or `{bug_description}` is empty at this point, stop immediately — do not proceed to step 5.
+   Then proceed to the next step **only if** both `{bug_title}` and `{bug_description}` are non-empty. If either is empty, stop immediately — do not proceed to step 5.
 
 ## NEXT
 

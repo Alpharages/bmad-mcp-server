@@ -588,3 +588,5 @@ Story 7-4 commit:
 | Date       | Change                                 |
 | ---------- | -------------------------------------- |
 | 2026-05-01 | Story drafted. Status → ready-for-dev. |
+| 2026-05-01 | Implemented step-04-description-composer.md. Status → done. |
+| 2026-05-01 | Code review fixes: clarified whitespace trimming on empty input, enforced single-line ~80 char bug_title in edit mode, removed contradictory "proceed / do not proceed" language in step 6. |
