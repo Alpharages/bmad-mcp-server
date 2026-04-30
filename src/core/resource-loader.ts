@@ -166,6 +166,15 @@ export class ResourceLoaderGit {
   }
 
   /**
+   * Get the absolute project root the loader is configured to use.
+   * Returns the value that was passed to the constructor, defaulted to
+   * `process.cwd()` when omitted.
+   */
+  public getProjectRoot(): string {
+    return this.paths.projectRoot;
+  }
+
+  /**
    * Get the BMAD root path for project-local scanning
    * Uses smart detection to handle:
    * - projectRoot IS the bmad root (contains modules)

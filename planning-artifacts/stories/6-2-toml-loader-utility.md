@@ -312,10 +312,10 @@ Kimi Code CLI (kimi-cli-help skill context).
 
 Adversarial code review (`bmad-code-review` workflow) raised four findings; all four addressed in a follow-up `fix(utils):` commit alongside the original `feat(utils):` commit:
 
-1. **AC #2 literal coverage of `readFileSync` ENOENT** — original implementation only caught around `statSync`. AC #2 explicitly lists *both* call sites (`fs.statSync` / `fs.readFileSync`) as ENOENT sources. Wrapped `readFileSync` in a try/catch mirroring the `statSync` handler so a TOCTOU race (file deleted between stat and read, or replaced by a directory) maps to `{ kind: 'missing' }` rather than throwing past the discriminated union.
+1. **AC #2 literal coverage of `readFileSync` ENOENT** — original implementation only caught around `statSync`. AC #2 explicitly lists _both_ call sites (`fs.statSync` / `fs.readFileSync`) as ENOENT sources. Wrapped `readFileSync` in a try/catch mirroring the `statSync` handler so a TOCTOU race (file deleted between stat and read, or replaced by a directory) maps to `{ kind: 'missing' }` rather than throwing past the discriminated union.
 2. **Windows UNC path support** — absolute-path guard's regex accepted POSIX `/…` and `<drive>:[\\/]` only. Added `\\…` prefix check so UNC paths (`\\server\share\file.toml`) are accepted on Windows. Pure expansion of the accept-set; no behavior change for existing callers.
 3. **Test cleanup robustness** — POSIX permission test's `chmodSync(p, 0o644)` restore was dead code on the assertion-failure path. Wrapped in `try { … } finally { chmodSync(p, 0o644); }`. `rmSync(force: true)` cleaned up correctly anyway, but the try/finally is the idiomatic shape and protects against future failures during the assertion.
-4. **AC #11 stronger assertion** — replaced `expect(r.error.constructor.name).toBe('TomlError')` with `expect(r.error).toBeInstanceOf(TomlError)`. `TomlError` is a public export of `smol-toml`'s package surface (verified in `node_modules/smol-toml/dist/index.d.ts`), so the import is permitted in the test file (AC #8 restricts the *loader's* imports, not the test's). The instanceof check is durable across class renames and survives wrapper-class regressions.
+4. **AC #11 stronger assertion** — replaced `expect(r.error.constructor.name).toBe('TomlError')` with `expect(r.error).toBeInstanceOf(TomlError)`. `TomlError` is a public export of `smol-toml`'s package surface (verified in `node_modules/smol-toml/dist/index.d.ts`), so the import is permitted in the test file (AC #8 restricts the _loader's_ imports, not the test's). The instanceof check is durable across class renames and survives wrapper-class regressions.
 
 All four fixes preserve the test count (246 passing / 1 pre-existing failing) and all gates remain green.
 
@@ -336,8 +336,8 @@ All four fixes preserve the test count (246 passing / 1 pre-existing failing) an
 
 ## Change Log
 
-| Date       | Change                                                                                                                                                                        |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-04-30 | Story drafted from EPIC-6 bullet 2 ("Implement `src/utils/toml-loader.ts` with malformed/missing handling + unit tests") and Story 6.1 §Out of Scope. Status → ready-for-dev. |
-| 2026-04-30 | Implementation complete: `src/utils/toml-loader.ts`, `tests/unit/utils/toml-loader.test.ts`, and dependency-audit guard added. All ACs satisfied. Status → review.            |
+| Date       | Change                                                                                                                                                                                                                                       |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-04-30 | Story drafted from EPIC-6 bullet 2 ("Implement `src/utils/toml-loader.ts` with malformed/missing handling + unit tests") and Story 6.1 §Out of Scope. Status → ready-for-dev.                                                                |
+| 2026-04-30 | Implementation complete: `src/utils/toml-loader.ts`, `tests/unit/utils/toml-loader.test.ts`, and dependency-audit guard added. All ACs satisfied. Status → review.                                                                           |
 | 2026-04-30 | Adversarial code review (`bmad-code-review`) raised 4 findings; all addressed in a follow-up `fix(utils):` commit (TOCTOU on `readFileSync`, UNC path support, chmod try/finally, `TomlError` instanceof). Gates re-verified. Status → done. |

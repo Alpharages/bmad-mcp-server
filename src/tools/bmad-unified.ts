@@ -54,13 +54,19 @@ import {
   validateExecuteParams,
   getExecuteExamples,
 } from './operations/execute.js';
+import {
+  type ResolveDocPathsParams,
+  executeResolveDocPathsOperation,
+  validateResolveDocPathsParams,
+  getResolveDocPathsExamples,
+} from './operations/resolve-doc-paths.js';
 
 /**
  * Parameters for the unified BMAD tool
  */
 export interface BMADToolParams {
   /** Operation to perform */
-  operation: 'list' | 'search' | 'read' | 'execute';
+  operation: 'list' | 'search' | 'read' | 'execute' | 'resolve-doc-paths';
 
   // List operation params
   /** Query for list operation (agents, workflows, modules, resources) */
@@ -83,6 +89,10 @@ export interface BMADToolParams {
   // Execute operation params
   /** User message/context (for execute operation) */
   message?: string;
+
+  // Resolve doc paths operation params
+  /** For resolve-doc-paths operation: absolute project root (defaults to server's project root) */
+  projectRoot?: string;
 
   // Common params
   /** Optional module filter (core, bmm, cis) */
@@ -118,8 +128,8 @@ export function createBMADTool(
 
   // Build operation enum based on config
   const operations = enableSearch
-    ? ['list', 'search', 'read', 'execute']
-    : ['list', 'read', 'execute'];
+    ? ['list', 'search', 'read', 'execute', 'resolve-doc-paths']
+    : ['list', 'read', 'execute', 'resolve-doc-paths'];
 
   // Build operation description
   const operationDesc = enableSearch
@@ -127,11 +137,13 @@ export function createBMADTool(
       '- list: Get available agents/workflows/modules\n' +
       '- search: Find agents/workflows by fuzzy search\n' +
       '- read: Inspect agent or workflow details (read-only)\n' +
-      '- execute: Run agent or workflow with user context (action)'
+      '- execute: Run agent or workflow with user context (action)\n' +
+      '- resolve-doc-paths: Resolve PRD/architecture/epics doc paths via the EPIC-6 cascade (.bmadmcp/config.toml → BMAD config → default)'
     : 'Operation type:\n' +
       '- list: Get available agents/workflows/modules\n' +
       '- read: Inspect agent or workflow details (read-only)\n' +
-      '- execute: Run agent or workflow with user context (action)';
+      '- execute: Run agent or workflow with user context (action)\n' +
+      '- resolve-doc-paths: Resolve PRD/architecture/epics doc paths via the EPIC-6 cascade (.bmadmcp/config.toml → BMAD config → default)';
 
   return {
     name: 'bmad',
@@ -169,6 +181,11 @@ export function createBMADTool(
           type: 'string',
           description:
             "For execute operation: User's message, question, or context. Optional - some agents/workflows may work without an initial message.",
+        },
+        projectRoot: {
+          type: 'string',
+          description:
+            "For resolve-doc-paths operation: absolute project root to resolve against. Defaults to the server's configured project root.",
         },
       },
       required: ['operation'],
@@ -212,6 +229,9 @@ function buildToolDescription(
   );
   parts.push(
     '- `execute`: Run agent or workflow with user context (performs actions)',
+  );
+  parts.push(
+    '- `resolve-doc-paths`: Resolve PRD/architecture/epics doc paths via the EPIC-6 cascade',
   );
   parts.push('');
 
@@ -268,6 +288,9 @@ function buildToolDescription(
   parts.push(
     '- `execute` - User wants to actually run an agent or workflow to accomplish a task',
   );
+  parts.push(
+    '- `resolve-doc-paths` - Skill prose needs the absolute path of PRD/architecture/epics for this project (cascade-aware; honours `.bmadmcp/config.toml [docs]` overrides)',
+  );
   parts.push('');
   parts.push(
     '**Important:** Use agent/workflow names WITHOUT module prefix (e.g., "analyst" not "bmm-analyst")',
@@ -304,6 +327,14 @@ function buildToolDescription(
     parts.push('  { operation: "search", query: "debug" }');
     parts.push('');
   }
+  parts.push('Resolve doc paths (defaults to server project root):');
+  parts.push('  { operation: "resolve-doc-paths" }');
+  parts.push('');
+  parts.push('Resolve doc paths for a specific project:');
+  parts.push(
+    '  { operation: "resolve-doc-paths", projectRoot: "/abs/path/to/project" }',
+  );
+  parts.push('');
   parts.push('Disambiguate with module (if name collision):');
   parts.push(
     '  { operation: "execute", agent: "debug", module: "bmm", message: "Fix this bug" }',
@@ -378,6 +409,8 @@ export async function handleBMADTool(
       return await handleRead(params, engine);
     case 'execute':
       return await handleExecute(params, engine);
+    case 'resolve-doc-paths':
+      return await handleResolveDocPaths(params, engine);
     default:
       return {
         content: [
@@ -585,6 +618,55 @@ async function handleExecute(
       {
         type: 'text',
         text: result.text,
+      },
+    ],
+  };
+}
+
+/**
+ * Handles resolve-doc-paths operation
+ */
+async function handleResolveDocPaths(
+  params: BMADToolParams,
+  engine: BMADEngine,
+): Promise<{ content: TextContent[] }> {
+  // Map BMADToolParams to ResolveDocPathsParams
+  const resolveParams: ResolveDocPathsParams = {
+    projectRoot: params.projectRoot,
+  };
+
+  // Validate params
+  const validationError = validateResolveDocPathsParams(resolveParams);
+  if (validationError) {
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `❌ Validation Error: ${validationError}\n\nExamples:\n${getResolveDocPathsExamples().join('\n')}`,
+        },
+      ],
+    };
+  }
+
+  // Execute operation
+  const result = await executeResolveDocPathsOperation(engine, resolveParams);
+
+  if (result.success) {
+    return {
+      content: [
+        {
+          type: 'text',
+          text: result.text,
+        },
+      ],
+    };
+  }
+
+  return {
+    content: [
+      {
+        type: 'text',
+        text: `❌ ${result.error ?? 'Unknown error'}`,
       },
     ],
   };

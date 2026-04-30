@@ -36,3 +36,11 @@ export {
   validateExecuteParams,
   getExecuteExamples,
 } from './execute.js';
+
+// Resolve doc paths operation
+export {
+  type ResolveDocPathsParams,
+  executeResolveDocPathsOperation,
+  validateResolveDocPathsParams,
+  getResolveDocPathsExamples,
+} from './resolve-doc-paths.js';
