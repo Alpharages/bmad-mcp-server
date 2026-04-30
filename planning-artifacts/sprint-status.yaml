@@ -1,5 +1,5 @@
 # generated: 2026-04-21
-# last_updated: 2026-04-28 (story 5-9 code review done; 5-9-pilot-retro-go-no-go → done; epic-5 → done; epic-5-retrospective → done)
+# last_updated: 2026-04-30 (story 6-1 → review; epic-6 → in-progress)
 # project: bmad-mcp-server
 # project_key: NOKEY
 # tracking_system: file-system
@@ -49,7 +49,7 @@
 #   So EPIC-1 has 8 bullets but only 7 stories.
 
 generated: 2026-04-21
-last_updated: 2026-04-28 (story 5-9 code review done; 5-9-pilot-retro-go-no-go → done; epic-5 → done; epic-5-retrospective → done)
+last_updated: 2026-04-30 (story 6-1 → review; epic-6 → in-progress)
 project: bmad-mcp-server
 project_key: NOKEY
 tracking_system: file-system
@@ -115,3 +115,54 @@ development_status:
   5-8-team-facing-quickstart-docs: done
   5-9-pilot-retro-go-no-go: done
   epic-5-retrospective: done
+
+  # EPIC-6: Configurable doc-path resolution (cascade)
+  epic-6: in-progress
+  6-1-add-smol-toml-dependency: review
+  6-2-toml-loader-utility: backlog
+  6-3-doc-path-resolver-cascade: backlog
+  6-4-resolve-doc-paths-mcp-operation: backlog
+  6-5-migrate-clickup-create-story: backlog
+  6-6-migrate-clickup-dev-implement: backlog
+  6-7-migrate-clickup-code-review: backlog
+  6-8-docs-and-config-example: backlog
+  epic-6-retrospective: optional
+
+  # EPIC-7: Bug-shaped stories in ClickUp
+  epic-7: backlog
+  7-1-decide-skill-shape-vs-kind-param: backlog
+  7-2-scaffold-bug-skill: backlog
+  7-3-bug-prereq-check-soft-artifacts: backlog
+  7-4-bug-description-composer: backlog
+  7-5-bug-list-and-sprint-picker: backlog
+  7-6-tags-priority-severity-inference: backlog
+  7-7-optional-epic-parent-wiring: backlog
+  7-8-feature-story-regression-check: backlog
+  7-9-tests-and-fixtures: backlog
+  7-10-bug-flow-documentation: backlog
+  epic-7-retrospective: optional
+
+  # EPIC-8: No-epic stories (standalone tasks)
+  epic-8: backlog
+  8-1-epic-picker-no-epic-option: backlog
+  8-2-description-composer-no-epic-handling: backlog
+  8-3-create-task-omit-parent: backlog
+  8-4-allow-no-epic-config-flag: backlog
+  8-5-sprint-list-picker-regression: backlog
+  8-6-tests-no-epic-paths: backlog
+  8-7-skill-docs-no-epic: backlog
+  8-8-pilot-quickstart-update: backlog
+  epic-8-retrospective: optional
+
+  # EPIC-9: README freshness pass
+  epic-9: backlog
+  9-1-readme-staleness-audit: backlog
+  9-2-document-doc-path-cascade: backlog
+  9-3-document-bug-skill: backlog
+  9-4-document-no-epic-option: backlog
+  9-5-expand-configuration-reference: backlog
+  9-6-rework-walkthrough-hardcoded-paths: backlog
+  9-7-add-common-patterns-faq: backlog
+  9-8-verify-anchors-and-links: backlog
+  9-9-cross-check-docs-directory: backlog
+  epic-9-retrospective: optional
