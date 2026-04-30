@@ -1,6 +1,6 @@
 # Story 6.9: Shared `[clickup]` config table and auto-save after first-run picker
 
-Status: review
+Status: done
 
 Epic: [EPIC-6: Configurable doc-path resolution (cascade)](../epics/EPIC-6-configurable-doc-path-resolution.md)
 

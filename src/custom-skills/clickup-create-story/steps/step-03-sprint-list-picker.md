@@ -52,7 +52,7 @@ sprint_list_name: ''
 
    Otherwise, from the detailed response filter the tree to entries matching `{space_id}` to ensure only the selected space's folders are scanned.
 
-3. **Pinned-folder short-circuit.** Before scanning, check whether `.bmadmcp/config.toml`'s `[clickup_create_story].pinned_sprint_folder_id` is set to a non-empty value. If it is, verify that the pinned ID appears as a folder in the filtered tree; if it does, set `{sprint_folder_id}` to the pinned value, confirm `✅ Sprint folder pinned via config: {sprint_folder_id}` to the user, and skip the scan below — proceed directly to instruction 5. If the pinned ID is not found in the tree, warn the user (`⚠️ pinned_sprint_folder_id not found in current space — falling back to scan`) and continue with the scan below. If the key is unset or empty, proceed directly to the scan.
+3. **Pinned-folder short-circuit.** Before scanning, check whether `.bmadmcp/config.toml`'s `[clickup_create_story].pinned_sprint_folder_id` is set to a non-empty value. If it is, verify that the pinned ID appears as a folder in the filtered tree; if it does, set `{sprint_folder_id}` to the pinned value, confirm `✅ Sprint folder pinned via config: {sprint_folder_id}` to the user, and skip the scan below — proceed directly to instruction 6. If the pinned ID is not found in the tree, warn the user (`⚠️ pinned_sprint_folder_id not found in current space — falling back to scan`) and continue with the scan below. If the key is unset or empty, proceed directly to the scan.
 
    Scan the filtered folders for the sprint folder:
    - **Exactly one folder** whose name contains "sprint" (case-insensitive): use it automatically.
@@ -82,14 +82,16 @@ sprint_list_name: ''
    **What to do:** Either rename your sprint folder to include the word "sprint", or enter the folder ID manually when prompted above, then re-invoke this step.
    ```
 
-4. **Auto-save sprint folder (user disambiguation only).** If `{sprint_folder_id}` in instruction 3 was set because the user chose from **more than one folder whose name contains "sprint"** (user disambiguation), persist the choice:
+4. Store the identified folder's ID in `{sprint_folder_id}`.
 
-   a. Use the Write/Edit tool to write `pinned_sprint_folder_id` into the `[clickup_create_story]` section of `.bmadmcp/config.toml`.
+5. **Auto-save sprint folder (user disambiguation only).** If `{sprint_folder_id}` was set by user disambiguation in instruction 3 — i.e., more than one folder whose name contains "sprint" was found and the user chose from the list — persist the choice:
+
+   a. Use the Write/Edit tool to write `pinned_sprint_folder_id = {sprint_folder_id}` into the `[clickup_create_story]` section of `.bmadmcp/config.toml`.
       - If the file does not exist, create it with just the `[clickup_create_story]` section.
       - If the file exists but has no `[clickup_create_story]` section, append the section.
       - If the `[clickup_create_story]` section already exists, update the key only if it is absent or empty.
 
-   b. Before writing, check whether `pinned_sprint_folder_id` already exists with a non-empty value in the file. If it does and the current value differs from the discovered value, emit:
+   b. Before writing, check whether `pinned_sprint_folder_id` already exists with a non-empty value in the file. If it does and the current value differs from `{sprint_folder_id}`, emit:
       `⚠️ .bmadmcp/config.toml already has [clickup_create_story].pinned_sprint_folder_id set — not overwriting. Update manually if needed.`
       and skip the write.
 
@@ -97,8 +99,6 @@ sprint_list_name: ''
       `✅ Sprint folder saved to .bmadmcp/config.toml ([clickup_create_story].pinned_sprint_folder_id) — future disambiguation prompts will be skipped.`
 
    d. If the write fails for any reason (permission error, disk error), emit a non-fatal warning and continue — auto-save is supplemental, the skill session is not interrupted.
-
-5. Store the identified folder's ID in `{sprint_folder_id}`.
 
 6. From the folder tree data already returned by `searchSpaces`, collect all lists within `{sprint_folder_id}`. Filter out any lists where `archived: true`. If the folder contains no non-archived lists, emit the following error block and stop.
 
