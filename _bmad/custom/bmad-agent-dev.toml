@@ -23,6 +23,11 @@ code = "DS"
 description = "Implement a ClickUp task end-to-end — fetch task + parent-epic context, read planning artifacts, implement code, post progress comments, transition status"
 skill = "clickup-dev-implement"
 
+[[agent.menu]]
+code = "CB"
+description = "Create a ClickUp bug ticket from a free-form bug report"
+skill = "clickup-create-bug"
+
 # Per-skill configuration (pinned space / list / folder IDs) lives in
 # `.bmadmcp/config.toml` at the project root, not here. That file is
 # project-agnostic, gitignored at the project level, and intended for
