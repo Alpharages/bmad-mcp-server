@@ -31,6 +31,8 @@ Parse into `{story_title}`. If empty, re-ask. Accept optional follow-up: "Any ad
 
 ### 3. Invoke bmad-create-story in content-composition mode
 
+> **Branch dispatch:** If `{epic_id}` is non-empty → use branch 3a. If `{epic_id}` is `''` → use branch 3b.
+
 #### Branch 3a — Epic path (`{epic_id}` is non-empty)
 
 Execute the `bmad-create-story` workflow via the `bmad` tool with the following pre-supplied context and overrides:
@@ -102,7 +104,7 @@ Does this description look correct? [Y/n/edit]
 ```
 
 - `Y` or Enter → proceed.
-- `n` → ask "What would you like to change?", re-invoke `bmad-create-story` step 5 with the feedback, re-present. Repeat until confirmed.
+- `n` → ask "What would you like to change?", re-invoke `bmad-create-story` step 5 with the feedback using the same branch override context (3a or 3b) as the initial invocation in instruction 3, re-present. Repeat until confirmed.
 - `edit` → ask the user to paste the full revised description terminated by `---END---`. Parse as the new `{task_description}`.
 
 ### 6. Confirm

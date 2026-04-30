@@ -1,6 +1,6 @@
 # Story 8.2: Description Composer — No-Epic Override Block
 
-Status: review
+Status: done
 
 Epic: [EPIC-8: No-epic stories (standalone tasks)](../epics/EPIC-8-no-epic-stories.md)
 
@@ -155,6 +155,18 @@ or misleading epic associations.
         `planning-artifacts/stories/8-2-description-composer-no-epic-handling.md`,
         `planning-artifacts/sprint-status.yaml`.
   - [x] Commit with header + body per AC #9.
+
+### Review Findings
+
+- [x] [Review][Patch] Missing explicit conditional dispatch at instruction 3 entry — instruction 3 presents two branch headings but has no explicit "if {epic_id} non-empty → 3a; if '' → 3b" gate before the first branch heading. The RULE covers it, but adding one dispatch line at the start of instruction 3 removes ambiguity for LLM executors. [src/custom-skills/clickup-create-story/steps/step-04-description-composer.md:32–34]
+- [x] [Review][Patch] Re-invocation loop (instruction 5 'n' path) does not specify branch context — "re-invoke `bmad-create-story` step 5 with the feedback" does not say to use the same branch-3b override context; an executor reset to a fresh sub-invocation could default to the epic path and inject an "Epic:" field on revision. [src/custom-skills/clickup-create-story/steps/step-04-description-composer.md:105]
+- [x] [Review][Defer] `story_key` kebab conversion underspecified for special characters/collisions — no rules for punctuation, Unicode, or key uniqueness; this is delegated to bmad-create-story's own conversion logic — deferred, pre-existing responsibility boundary
+- [x] [Review][Defer] Branch 3b Step 2 negative constraint ("do NOT extract") has no explicit success criteria — "run in full" is sufficient but no definition of a passing no-epic analysis — deferred, pre-existing design pattern
+- [x] [Review][Defer] Whitespace-only `{epic_id}` bypasses empty-string sentinel — step-02 sets `''` explicitly so risk is low — deferred, pre-existing
+- [x] [Review][Defer] AC #8 sprint-status skips `backlog → ready-for-dev` intermediate commit — story went directly `backlog → done` in one commit — deferred, pre-existing process gap, unfixable retroactively
+- [x] [Review][Defer] `{epics_content}` unset risk — same pattern exists in branch 3a pre-dating this story — deferred, pre-existing
+- [x] [Review][Defer] `{epics_content}` as unresolved template literal in fenced code block — pre-existing template pattern used throughout the file — deferred, pre-existing
+- [x] [Review][Defer] Duplicate `last_updated` comment + YAML body blocks in sprint-status.yaml — pre-existing structure — deferred, pre-existing
 
 ## Dev Notes
 
