@@ -32,9 +32,11 @@ files or the EPIC-6 implementation stories.
 
 1. **`CLAUDE.md` "Unified Tool Design" section MUST list `resolve-doc-paths` as the fifth
    operation.** The current text reads:
+
    > _"A single `bmad` MCP tool with four operations (`list`, `read`, `execute`, `search`)"_
 
    It MUST be updated to:
+
    > _"A single `bmad` MCP tool with five operations (`list`, `read`, `execute`, `search`,
    > `resolve-doc-paths`)"_
 
@@ -45,44 +47,45 @@ files or the EPIC-6 implementation stories.
    `## Environment Variables` block (before `## Conventions`). The section MUST include:
 
    a. A one-paragraph overview explaining what the cascade is and why it exists (projects
-      with non-standard layouts hit a hard prereq failure before EPIC-6).
+   with non-standard layouts hit a hard prereq failure before EPIC-6).
 
    b. A cascade-order table or numbered list (highest → lowest priority):
-      1. `.bmadmcp/config.toml` `[docs]` table — per-project escape hatch
-      2. BMAD config chain (`_bmad/config.toml` → `_bmad/config.user.toml` →
-         `_bmad/custom/config.toml` → `_bmad/custom/config.user.toml`) via
-         `[bmm].planning_artifacts` directory key
-      3. Hardcoded default — `{project-root}/planning-artifacts/` (preserves
-         pre-EPIC-6 behavior)
+   1. `.bmadmcp/config.toml` `[docs]` table — per-project escape hatch
+   2. BMAD config chain (`_bmad/config.toml` → `_bmad/config.user.toml` →
+      `_bmad/custom/config.toml` → `_bmad/custom/config.user.toml`) via
+      `[bmm].planning_artifacts` directory key
+   3. Hardcoded default — `{project-root}/planning-artifacts/` (preserves
+      pre-EPIC-6 behavior)
 
    c. A table of the four per-key overrides available in `.bmadmcp/config.toml [docs]`:
-      | Key | Resolves | Default |
-      |-----|---------|---------|
-      | `prd_path` | Absolute or project-root-relative path to PRD | `planning-artifacts/PRD.md` |
-      | `architecture_path` | Absolute or project-root-relative path to architecture doc | `planning-artifacts/architecture.md` |
-      | `epics_path` | Path to epics file or directory | `planning-artifacts/epics/` |
-      | `planning_dir` | Directory used to derive default filenames (applies to all three) | `planning-artifacts/` |
+   | Key | Resolves | Default |
+   |-----|---------|---------|
+   | `prd_path` | Absolute or project-root-relative path to PRD | `planning-artifacts/PRD.md` |
+   | `architecture_path` | Absolute or project-root-relative path to architecture doc | `planning-artifacts/architecture.md` |
+   | `epics_path` | Path to epics file or directory | `planning-artifacts/epics/` |
+   | `planning_dir` | Directory used to derive default filenames (applies to all three) | `planning-artifacts/` |
 
    d. A worked example TOML block for a project whose docs live under `docs/`:
-      ```toml
-      [docs]
-      prd_path          = "docs/specs/PRD.md"
-      architecture_path = "docs/architecture/overview.md"
-      epics_path        = "docs/epics/"
-      ```
+
+   ```toml
+   [docs]
+   prd_path          = "docs/specs/PRD.md"
+   architecture_path = "docs/architecture/overview.md"
+   epics_path        = "docs/epics/"
+   ```
 
    e. A note that resolution is **per-key**: overriding only `prd_path` leaves
-      architecture and epics to be resolved by the BMAD config or default layers.
+   architecture and epics to be resolved by the BMAD config or default layers.
 
    f. A note that the cascade is invoked via `bmad({ operation: 'resolve-doc-paths' })`
-      and is consumed by all three custom skills (`clickup-create-story`,
-      `clickup-dev-implement`, `clickup-code-review`).
+   and is consumed by all three custom skills (`clickup-create-story`,
+   `clickup-dev-implement`, `clickup-code-review`).
 
    g. This project's own override note: this repo's architecture lives at
-      `docs/architecture.md` (not `planning-artifacts/architecture.md`), so a
-      project-local `.bmadmcp/config.toml` must set `architecture_path =
-      "docs/architecture.md"`. The gitignored `.bmadmcp/config.toml` is the right
-      place for this; `.bmadmcp/config.example.toml` (tracked) shows the schema.
+   `docs/architecture.md` (not `planning-artifacts/architecture.md`), so a
+   project-local `.bmadmcp/config.toml` must set `architecture_path =
+   "docs/architecture.md"`. The gitignored `.bmadmcp/config.toml` is the right
+   place for this; `.bmadmcp/config.example.toml` (tracked) shows the schema.
 
 3. **`.bmadmcp/config.example.toml` MUST gain a `[docs]` section** appended after the
    existing `[clickup_create_story]` block. The section MUST:
@@ -90,54 +93,56 @@ files or the EPIC-6 implementation stories.
    a. Have a header comment explaining the cascade and when to use this table.
 
    b. Document all four keys (`prd_path`, `architecture_path`, `epics_path`,
-      `planning_dir`), each commented out with a one-line description.
+   `planning_dir`), each commented out with a one-line description.
 
    c. Include an inline worked example (commented out) for a project whose docs live
-      under `docs/`:
-      ```toml
-      # Example for a project with docs in docs/ rather than planning-artifacts/:
-      # prd_path          = "docs/specs/PRD.md"
-      # architecture_path = "docs/architecture/overview.md"
-      # epics_path        = "docs/epics/"
-      ```
+   under `docs/`:
+
+   ```toml
+   # Example for a project with docs in docs/ rather than planning-artifacts/:
+   # prd_path          = "docs/specs/PRD.md"
+   # architecture_path = "docs/architecture/overview.md"
+   # epics_path        = "docs/epics/"
+   ```
 
    d. Include a reminder that the cascade is per-key — overriding only one key leaves
-      the others to the BMAD config or default layers.
+   the others to the BMAD config or default layers.
 
    e. Update the file-level header comment ("Read by: clickup-create-epic /
-      clickup-create-story custom skills") to also include `clickup-dev-implement` and
-      `clickup-code-review`, which now also call `resolve-doc-paths`.
+   clickup-create-story custom skills") to also include `clickup-dev-implement` and
+   `clickup-code-review`, which now also call `resolve-doc-paths`.
 
 4. **`README.md` "Project-local config" section MUST document the `[docs]` cascade.**
    The current section (`### Project-local config (.bmadmcp/config.toml)`, approximately
    lines 650–686) describes only the ClickUp-picker pinning keys. MUST be extended with:
 
    a. A sub-section or paragraph titled **"Doc-path cascade (`[docs]` table)"** that
-      explains the cascade and refers to `.bmadmcp/config.example.toml` for the full
-      schema.
+   explains the cascade and refers to `.bmadmcp/config.example.toml` for the full
+   schema.
 
    b. A minimal TOML example showing only the `[docs]` keys:
-      ```toml
-      [docs]
-      prd_path          = "docs/specs/PRD.md"
-      architecture_path = "docs/architecture/overview.md"
-      ```
+
+   ```toml
+   [docs]
+   prd_path          = "docs/specs/PRD.md"
+   architecture_path = "docs/architecture/overview.md"
+   ```
 
    c. A statement that this override is consumed by all three custom skills when they
-      call `resolve-doc-paths`.
+   call `resolve-doc-paths`.
 
    d. A note pointing to the `## Environment Variables` table in CLAUDE.md (or to
-      CLAUDE.md's `## Doc-Path Cascade` section) for contributor-level detail.
+   CLAUDE.md's `## Doc-Path Cascade` section) for contributor-level detail.
 
    e. The existing note `> Does **not** apply to clickup-dev-implement or
-      clickup-code-review` MUST be removed or corrected — those skills now DO consume
-      the cascade via `resolve-doc-paths`.
+   clickup-code-review` MUST be removed or corrected — those skills now DO consume
+   the cascade via `resolve-doc-paths`.
 
 5. **No TypeScript changes.** `git diff --stat -- src/` MUST be empty. No new
    `// @ts-expect-error` or `// @ts-ignore` directives.
 
 6. **No changes to skill step files or workflow.md files.** `git diff --stat --
-   src/custom-skills/` MUST be empty.
+src/custom-skills/` MUST be empty.
 
 7. **No changes to test files.** `git diff --stat -- tests/` MUST be empty.
 
@@ -220,6 +225,7 @@ Layer strings are `"bmadmcp-config"`, `"bmad-config"`, or `"default"`.
 ### Why each file is changing
 
 **`CLAUDE.md`** — CLAUDE.md is the contributor's orientation guide. Two things are wrong today:
+
 - "Unified Tool Design" lists four operations but the server now has five (story 6.4 added
   `resolve-doc-paths`).
 - There is no documentation of the cascade, so a contributor hitting the server's resolver
@@ -246,10 +252,12 @@ failure — even though the file exists.
 
 **Dev setup step (not committed):** After landing this story, create
 `.bmadmcp/config.toml` at the project root:
+
 ```toml
 [docs]
 architecture_path = "docs/architecture.md"
 ```
+
 This is gitignored and must be set up manually by each developer. The updated
 `config.example.toml` makes this self-evident.
 
@@ -324,6 +332,6 @@ Claude Sonnet 4.6 (claude-sonnet-4-6) via Claude Code CLI executing `bmad-create
 
 ## Change Log
 
-| Date       | Change                                                                                                                  |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Date       | Change                                                                                                                                                                                                     |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 2026-04-30 | Story drafted from EPIC-6 bullet 8 ("Update CLAUDE.md, .bmadmcp/config.example.toml, and per-skill workflow.md files to document the cascade") and story 6.7 out-of-scope handoff. Status → ready-for-dev. |

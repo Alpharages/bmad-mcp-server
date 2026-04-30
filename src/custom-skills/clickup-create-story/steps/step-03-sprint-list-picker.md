@@ -87,16 +87,16 @@ sprint_list_name: ''
 5. **Auto-save sprint folder (user disambiguation only).** If `{sprint_folder_id}` was set by user disambiguation in instruction 3 — i.e., more than one folder whose name contains "sprint" was found and the user chose from the list — persist the choice:
 
    a. Use the Write/Edit tool to write `pinned_sprint_folder_id = {sprint_folder_id}` into the `[clickup_create_story]` section of `.bmadmcp/config.toml`.
-      - If the file does not exist, create it with just the `[clickup_create_story]` section.
-      - If the file exists but has no `[clickup_create_story]` section, append the section.
-      - If the `[clickup_create_story]` section already exists, update the key only if it is absent or empty.
+   - If the file does not exist, create it with just the `[clickup_create_story]` section.
+   - If the file exists but has no `[clickup_create_story]` section, append the section.
+   - If the `[clickup_create_story]` section already exists, update the key only if it is absent or empty.
 
    b. Before writing, check whether `pinned_sprint_folder_id` already exists with a non-empty value in the file. If it does and the current value differs from `{sprint_folder_id}`, emit:
-      `⚠️ .bmadmcp/config.toml already has [clickup_create_story].pinned_sprint_folder_id set — not overwriting. Update manually if needed.`
-      and skip the write.
+   `⚠️ .bmadmcp/config.toml already has [clickup_create_story].pinned_sprint_folder_id set — not overwriting. Update manually if needed.`
+   and skip the write.
 
    c. After a successful write, confirm:
-      `✅ Sprint folder saved to .bmadmcp/config.toml ([clickup_create_story].pinned_sprint_folder_id) — future disambiguation prompts will be skipped.`
+   `✅ Sprint folder saved to .bmadmcp/config.toml ([clickup_create_story].pinned_sprint_folder_id) — future disambiguation prompts will be skipped.`
 
    d. If the write fails for any reason (permission error, disk error), emit a non-fatal warning and continue — auto-save is supplemental, the skill session is not interrupted.
 

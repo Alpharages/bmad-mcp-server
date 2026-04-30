@@ -165,6 +165,7 @@ src/custom-skills/clickup-create-story/
 ```
 
 Bug skill divergences from story skill:
+
 - **step-01**: PRD + architecture are **optional** (warn but continue) — implemented in 7-3.
 - **step-02**: Picks the _target list_ (dedicated bug list OR sprint list, governed by
   `.bmadmcp/config.toml` `[clickup_create_bug].target_list_id`) — implemented in 7-5.
@@ -195,6 +196,7 @@ describes the full intended flow (what each step will do once implemented) and r
 each step file. This gives later story authors the full picture without reading the epic.
 
 Sections:
+
 1. **Goal** — one paragraph (see EPIC-7 `## Goal`)
 2. **Prerequisites** — ClickUp permission gate + soft artifact load (step 1)
 3. **Target-list picker** — pick bug list or sprint list (step 2)
@@ -247,6 +249,7 @@ skill = "clickup-create-bug"
 
 `.bmadmcp/config.toml` `[clickup_create_bug]` table keys (to be documented in story 7-10,
 but reserved here so step stubs can reference them):
+
 - `target_list_id` — optional; pinned target list (story 7-5)
 - `default_priority` — optional; overrides severity-inferred priority (story 7-6)
 - `default_tags` — optional; extra tags beyond `bug` (story 7-6)
@@ -298,7 +301,7 @@ Kimi Code CLI (root agent)
 
 ## Change Log
 
-| Date       | Change |
-| ---------- | ------ |
-| 2026-04-30 | Story drafted. Status → ready-for-dev. |
+| Date       | Change                                               |
+| ---------- | ---------------------------------------------------- |
+| 2026-04-30 | Story drafted. Status → ready-for-dev.               |
 | 2026-04-30 | Story implemented. All ACs satisfied. Status → done. |

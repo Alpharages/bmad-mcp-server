@@ -41,7 +41,7 @@ Run these two checks in order. If either fails, emit the corresponding error blo
 >
 > `pickSpace` returned an authentication error. The `CLICKUP_API_KEY` or `CLICKUP_TEAM_ID` in the MCP server config may be invalid or expired.
 >
-> **What to do:** Update the credentials in the `bmad-mcp-server` env config, restart the MCP server, then re-invoke the skill.
+> **What to do:** Update the credentials in the `bmad-mcp-server` env config (whichever name you gave it in your MCP client settings), restart the MCP server, then re-invoke the skill.
 
 ## INSTRUCTIONS
 

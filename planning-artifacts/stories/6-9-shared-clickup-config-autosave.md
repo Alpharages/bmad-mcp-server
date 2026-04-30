@@ -12,7 +12,6 @@ Epic: [EPIC-6: Configurable doc-path resolution (cascade)](../epics/EPIC-6-confi
 >    appear identically under both `[clickup_create_epic]` and `[clickup_create_story]`. A
 >    project using both skills must write and maintain two copies of the same values. If the
 >    space ID ever changes, it must be updated in two places.
->
 > 2. **No auto-save.** On first run, both skills walk through the full interactive space-and-
 >    backlog-list picker. When the picker succeeds, the discovered values are used for that
 >    session only — nothing is written back to `.bmadmcp/config.toml`. Every subsequent
@@ -54,6 +53,7 @@ so that every subsequent invocation skips the picker entirely without any manual
    header comment MUST say it is for per-skill overrides only — values here take precedence
    over `[clickup]`. Since no skill-specific keys remain for create-epic, the section body MUST
    contain a single commented-out placeholder explaining how to override, e.g.:
+
    ```toml
    # (uncomment and set keys here to override [clickup] values for this skill only)
    ```
@@ -72,6 +72,7 @@ so that every subsequent invocation skips the picker entirely without any manual
    - Level 3 (picker): interactive flow if neither level provides the value.
 
    The effective-value derivation MUST be stated explicitly, e.g.:
+
    > `effective pinned_space_id` = `[clickup_create_epic].pinned_space_id` if non-empty, else
    > `[clickup].pinned_space_id`.
 
@@ -83,7 +84,7 @@ so that every subsequent invocation skips the picker entirely without any manual
 
 6. **Both step-02 files MUST preserve the existing partial-pin sub-cases** (both set → full
    skip; only space set → skip to instruction 5; only list set → apply at instruction 6). The
-   cascade only changes *where* values are read from, not *how* partial-pin conditions are
+   cascade only changes _where_ values are read from, not _how_ partial-pin conditions are
    evaluated. The short-circuit confirmation messages remain unchanged.
 
 ### Auto-save after picker
@@ -93,21 +94,21 @@ so that every subsequent invocation skips the picker entirely without any manual
    picker, not from existing config). The instruction MUST:
 
    a. Use the Write/Edit tool to write `pinned_space_id`, `pinned_space_name`, and
-      `pinned_backlog_list_id` into the `[clickup]` section of `.bmadmcp/config.toml`
-      (creating the file if absent; appending the section if the file exists but has no
-      `[clickup]`; preserving all other existing content).
+   `pinned_backlog_list_id` into the `[clickup]` section of `.bmadmcp/config.toml`
+   (creating the file if absent; appending the section if the file exists but has no
+   `[clickup]`; preserving all other existing content).
 
    b. Before writing each key, check whether it already exists with a non-empty value in the
-      file. If it does and the current value differs from the picker result, emit:
-      `⚠️ .bmadmcp/config.toml already has [clickup].{key} set — not overwriting. Update
-      manually if needed.` and skip that key.
+   file. If it does and the current value differs from the picker result, emit:
+   `⚠️ .bmadmcp/config.toml already has [clickup].{key} set — not overwriting. Update
+   manually if needed.` and skip that key.
 
    c. After a successful write, confirm:
-      `✅ Space + backlog list saved to .bmadmcp/config.toml ([clickup] table) — future runs
-      will skip this picker.`
+   `✅ Space + backlog list saved to .bmadmcp/config.toml ([clickup] table) — future runs
+   will skip this picker.`
 
    d. If the write fails for any reason (permission error, disk error), emit a non-fatal
-      warning and continue — auto-save is supplemental, the skill session is not interrupted.
+   warning and continue — auto-save is supplemental, the skill session is not interrupted.
 
 8. **`step-03-sprint-list-picker.md` (clickup-create-story) MUST gain an auto-save
    instruction** for `pinned_sprint_folder_id`. It MUST trigger only when the sprint folder
@@ -118,15 +119,15 @@ so that every subsequent invocation skips the picker entirely without any manual
 
    The instruction MUST:
    a. Write `pinned_sprint_folder_id` into the `[clickup_create_story]` section of
-      `.bmadmcp/config.toml` (creating the file/section if absent; preserving other content).
+   `.bmadmcp/config.toml` (creating the file/section if absent; preserving other content).
    b. Apply the same non-overwrite guard as AC #7b.
    c. Confirm: `✅ Sprint folder saved to .bmadmcp/config.toml
-      ([clickup_create_story].pinned_sprint_folder_id) — future disambiguation prompts will
-      be skipped.`
+   ([clickup_create_story].pinned_sprint_folder_id) — future disambiguation prompts will
+   be skipped.`
    d. Non-fatal on write failure.
 
    The existing edge-case tip ("Pin the chosen folder via `[clickup_create_story]
-   .pinned_sprint_folder_id` in `.bmadmcp/config.toml` to skip this prompt on future
+.pinned_sprint_folder_id` in `.bmadmcp/config.toml` to skip this prompt on future
    invocations") MUST be removed or replaced with a note that auto-save handles this.
 
 ### Hygiene
@@ -162,7 +163,7 @@ so that every subsequent invocation skips the picker entirely without any manual
 - README or CLAUDE.md updates for this story — documentation pass deferred to EPIC-9
   (README freshness) or a dedicated follow-up.
 - Auto-save for the sprint list itself (`sprint_list_id`) — the active sprint changes
-  each sprint; pinning it would cause stale selections. Only the sprint *folder* is
+  each sprint; pinning it would cause stale selections. Only the sprint _folder_ is
   stable enough to pin.
 - Adding automated tests for step-file prose logic — these are LLM-executed markdown
   instructions, not TypeScript code.
@@ -330,6 +331,6 @@ Kimi Code CLI (k1.6)
 
 ## Change Log
 
-| Date       | Change |
-| ---------- | ------ |
+| Date       | Change                                                                                                                                                    |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 2026-04-30 | Story drafted following post-EPIC-6 config review. Identified duplicate shared keys and missing auto-save after first-run picker. Status → ready-for-dev. |

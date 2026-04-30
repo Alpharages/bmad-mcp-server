@@ -10,7 +10,6 @@ Epic: [EPIC-7: Bug-shaped stories in ClickUp](../epics/EPIC-7-bug-shaped-stories
 > - **Option A — New sibling skill:** `src/custom-skills/clickup-create-bug/` lives alongside
 >   `clickup-create-story`, with its own `SKILL.md`, `workflow.md`, and step files. Bug and
 >   feature flows are fully independent.
->
 > - **Option B — `kind` parameter on `clickup-create-story`:** A single skill routes to a
 >   feature branch or a bug branch based on a `kind: bug | feature` argument (or detected
 >   intent). Step files grow conditional logic; prereq checks split at step 1; description
@@ -36,7 +35,6 @@ so that story 7-2 can scaffold the correct shape immediately, without ambiguity 
 
 1. **The Dev Agent Record MUST document the trade-off analysis** covering at minimum these
    four dimensions for each option:
-
    - **Route stability** — how stable is the trigger path over time? Does adding bug support
      risk destabilising the existing feature flow?
    - **Prompt complexity** — how many conditional branches do the step files accumulate? Is
@@ -45,8 +43,8 @@ so that story 7-2 can scaffold the correct shape immediately, without ambiguity 
    - **Upstream-merge surface** — when the upstream `bmad-create-story` workflow (delegated
      from `clickup-create-story` step 4) is updated, how many skill files need a manual
      merge review?
-   - **Prereq-check complexity** — PRD + architecture are *required* for feature stories but
-     *optional* for bug reports. How much branching does that add to step 1 under each option?
+   - **Prereq-check complexity** — PRD + architecture are _required_ for feature stories but
+     _optional_ for bug reports. How much branching does that add to step 1 under each option?
 
 2. **The analysis MUST state which option is chosen and give a one-paragraph rationale.**
 
@@ -201,7 +199,7 @@ precedent already established in the codebase.
 
 ## Change Log
 
-| Date       | Change |
-| ---------- | ------ |
-| 2026-04-30 | Story drafted. Status → ready-for-dev. |
+| Date       | Change                                                          |
+| ---------- | --------------------------------------------------------------- |
+| 2026-04-30 | Story drafted. Status → ready-for-dev.                          |
 | 2026-04-30 | Decision recorded: Option A (new sibling skill). Status → done. |

@@ -72,6 +72,7 @@ Continue with empty planning-artifact context — the review is non-fatal on pla
   > `<data.prd.path>` [`<data.prd.layer>`] was not found. The review will proceed without it, but acceptance-criteria and design-conformance checks will be limited to the task description only.
   >
   > **How to configure doc paths:**
+  >
   > 1. Per-project (highest priority): add `[docs].prd_path` / `[docs].architecture_path` to `.bmadmcp/config.toml`
   > 2. BMAD-config: set `[bmm].planning_artifacts` in `_bmad/config.toml`
   > 3. Default (no config needed): place file at `planning-artifacts/PRD.md` / `planning-artifacts/architecture.md`
@@ -83,6 +84,7 @@ Continue with empty planning-artifact context — the review is non-fatal on pla
   > `<data.architecture.path>` [`<data.architecture.layer>`] was not found. The review will proceed without it, but acceptance-criteria and design-conformance checks will be limited to the task description only.
   >
   > **How to configure doc paths:**
+  >
   > 1. Per-project (highest priority): add `[docs].prd_path` / `[docs].architecture_path` to `.bmadmcp/config.toml`
   > 2. BMAD-config: set `[bmm].planning_artifacts` in `_bmad/config.toml`
   > 3. Default (no config needed): place file at `planning-artifacts/PRD.md` / `planning-artifacts/architecture.md`

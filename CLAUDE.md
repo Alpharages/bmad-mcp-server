@@ -126,12 +126,12 @@ BMAD custom skills (`clickup-create-story`, `clickup-dev-implement`, `clickup-co
 
 The four per-key overrides available in `.bmadmcp/config.toml [docs]` are:
 
-| Key | Resolves | Default |
-|-----|----------|---------|
-| `prd_path` | Absolute or project-root-relative path to PRD | `planning-artifacts/PRD.md` |
-| `architecture_path` | Absolute or project-root-relative path to architecture doc | `planning-artifacts/architecture.md` |
-| `epics_path` | Path to epics file or directory (trailing `/` marks a directory) | `planning-artifacts/epics/` |
-| `planning_dir` | Base directory for default filenames for any key not already set in `[docs]` (lower priority than per-key overrides) | `planning-artifacts/` |
+| Key                 | Resolves                                                                                                             | Default                              |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
+| `prd_path`          | Absolute or project-root-relative path to PRD                                                                        | `planning-artifacts/PRD.md`          |
+| `architecture_path` | Absolute or project-root-relative path to architecture doc                                                           | `planning-artifacts/architecture.md` |
+| `epics_path`        | Path to epics file or directory (trailing `/` marks a directory)                                                     | `planning-artifacts/epics/`          |
+| `planning_dir`      | Base directory for default filenames for any key not already set in `[docs]` (lower priority than per-key overrides) | `planning-artifacts/`                |
 
 Resolution is **per-key**: overriding only `prd_path` leaves `architecture_path` and `epics_path` to be resolved by the BMAD config or default layers.
 
@@ -183,6 +183,7 @@ Releases are fully automated via semantic-release. Do not manually bump versions
 - Git source caching lives in `~/.bmad/cache/git/`; delete this directory to force a fresh clone.
 
 <!-- gitnexus:start -->
+
 # GitNexus — Code Intelligence
 
 This project is indexed by GitNexus as **bmad-mcp-server** (1142 symbols, 2699 relationships, 79 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
@@ -219,35 +220,36 @@ This project is indexed by GitNexus as **bmad-mcp-server** (1142 symbols, 2699 r
 
 ## Tools Quick Reference
 
-| Tool | When to use | Command |
-|------|-------------|---------|
-| `query` | Find code by concept | `gitnexus_query({query: "auth validation"})` |
-| `context` | 360-degree view of one symbol | `gitnexus_context({name: "validateUser"})` |
-| `impact` | Blast radius before editing | `gitnexus_impact({target: "X", direction: "upstream"})` |
-| `detect_changes` | Pre-commit scope check | `gitnexus_detect_changes({scope: "staged"})` |
-| `rename` | Safe multi-file rename | `gitnexus_rename({symbol_name: "old", new_name: "new", dry_run: true})` |
-| `cypher` | Custom graph queries | `gitnexus_cypher({query: "MATCH ..."})` |
+| Tool             | When to use                   | Command                                                                 |
+| ---------------- | ----------------------------- | ----------------------------------------------------------------------- |
+| `query`          | Find code by concept          | `gitnexus_query({query: "auth validation"})`                            |
+| `context`        | 360-degree view of one symbol | `gitnexus_context({name: "validateUser"})`                              |
+| `impact`         | Blast radius before editing   | `gitnexus_impact({target: "X", direction: "upstream"})`                 |
+| `detect_changes` | Pre-commit scope check        | `gitnexus_detect_changes({scope: "staged"})`                            |
+| `rename`         | Safe multi-file rename        | `gitnexus_rename({symbol_name: "old", new_name: "new", dry_run: true})` |
+| `cypher`         | Custom graph queries          | `gitnexus_cypher({query: "MATCH ..."})`                                 |
 
 ## Impact Risk Levels
 
-| Depth | Meaning | Action |
-|-------|---------|--------|
-| d=1 | WILL BREAK — direct callers/importers | MUST update these |
-| d=2 | LIKELY AFFECTED — indirect deps | Should test |
-| d=3 | MAY NEED TESTING — transitive | Test if critical path |
+| Depth | Meaning                               | Action                |
+| ----- | ------------------------------------- | --------------------- |
+| d=1   | WILL BREAK — direct callers/importers | MUST update these     |
+| d=2   | LIKELY AFFECTED — indirect deps       | Should test           |
+| d=3   | MAY NEED TESTING — transitive         | Test if critical path |
 
 ## Resources
 
-| Resource | Use for |
-|----------|---------|
-| `gitnexus://repo/bmad-mcp-server/context` | Codebase overview, check index freshness |
-| `gitnexus://repo/bmad-mcp-server/clusters` | All functional areas |
-| `gitnexus://repo/bmad-mcp-server/processes` | All execution flows |
-| `gitnexus://repo/bmad-mcp-server/process/{name}` | Step-by-step execution trace |
+| Resource                                         | Use for                                  |
+| ------------------------------------------------ | ---------------------------------------- |
+| `gitnexus://repo/bmad-mcp-server/context`        | Codebase overview, check index freshness |
+| `gitnexus://repo/bmad-mcp-server/clusters`       | All functional areas                     |
+| `gitnexus://repo/bmad-mcp-server/processes`      | All execution flows                      |
+| `gitnexus://repo/bmad-mcp-server/process/{name}` | Step-by-step execution trace             |
 
 ## Self-Check Before Finishing
 
 Before completing any code modification task, verify:
+
 1. `gitnexus_impact` was run for all modified symbols
 2. No HIGH/CRITICAL risk warnings were ignored
 3. `gitnexus_detect_changes()` confirms changes match expected scope

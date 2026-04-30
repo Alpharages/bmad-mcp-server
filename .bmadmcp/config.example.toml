@@ -5,8 +5,8 @@
 # `config.example.toml` (this file) is committed as the schema reference.
 #
 # Path: `{project-root}/.bmadmcp/config.toml`
-# Read by: clickup-create-epic, clickup-create-story, clickup-dev-implement,
-#          clickup-code-review custom skills.
+# Read by: clickup-create-epic, clickup-create-story, clickup-create-bug,
+#          clickup-dev-implement, clickup-code-review custom skills.
 #
 # All keys are optional. Unset keys preserve the original picker behaviour
 # (interactive space + list + folder selection on every invocation).
@@ -37,6 +37,15 @@
 
 [clickup_create_story]
 # pinned_sprint_folder_id = ""   # Bypass sprint-folder disambiguation when >1 sprint folder exists
+
+# ---------------------------------------------------------------------------
+# clickup-create-bug — per-skill config
+# ---------------------------------------------------------------------------
+
+[clickup_create_bug]
+# target_list_id   = ""    # Pin the target list for bug tickets (skips list picker)
+# default_priority = ""    # Override severity-inferred priority (1=urgent,2=high,3=normal,4=low)
+# default_tags     = []    # Extra tags added beyond the automatic "bug" tag
 
 # ---------------------------------------------------------------------------
 # Doc-path cascade

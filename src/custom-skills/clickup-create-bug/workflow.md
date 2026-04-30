@@ -6,9 +6,9 @@
 
 ## Prerequisites
 
-Before proceeding, the skill calls `bmad({ operation: 'resolve-doc-paths' })` to determine PRD, architecture, and epics paths via the 3-layer cascade (`.bmadmcp/config.toml [docs]` → BMAD `_bmad/config.toml` chain → `planning-artifacts/` default). Unlike `clickup-create-story`, these files are **optional** for bug creation — the skill warns if either is missing but **does not abort**.
+Step 1 first verifies that `CLICKUP_MCP_MODE=write` (so `createTask` is registered) and that the `CLICKUP_API_KEY` token authenticates against the ClickUp API; the skill aborts with an actionable error if either check fails.
 
-Before checking project files, step 1 verifies that `CLICKUP_MCP_MODE=write` (so `createTask` is registered) and that the `CLICKUP_API_KEY` token authenticates against the ClickUp API; the skill aborts with an actionable error if either check fails.
+After the permission gate passes, the skill calls `bmad({ operation: 'resolve-doc-paths' })` to determine PRD, architecture, and epics paths via the 3-layer cascade (`.bmadmcp/config.toml [docs]` → BMAD `_bmad/config.toml` chain → `planning-artifacts/` default). Unlike `clickup-create-story`, these files are **optional** for bug creation — the skill warns if any file is missing but **does not abort**.
 
 See: [./steps/step-01-prereq-check.md](./steps/step-01-prereq-check.md)
 

@@ -1,4 +1,12 @@
 ---
+# inputs from upstream steps
+target_list_id: ''
+target_list_name: ''
+epic_id: ''          # '' when step-03 was skipped — omit parent_task_id from createTask call
+epic_name: ''
+bug_title: ''
+bug_description: ''
+# outputs set by this step
 created_task_id: ''
 created_task_url: ''
 ---

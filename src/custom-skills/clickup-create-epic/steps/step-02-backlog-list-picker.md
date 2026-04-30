@@ -47,16 +47,16 @@ backlog_list_id: ''
 7. **Auto-save discovered values to `[clickup]`.** If the backlog list in instruction 6 was resolved via the interactive picker (scan or user choice) — i.e., NOT from a pinned config value — persist the discovered space and list IDs so future runs skip the picker:
 
    a. Use the Write/Edit tool to write `pinned_space_id`, `pinned_space_name`, and `pinned_backlog_list_id` into the `[clickup]` section of `.bmadmcp/config.toml`.
-      - If the file does not exist, create it with just the `[clickup]` section.
-      - If the file exists but has no `[clickup]` section, append the section.
-      - If the `[clickup]` section already exists, update only keys that are absent or empty.
+   - If the file does not exist, create it with just the `[clickup]` section.
+   - If the file exists but has no `[clickup]` section, append the section.
+   - If the `[clickup]` section already exists, update only keys that are absent or empty.
 
    b. Before writing each key, check whether it already exists with a non-empty value in the file. If it does and the current value differs from the discovered value, emit:
-      `⚠️ .bmadmcp/config.toml already has [clickup].{key} set — not overwriting. Update manually if needed.`
-      and skip that key.
+   `⚠️ .bmadmcp/config.toml already has [clickup].{key} set — not overwriting. Update manually if needed.`
+   and skip that key.
 
    c. After a successful write, confirm:
-      `✅ Space + backlog list saved to .bmadmcp/config.toml ([clickup] table) — future runs will skip this picker.`
+   `✅ Space + backlog list saved to .bmadmcp/config.toml ([clickup] table) — future runs will skip this picker.`
 
    d. If the write fails for any reason (permission error, disk error), emit a non-fatal warning and continue — auto-save is supplemental, the skill session is not interrupted.
 

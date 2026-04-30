@@ -40,7 +40,7 @@ so that pilot projects with non-standard layouts (e.g. `docs/architecture/overvi
      2. BMAD-config: set `[bmm].planning_artifacts` in `_bmad/config.toml`
      3. Default (no config needed): place file at `planning-artifacts/PRD.md`
      ```
-   The architecture error block MUST follow the same pattern with `data.architecture.path` and `data.architecture.layer`, pointing to `[docs].architecture_path` and `planning-artifacts/architecture.md`.
+     The architecture error block MUST follow the same pattern with `data.architecture.path` and `data.architecture.layer`, pointing to `[docs].architecture_path` and `planning-artifacts/architecture.md`.
 
 6. **File loading MUST use the resolved paths.** When the file at `data.prd.path` is confirmed present, load it into conversation context (replacing the former `Read planning-artifacts/PRD.md` instruction). Likewise for `data.architecture.path`. The variables `{prd_loaded}` = `'true'` and `{architecture_loaded}` = `'true'` MUST be set after each confirmed read, exactly as before.
 
@@ -60,7 +60,7 @@ so that pilot projects with non-standard layouts (e.g. `docs/architecture/overvi
 10. **`## RULES` section MUST be updated.** Rules 2 and 3 MUST reference the resolved paths instead of hardcoded strings:
     - Rule 2: "**PRD required:** If the file at `data.prd.path` (resolved by `resolve-doc-paths`) is missing or cannot be read, emit the PRD-not-found error block and **stop**."
     - Rule 3: "**Architecture required:** If the file at `data.architecture.path` (resolved by `resolve-doc-paths`) is missing or cannot be read, emit the architecture-not-found error block and **stop**."
-    Rules 4 ("Tech-spec best-effort: `planning-artifacts/tech-spec.md`…") and 5 ("project-context best-effort…") MUST be byte-identical to their pre-migration form.
+      Rules 4 ("Tech-spec best-effort: `planning-artifacts/tech-spec.md`…") and 5 ("project-context best-effort…") MUST be byte-identical to their pre-migration form.
 
 11. **`workflow.md` Context Builder section MUST be updated.** In `src/custom-skills/clickup-dev-implement/workflow.md`, the paragraph beginning "Loads `planning-artifacts/PRD.md` and `planning-artifacts/architecture.md` (required)…" in the `## Context Builder` section MUST be replaced with:
 
@@ -153,30 +153,33 @@ Unlike `clickup-create-story/step-01`, which loads epics context to enrich the s
 ### Structure of migrated instructions
 
 Pre-migration flow:
+
 1. Read `planning-artifacts/PRD.md` → error or set `{prd_loaded}`
 2. (implicit set prd_loaded)
 3. Read `planning-artifacts/architecture.md` → error or set `{architecture_loaded}`
 4. (implicit set architecture_loaded)
 5. Read `planning-artifacts/tech-spec.md` (best-effort)
 6. Search `**/project-context.md` (silent best-effort)
-7–9. Parse task description structure
-10. Emit success summary
+   7–9. Parse task description structure
+7. Emit success summary
 
 Post-migration flow:
+
 1. `bmad({ operation: 'resolve-doc-paths' })` → `{resolve_doc_paths_result}`
 2. Emit `data.warnings` (if any)
 3. Check `data.prd.path`, load, set `{prd_loaded}`
 4. Check `data.architecture.path`, load, set `{architecture_loaded}`
 5. Read `planning-artifacts/tech-spec.md` (best-effort, UNCHANGED)
 6. Search `**/project-context.md` (silent best-effort, UNCHANGED)
-7–9. Parse task description structure (UNCHANGED)
-10. Emit updated success summary (with resolved paths + layers)
+   7–9. Parse task description structure (UNCHANGED)
+7. Emit updated success summary (with resolved paths + layers)
 
 The instruction numbering may shift — the resolver call absorbs instructions 1–4 into a tighter block.
 
 ### Previous story learnings from 6.5
 
 Story 6.5 migrated `clickup-create-story/step-01-prereq-check.md` using the same resolver pattern. Key learnings:
+
 - The YAML front-matter variable `resolve_doc_paths_result: ''` documents the new context variable to downstream steps.
 - Error blocks must include path, layer tag, and 3-bullet override block as a unit.
 - The confirmation/success message must include layer tags so operators can see which config layer resolved each path.
@@ -237,7 +240,7 @@ Kimi Code CLI (kimi-cli) with bmad-mcp-server tooling.
 
 ## Change Log
 
-| Date       | Change                                                                                                                                                                                                         |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Date       | Change                                                                                                                                                                                                                                   |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 2026-04-30 | Story drafted from EPIC-6 bullet 6 ("Migrate `clickup-dev-implement` step-03 to consume the new op") and Story 6.5 as structural template. Key difference: `tech-spec.md` and `project-context.md` not migrated. Status → ready-for-dev. |
-| 2026-04-30 | Story implemented — step-03 and workflow.md migrated to `resolve-doc-paths` operation. All ACs satisfied. Diff scope clean (2 files only, no TypeScript changes). Status → review. |
+| 2026-04-30 | Story implemented — step-03 and workflow.md migrated to `resolve-doc-paths` operation. All ACs satisfied. Diff scope clean (2 files only, no TypeScript changes). Status → review.                                                       |

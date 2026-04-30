@@ -1,6 +1,6 @@
 # Story 7.3: Implement bug-intent prereq check (soft artifact loading)
 
-Status: review
+Status: done
 
 Epic: [EPIC-7: Bug-shaped stories in ClickUp](../epics/EPIC-7-bug-shaped-stories.md)
 
@@ -197,6 +197,14 @@ while still enriching the bug description with project context when they are pre
   - [x] Stage modified files.
   - [x] Commit with header + body per AC #17.
 
+### Review Findings
+
+- [x] [Review][Patch] P1: Token error block missing UX parenthetical [src/custom-skills/clickup-create-bug/steps/step-01-prereq-check.md:40–44] — added "(whichever name you gave it in your MCP client settings)" after `env config` to match mode error block and `clickup-create-story` reference.
+- [x] [Review][Patch] P2: AC #3 verbatim success line absent from Dev Agent Record — added verbatim line to Completion Notes.
+- [x] [Review][Defer] D1: Runtime vars `{prd_present}` / `{arch_present}` / `{warnings}` absent from YAML front-matter — deferred, pre-existing; consistent with `clickup-create-story` step 1 pattern; downstream steps do not reference these vars
+- [x] [Review][Defer] D2: `resolve-doc-paths` error uses fenced code block while mode/token errors use blockquote — deferred, pre-existing; matches `clickup-create-story` reference pattern
+- [x] [Review][Defer] D3: Epics "N file(s)" count implicit in completion summary — deferred, pre-existing; consistent with reference implementation
+
 ## Dev Notes
 
 ### Key difference from `clickup-create-story` step 1
@@ -287,7 +295,7 @@ Kimi Code CLI (root agent)
 
 ### Completion Notes List
 
-- Implemented permission gate (write-mode + `pickSpace` auth check) with verbatim error blocks for mode, token, and `resolve-doc-paths` failures.
+- Implemented permission gate (write-mode + `pickSpace` auth check) with verbatim error blocks for mode, token, and `resolve-doc-paths` failures. Verbatim confirmation: ✅ Permission gate passed — write mode active, token authenticated.
 - Implemented soft artifact loading: PRD, architecture, and epics are loaded when present, warned when missing, and the skill continues regardless.
 - Front matter already contained the required four keys; no changes needed.
 - No TypeScript or test files modified; build, lint, format pass; tests show 1 pre-existing dependency-audit failure unrelated to this story.

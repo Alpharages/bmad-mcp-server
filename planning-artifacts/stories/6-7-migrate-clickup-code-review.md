@@ -19,7 +19,7 @@ Epic: [EPIC-6: Configurable doc-path resolution (cascade)](../epics/EPIC-6-confi
 Story 6.4 (commit `caa033b`) correctly added `resolve-doc-paths` to the operation enum in `src/tools/bmad-unified.ts` (line 131: `['list', 'read', 'execute', 'resolve-doc-paths']`) and wired the handler. However, `src/server.ts` `registerBmadTool()` contains a **hardcoded** Zod schema (line 129):
 
 ```ts
-operation: z.enum(['list', 'read', 'execute'])
+operation: z.enum(['list', 'read', 'execute']);
 ```
 
 This enum was never updated to include `'resolve-doc-paths'`. The MCP SDK validates tool call inputs against this Zod schema before invoking the handler — any call with `operation: "resolve-doc-paths"` is rejected at the MCP layer with an `invalid_enum_value` error before the handler is ever reached.
@@ -56,6 +56,7 @@ so that pilot projects with non-standard layouts (e.g. `docs/architecture/overvi
 
 5. **Missing-file WARNING block MUST include cascade-layer context and remain non-fatal.** When a resolved file is absent, the updated warning block MUST include:
    - The resolved path and layer tag, e.g.:
+
      ```
      ⚠️ **Planning artifact missing — review context reduced**
      `<data.prd.path>` [`<data.prd.layer>`] was not found. The review will proceed without it, but acceptance-criteria and design-conformance checks will be limited to the task description only.
@@ -65,6 +66,7 @@ so that pilot projects with non-standard layouts (e.g. `docs/architecture/overvi
      2. BMAD-config: set `[bmm].planning_artifacts` in `_bmad/config.toml`
      3. Default (no config needed): place file at `planning-artifacts/PRD.md` / `planning-artifacts/architecture.md`
      ```
+
    - Layer tags MUST be exactly the resolver strings: `bmadmcp-config`, `bmad-config`, or `default`.
    - The review MUST continue after emitting the warning (non-fatal, exactly as before).
 
@@ -194,12 +196,14 @@ All three migration stories (6.5, 6.6, 6.7) produce correctly-migrated markdown 
 ### Why no tests are added for the markdown files
 
 `step-03-code-reader.md` is LLM-interpreted prose — there is no unit-testable TypeScript function. End-to-end correctness is established by:
+
 1. Story 6.4's integration tests (AC #14 of that story), which verify the `resolve-doc-paths` operation itself.
 2. EPIC-6 §Exit criteria — the three-skill end-to-end pilot project run.
 
 ### Downstream steps are unaffected
 
 Steps 01, 02, 04, 05, and 06 of `clickup-code-review` do not reference planning-artifact file paths. They consume the diff (`{diff_loaded}`, `{changed_files}`, `{branch_name}`) and ClickUp task fields (`{task_description}`, `{task_ac_list}`, `{review_verdict}`) via step context. Reading them confirmed:
+
 - `step-04-review-execution.md` receives planning artifact content from conversation context, not file paths.
 - `step-05-review-comment-poster.md` and `step-06-status-transition.md` work with ClickUp task IDs and review verdicts only.
 
@@ -253,7 +257,7 @@ Claude Sonnet 4.6 (claude-sonnet-4-6) via Claude Code CLI executing `bmad-create
 
 ## Change Log
 
-| Date       | Change                                                                                                                                                                         |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Date       | Change                                                                                                                                                                                                                                            |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 2026-04-30 | Story drafted from EPIC-6 bullet 7 ("Migrate `clickup-code-review` step-03 to consume the new op") and stories 6.5/6.6 as pattern. Includes `server.ts` fix (AC #14) to close server-schema mismatch missed in story 6.4. Status → ready-for-dev. |
-| 2026-04-30 | All tasks completed. `step-03-code-reader.md` and `workflow.md` migrated to `resolve-doc-paths`. `server.ts` Zod enum fixed. Committed `1ba7fe8`. Status → review. |
+| 2026-04-30 | All tasks completed. `step-03-code-reader.md` and `workflow.md` migrated to `resolve-doc-paths`. `server.ts` Zod enum fixed. Committed `1ba7fe8`. Status → review.                                                                                |

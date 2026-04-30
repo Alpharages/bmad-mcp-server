@@ -1,4 +1,9 @@
 ---
+# pass-through from step-01 (soft-loaded; may be '' if files were missing)
+prd_content: ''
+architecture_content: ''
+epics_content: ''
+# outputs set by this step
 bug_title: ''
 bug_description: ''
 ---

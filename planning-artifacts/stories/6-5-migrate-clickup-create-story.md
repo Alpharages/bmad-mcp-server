@@ -230,7 +230,7 @@ Kimi Code CLI (root agent) executing bmad-dev-story workflow.
 
 ## Change Log
 
-| Date       | Change                                                                                                                                                                       |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-04-30 | Story drafted from EPIC-6 bullet 5 ("Migrate `clickup-create-story` step-01 to consume the new op; update error block") and Story 6.4 §Out of Scope. Status → ready-for-dev. |
+| Date       | Change                                                                                                                                                                                                                         |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 2026-04-30 | Story drafted from EPIC-6 bullet 5 ("Migrate `clickup-create-story` step-01 to consume the new op; update error block") and Story 6.4 §Out of Scope. Status → ready-for-dev.                                                   |
 | 2026-04-30 | Code review fixes: (1) added error guard in step-01 instruction 1 for `resolve-doc-paths` call failure (E-1/Major); (2) split implementation commit from planning commit to satisfy AC #12 scope guard. Status remains review. |
