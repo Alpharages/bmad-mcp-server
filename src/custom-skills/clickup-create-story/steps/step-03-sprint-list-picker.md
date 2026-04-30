@@ -56,7 +56,7 @@ sprint_list_name: ''
 
    Scan the filtered folders for the sprint folder:
    - **Exactly one folder** whose name contains "sprint" (case-insensitive): use it automatically.
-   - **More than one folder** whose name contains "sprint": present the matching folders as a numbered list and ask: "More than one sprint folder was found. Enter the number of the correct sprint folder." Pin the chosen folder via `[clickup_create_story].pinned_sprint_folder_id` in `.bmadmcp/config.toml` to skip this prompt on future invocations.
+   - **More than one folder** whose name contains "sprint": present the matching folders as a numbered list and ask: "More than one sprint folder was found. Enter the number of the correct sprint folder."
    - **No folder** whose name contains "sprint" but other folders exist: present the full folder list as a numbered list and ask the user to identify the sprint folder by entering its number **or** its raw folder ID. If the user enters a number, resolve it to the corresponding folder. If the user enters a raw folder ID, verify it appears in the returned folder tree; if not found, warn the user and re-present the list.
    - **No folders at all** in the space: emit the following error block and stop.
 
@@ -82,9 +82,25 @@ sprint_list_name: ''
    **What to do:** Either rename your sprint folder to include the word "sprint", or enter the folder ID manually when prompted above, then re-invoke this step.
    ```
 
-4. Store the identified folder's ID in `{sprint_folder_id}`.
+4. **Auto-save sprint folder (user disambiguation only).** If `{sprint_folder_id}` in instruction 3 was set because the user chose from **more than one folder whose name contains "sprint"** (user disambiguation), persist the choice:
 
-5. From the folder tree data already returned by `searchSpaces`, collect all lists within `{sprint_folder_id}`. Filter out any lists where `archived: true`. If the folder contains no non-archived lists, emit the following error block and stop.
+   a. Use the Write/Edit tool to write `pinned_sprint_folder_id` into the `[clickup_create_story]` section of `.bmadmcp/config.toml`.
+      - If the file does not exist, create it with just the `[clickup_create_story]` section.
+      - If the file exists but has no `[clickup_create_story]` section, append the section.
+      - If the `[clickup_create_story]` section already exists, update the key only if it is absent or empty.
+
+   b. Before writing, check whether `pinned_sprint_folder_id` already exists with a non-empty value in the file. If it does and the current value differs from the discovered value, emit:
+      `⚠️ .bmadmcp/config.toml already has [clickup_create_story].pinned_sprint_folder_id set — not overwriting. Update manually if needed.`
+      and skip the write.
+
+   c. After a successful write, confirm:
+      `✅ Sprint folder saved to .bmadmcp/config.toml ([clickup_create_story].pinned_sprint_folder_id) — future disambiguation prompts will be skipped.`
+
+   d. If the write fails for any reason (permission error, disk error), emit a non-fatal warning and continue — auto-save is supplemental, the skill session is not interrupted.
+
+5. Store the identified folder's ID in `{sprint_folder_id}`.
+
+6. From the folder tree data already returned by `searchSpaces`, collect all lists within `{sprint_folder_id}`. Filter out any lists where `archived: true`. If the folder contains no non-archived lists, emit the following error block and stop.
 
    ```
    ❌ **Sprint-list picker failed — no active sprint lists**
@@ -96,7 +112,7 @@ sprint_list_name: ''
    **What to do:** Unarchive the sprint list you want to use, or create a new sprint list inside the sprint folder, then re-invoke this step.
    ```
 
-6. Present a numbered list of non-archived sprint lists with the format:
+7. Present a numbered list of non-archived sprint lists with the format:
 
    ```
    [N] <list_name> (list_id: <id>)
@@ -105,11 +121,11 @@ sprint_list_name: ''
    Precede the list with the hint: "If your sprint lists have ClickUp date ranges configured, the active sprint is the one whose start date is on or before today and end date is on or after today (inclusive bounds — a sprint that starts today still counts as active)."
    Follow the list with: "Enter the number of the sprint list that should receive the new story."
 
-7. Parse the user's numeric response: validate it is a number between 1 and N; if invalid, re-present the list and ask again.
+8. Parse the user's numeric response: validate it is a number between 1 and N; if invalid, re-present the list and ask again.
 
-8. Set `{sprint_list_id}` to the selected list's ID and `{sprint_list_name}` to its name.
+9. Set `{sprint_list_id}` to the selected list's ID and `{sprint_list_name}` to its name.
 
-9. Confirm the selection: emit `✅ Sprint list selected: {sprint_list_name} (list_id: {sprint_list_id})` and continue to step 4.
+10. Confirm the selection: emit `✅ Sprint list selected: {sprint_list_name} (list_id: {sprint_list_id})` and continue to step 4.
 
 ## NEXT
 

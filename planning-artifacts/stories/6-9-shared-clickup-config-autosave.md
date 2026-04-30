@@ -1,6 +1,6 @@
 # Story 6.9: Shared `[clickup]` config table and auto-save after first-run picker
 
-Status: ready-for-dev
+Status: review
 
 Epic: [EPIC-6: Configurable doc-path resolution (cascade)](../epics/EPIC-6-configurable-doc-path-resolution.md)
 
@@ -169,32 +169,32 @@ so that every subsequent invocation skips the picker entirely without any manual
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1 — Update `.bmadmcp/config.example.toml`** (AC: #1–#3)
-  - [ ] Add `[clickup]` section above skill-specific sections with shared keys + header comment.
-  - [ ] Update `[clickup_create_epic]` — remove shared keys, add override-only header + placeholder comment.
-  - [ ] Update `[clickup_create_story]` — remove shared keys, keep only `pinned_sprint_folder_id`, update header.
+- [x] **Task 1 — Update `.bmadmcp/config.example.toml`** (AC: #1–#3)
+  - [x] Add `[clickup]` section above skill-specific sections with shared keys + header comment.
+  - [x] Update `[clickup_create_epic]` — remove shared keys, add override-only header + placeholder comment.
+  - [x] Update `[clickup_create_story]` — remove shared keys, keep only `pinned_sprint_folder_id`, update header.
 
-- [ ] **Task 2 — Update `step-02-backlog-list-picker.md` (create-epic)** (AC: #4, #6, #7)
-  - [ ] Rewrite instruction 0 to implement the two-level cascade (`[clickup_create_epic]` → `[clickup]`) with explicit effective-value derivation.
-  - [ ] Add auto-save instruction (with non-overwrite guard and failure fallback) after backlog list resolves via picker.
+- [x] **Task 2 — Update `step-02-backlog-list-picker.md` (create-epic)** (AC: #4, #6, #7)
+  - [x] Rewrite instruction 0 to implement the two-level cascade (`[clickup_create_epic]` → `[clickup]`) with explicit effective-value derivation.
+  - [x] Add auto-save instruction (with non-overwrite guard and failure fallback) after backlog list resolves via picker.
 
-- [ ] **Task 3 — Update `step-02-epic-picker.md` (create-story)** (AC: #5, #6, #7)
-  - [ ] Rewrite instruction 0 to implement the two-level cascade (`[clickup_create_story]` → `[clickup]`) with explicit effective-value derivation.
-  - [ ] Add auto-save instruction (with non-overwrite guard and failure fallback) after backlog list resolves via picker.
+- [x] **Task 3 — Update `step-02-epic-picker.md` (create-story)** (AC: #5, #6, #7)
+  - [x] Rewrite instruction 0 to implement the two-level cascade (`[clickup_create_story]` → `[clickup]`) with explicit effective-value derivation.
+  - [x] Add auto-save instruction (with non-overwrite guard and failure fallback) after backlog list resolves via picker.
 
-- [ ] **Task 4 — Update `step-03-sprint-list-picker.md` (create-story)** (AC: #8)
-  - [ ] Add auto-save instruction for `pinned_sprint_folder_id` triggered only on user disambiguation.
-  - [ ] Remove or replace the existing manual-pin edge-case tip.
+- [x] **Task 4 — Update `step-03-sprint-list-picker.md` (create-story)** (AC: #8)
+  - [x] Add auto-save instruction for `pinned_sprint_folder_id` triggered only on user disambiguation.
+  - [x] Remove or replace the existing manual-pin edge-case tip.
 
-- [ ] **Task 5 — Verify** (AC: #9–#12)
-  - [ ] `npm run build` — zero TypeScript errors.
-  - [ ] `npm run lint` — no new ESLint warnings.
-  - [ ] `git diff --stat` shows exactly the four target files.
-  - [ ] `git diff --stat -- src/` and `git diff --stat -- tests/` are both empty.
+- [x] **Task 5 — Verify** (AC: #9–#12)
+  - [x] `npm run build` — zero TypeScript errors.
+  - [x] `npm run lint` — no new ESLint warnings.
+  - [x] `git diff --stat` shows exactly the four target files.
+  - [x] `git diff --stat -- src/` and `git diff --stat -- tests/` are both empty.
 
-- [ ] **Task 6 — Commit** (AC: #13)
-  - [ ] Stage the four modified files.
-  - [ ] Commit with header and body per AC #13.
+- [x] **Task 6 — Commit** (AC: #13)
+  - [x] Stage the four modified files.
+  - [x] Commit with header and body per AC #13.
 
 ## Dev Notes
 
@@ -294,15 +294,22 @@ required to.
 
 ### Agent Model Used
 
-_(to be filled by dev agent)_
+Kimi Code CLI (k1.6)
 
 ### Debug Log References
 
-_(to be filled by dev agent)_
+- Build: zero TypeScript errors
+- Lint: 7 pre-existing warnings in tests/support/litellm-helper.mjs (none new)
+- Diff scope: exactly 4 files as specified in AC #12
 
 ### Completion Notes List
 
-_(to be filled by dev agent)_
+1. **Task 1 — Config example:** Added `[clickup]` shared section with `pinned_space_id`, `pinned_space_name`, `pinned_backlog_list_id`. Updated `[clickup_create_epic]` to override-only placeholder. Updated `[clickup_create_story]` to retain only `pinned_sprint_folder_id`.
+2. **Task 2 — create-epic step-02:** Rewrote instruction 0 with explicit two-level cascade derivation. Rewrote instruction 6 (pinned-list) to use cascade. Added instruction 7 (auto-save) with non-overwrite guard and failure fallback.
+3. **Task 3 — create-story step-02:** Rewrote instruction 0 with explicit two-level cascade derivation. Rewrote instruction 6 (pinned-list) to use cascade. Added instruction 7 (auto-save) with non-overwrite guard and failure fallback. Shifted subsequent instructions 7→8 through 11→12.
+4. **Task 4 — create-story step-03:** Replaced manual-pin edge-case tip in instruction 3 with auto-save instruction 4 that triggers only on user disambiguation (more than one sprint folder). Shifted subsequent instructions 4→5 through 9→10.
+5. **Task 5 — Verification:** All checks passed (build, lint, diff scope).
+6. **Task 6 — Commit:** Committed with Conventional Commits format per AC #13.
 
 ### File List
 
