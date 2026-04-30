@@ -1,5 +1,5 @@
 # generated: 2026-04-21
-# last_updated: 2026-05-01 (story 8-4 → ready-for-dev)
+# last_updated: 2026-05-01 (story 8-3 → done)
 # project: bmad-mcp-server
 # project_key: NOKEY
 # tracking_system: file-system
@@ -49,7 +49,7 @@
 #   So EPIC-1 has 8 bullets but only 7 stories.
 
 generated: 2026-04-21
-last_updated: 2026-05-01 (story 8-4 → ready-for-dev)
+last_updated: 2026-05-01 (story 8-3 → done)
 project: bmad-mcp-server
 project_key: NOKEY
 tracking_system: file-system
@@ -147,7 +147,7 @@ development_status:
   epic-8: in-progress
   8-1-epic-picker-no-epic-option: done
   8-2-description-composer-no-epic-handling: done
-  8-3-create-task-omit-parent: ready-for-dev
+  8-3-create-task-omit-parent: done
   8-4-allow-no-epic-config-flag: ready-for-dev
   8-5-sprint-list-picker-regression: backlog
   8-6-tests-no-epic-paths: backlog
