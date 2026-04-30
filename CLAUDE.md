@@ -130,8 +130,8 @@ The four per-key overrides available in `.bmadmcp/config.toml [docs]` are:
 |-----|----------|---------|
 | `prd_path` | Absolute or project-root-relative path to PRD | `planning-artifacts/PRD.md` |
 | `architecture_path` | Absolute or project-root-relative path to architecture doc | `planning-artifacts/architecture.md` |
-| `epics_path` | Path to epics file or directory | `planning-artifacts/epics/` |
-| `planning_dir` | Directory used to derive default filenames (applies to all three) | `planning-artifacts/` |
+| `epics_path` | Path to epics file or directory (trailing `/` marks a directory) | `planning-artifacts/epics/` |
+| `planning_dir` | Base directory for default filenames for any key not already set in `[docs]` (lower priority than per-key overrides) | `planning-artifacts/` |
 
 Resolution is **per-key**: overriding only `prd_path` leaves `architecture_path` and `epics_path` to be resolved by the BMAD config or default layers.
 
@@ -146,7 +146,7 @@ epics_path        = "docs/epics/"
 
 The cascade is invoked via `bmad({ operation: 'resolve-doc-paths' })` and is consumed by all three custom skills (`clickup-create-story`, `clickup-dev-implement`, `clickup-code-review`).
 
-> **This project's override.** This repo's architecture document lives at `docs/architecture.md` (not `planning-artifacts/architecture.md`), so a project-local `.bmadmcp/config.toml` must set `architecture_path = "docs/architecture.md"`. The gitignored `.bmadmcp/config.toml` is the right place for this; `.bmadmcp/config.example.toml` (tracked) shows the full schema.
+> **This project's override.** This repo's architecture document lives at `docs/architecture.md` (not `planning-artifacts/architecture.md`), so a project-local `.bmadmcp/config.toml` must set `architecture_path = "docs/architecture.md"`. **After cloning, create this file before running any custom skill** — without it the resolver falls back to `planning-artifacts/architecture.md`, which does not exist in this repo. The gitignored `.bmadmcp/config.toml` is the right place for this; `.bmadmcp/config.example.toml` (tracked) shows the full schema.
 
 ---
 

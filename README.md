@@ -649,11 +649,11 @@ Reviews a story implementation given a ClickUp task ID. Fetches the task require
 
 ### Project-local config (`.bmadmcp/config.toml`)
 
-All four custom skills discover the active space, the Backlog list, and (for the
-story skill) the sprint folder by calling ClickUp on every invocation — typically
-`getCurrentSpace` → `pickSpace` → `searchSpaces`, then a tree scan. To pin those
-IDs and skip the round-trips, drop a project-local `.bmadmcp/config.toml` at the
-project root:
+`clickup-create-epic` and `clickup-create-story` discover the active space, the
+Backlog list, and (for the story skill) the sprint folder by calling ClickUp on
+every invocation — typically `getCurrentSpace` → `pickSpace` → `searchSpaces`,
+then a tree scan. To pin those IDs and skip the round-trips, drop a project-local
+`.bmadmcp/config.toml` at the project root:
 
 ```toml
 [clickup_create_epic]
@@ -682,10 +682,11 @@ will land alongside.
 
 #### Doc-path cascade (`[docs]` table)
 
-All four custom skills call `resolve-doc-paths` at startup to locate the PRD,
-architecture document, and epics directory. By default they look under
-`planning-artifacts/`, but projects with non-standard layouts can override
-individual paths via the `[docs]` table in `.bmadmcp/config.toml`:
+`clickup-create-story`, `clickup-dev-implement`, and `clickup-code-review` call
+`resolve-doc-paths` at startup to locate the PRD, architecture document, and
+epics directory. By default they look under `planning-artifacts/`, but projects
+with non-standard layouts can override individual paths via the `[docs]` table
+in `.bmadmcp/config.toml`:
 
 ```toml
 [docs]
