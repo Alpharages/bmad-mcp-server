@@ -53,7 +53,7 @@ bug_description: ''
    | Medium   | slow, wrong, inconsistent, unexpected, regression    |
    | Low      | cosmetic, minor, typo, formatting, style             |
 
-   Default to **High** when no keyword matches.
+   Default to **High** when no keyword matches. When keywords match multiple severity levels, use the highest matching level.
 
 3. **Optional enrichment.** After parsing, if at least one of `{prd_content}` or `{architecture_content}` is non-empty:
    - Search `{architecture_content}` for content relevant to the suspected area. If found, compose ≤3 concise bullets on the relevant stack or constraints.
@@ -120,9 +120,9 @@ bug_description: ''
    ```
    🐛 **Proposed bug ticket for "{bug_title}":**
 
-   ---
+   ~~~
    {bug_description}
-   ---
+   ~~~
 
    Does this look correct? [Y/n/edit]
    ```
