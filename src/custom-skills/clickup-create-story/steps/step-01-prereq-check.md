@@ -2,6 +2,7 @@
 prd_content: ''
 architecture_content: ''
 epics_content: ''
+resolve_doc_paths_result: ''
 ---
 
 # Step 1: Prereq File Check
@@ -44,47 +45,85 @@ Run these two checks in order. If either fails, emit the corresponding error blo
 
 ## INSTRUCTIONS
 
-1. **Resolve the project root.** Determine `{project-root}` from the current working directory.
+1. **Call `bmad({ operation: 'resolve-doc-paths' })`.** No `projectRoot` argument — the operation defaults to the server's configured project root. Store the full response data object as `{resolve_doc_paths_result}`. Extract:
+   - `data.prd` → `{prd_info}` (contains `.path` and `.layer`)
+   - `data.architecture` → `{arch_info}` (contains `.path` and `.layer`)
+   - `data.epics` → `{epics_info}` (contains `.path` and `.layer`)
+   - `data.warnings` → `{warnings}`
 
-2. **Check required and optional files.** Verify whether each path exists:
+   If the call returns an error or `data` is absent/null, emit the following error block and stop the skill run immediately:
+
+   ```
+   ❌ resolve-doc-paths operation failed: <error message>
+
+   The `clickup-create-story` skill could not resolve document paths. This usually means:
+   - The `resolve-doc-paths` operation is not registered (check that story 6.4 is merged and the server is rebuilt).
+   - The MCP server encountered a transient error.
+
+   **What to do:** Restart the MCP server and re-invoke the skill. If the error persists, verify that `resolve-doc-paths` appears in `npm run cli:list-tools`.
+   ```
+
+2. **Emit cascade warnings.** If `{warnings}` is non-empty, emit each warning to the user as a `⚠️`-prefixed line before proceeding.
+
+3. **Check required files.** Verify whether each resolved path exists:
 
    **Required:**
-   - `{project-root}/planning-artifacts/PRD.md`
-   - `{project-root}/planning-artifacts/architecture.md`
+   - `{prd_info.path}`
+   - `{arch_info.path}`
 
-   **Optional (strongly preferred — enables rich story generation):**
-   - `{project-root}/planning-artifacts/epics-and-stories.md`
+   Set `{prd_present}` / `{arch_present}` = `present` or `**MISSING**`.
 
-   Set `{prd_present}`, `{arch_present}` = `present` or `**MISSING**`. Set `{epics_present}` = `present` or `absent`.
-
-3. **If either required file is missing, emit the following error block and stop:**
+4. **If either required file is missing, emit the following error block and stop:**
 
    ```
    ❌ **Prereq check failed — missing required file**
 
-   The `clickup-create-story` skill requires both of the following files to exist in the project root before it can proceed:
+   The `clickup-create-story` skill requires both of the following files to exist before it can proceed:
 
-   - `planning-artifacts/PRD.md` — {prd_present}
-   - `planning-artifacts/architecture.md` — {arch_present}
+   - PRD: <data.prd.path> [<data.prd.layer>] — {prd_present}
+   - Architecture: <data.architecture.path> [<data.architecture.layer>] — {arch_present}
 
-   **Why:** Story descriptions are composed from PRD and architecture context. Without these files the description would be empty or fabricated.
+   **Why:** Story descriptions are composed from PRD and architecture context. The paths above were resolved via the cascade (not hardcoded). Without these files the description would be empty or fabricated.
 
-   **What to do:** Add the missing file(s) to your project's `planning-artifacts/` directory, then re-invoke the skill.
+   **How to override doc paths:**
+   1. Per-project (highest priority): add `[docs].prd_path` / `[docs].architecture_path` to `.bmadmcp/config.toml`
+   2. BMAD-config: set `[bmm].planning_artifacts` in `_bmad/config.toml` (affects all three paths via default filenames)
+   3. Default (no config needed): place files at `planning-artifacts/PRD.md` and `planning-artifacts/architecture.md`
+
+   **What to do:** Add the missing file(s) at the resolved path(s), adjust your config to point to existing files, then re-invoke the skill.
    ```
 
-4. **Load files.** Read:
-   - `{project-root}/planning-artifacts/PRD.md` → `{prd_content}`
-   - `{project-root}/planning-artifacts/architecture.md` → `{architecture_content}`
-   - If `epics-and-stories.md` is present: read it → `{epics_content}`. If absent, set `{epics_content}` = `''` and note to the user: `⚠️ planning-artifacts/epics-and-stories.md not found — story detail will be derived from PRD and epic ClickUp task only.`
+5. **Load files.** Read:
+   - `{prd_info.path}` → `{prd_content}`
+   - `{arch_info.path}` → `{architecture_content}`
+
+6. **Load epics.** Use `{epics_info.path}` from the resolver result. Branch based on whether the path ends with `.md`:
+   - **If the path ends with `.md` (single file):** attempt to read it directly → `{epics_content}`.
+   - **Otherwise (directory path):** list and read all `EPIC-*.md` files inside the directory, concatenate them with `---` separators → `{epics_content}`. If the directory is absent or contains no `EPIC-*.md` files, set `{epics_content}` = `''`.
+
+   If the resolved epics path does not exist (neither as file nor populated directory), set `{epics_content}` = `''` and emit:
+
+   ```
+   ⚠️ Epics path not found at <data.epics.path> [<data.epics.layer>] — story detail will be derived from PRD and epic ClickUp task only.
+   ```
 
    Also check for optional files and note their presence (do not fail if absent):
    - `{project-root}/planning-artifacts/ux-design.md` or similar `*ux*.md`
    - `{project-root}/planning-artifacts/tech-spec.md`
 
-5. **Confirm and continue.** Report to the user which files were loaded, then proceed to the next step.
+7. **Confirm and continue.** Report to the user:
+
+   ```
+   ✅ Prereq check passed — files loaded:
+   - PRD: <data.prd.path> [<data.prd.layer>]
+   - Architecture: <data.architecture.path> [<data.architecture.layer>]
+   - Epics: <data.epics.path> [<data.epics.layer>] — <found N file(s) / not found>
+   ```
+
+   Then proceed to the next step.
 
 ## NEXT
 
-Proceed to [step-02-epic-picker.md](./step-02-epic-picker.md). The cwd-assertion result, the permission-gate verbatim message, and the loaded `{prd_content}` / `{architecture_content}` are available to all downstream steps.
+Proceed to [step-02-epic-picker.md](./step-02-epic-picker.md). The cwd-assertion result, the permission-gate verbatim message, `{prd_content}` / `{architecture_content}` / `{epics_content}`, and the full `{resolve_doc_paths_result}` (including resolved paths and their layers) are available to all downstream steps.
 
 > **Refinement source:** `pwd-deviation-cwd-not-pilot-repo`, `step-01-verbatim-message-not-captured`, `stale-next-wording-in-skill-files` (story 5-7).

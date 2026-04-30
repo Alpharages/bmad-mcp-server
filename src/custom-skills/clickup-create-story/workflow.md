@@ -6,7 +6,7 @@
 
 ## Prerequisites
 
-Before proceeding, the skill verifies that `planning-artifacts/PRD.md` and `planning-artifacts/architecture.md` exist (required) and optionally loads `planning-artifacts/epics-and-stories.md` (strongly preferred — enables full BDD acceptance criteria and task breakdown). The skill aborts if either required file is missing.
+Before proceeding, the skill calls `bmad({ operation: 'resolve-doc-paths' })` to determine PRD, architecture, and epics paths via the 3-layer cascade (`.bmadmcp/config.toml [docs]` → BMAD `_bmad/config.toml` chain → `planning-artifacts/` default), then verifies the required files exist at the resolved paths. The skill aborts if either required file is missing, surfacing the cascade layer that produced the path and instructions for all three override layers.
 
 Before checking project files, step 1 verifies that `CLICKUP_MCP_MODE=write` (so `createTask` is registered) and that the `CLICKUP_API_KEY` token authenticates against the ClickUp API; the skill aborts with an actionable error if either check fails.
 
