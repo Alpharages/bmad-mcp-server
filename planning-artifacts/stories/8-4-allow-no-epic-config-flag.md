@@ -302,3 +302,9 @@ claude-sonnet-4-6 (claude-code)
 - `.bmadmcp/config.toml`
 - `planning-artifacts/stories/8-4-allow-no-epic-config-flag.md`
 - `planning-artifacts/sprint-status.yaml`
+
+## Review Findings
+
+- [ ] [Review][Decision] `.bmadmcp/config.toml` tracked despite `.gitignore` — **Resolved: Option B (untrack)**. `.gitignore` line 104 lists `.bmadmcp/config.toml`; commit `47fc8d4` force-added it as a new tracked file containing 4 sections (17 lines) beyond the story's single-commented-line scope. Decision: `git rm --cached .bmadmcp/config.toml` applied in follow-up commit; file stays on disk, gitignore restored. Each contributor maintains their own local copy.
+- [x] [Review][Defer] story 8-1 file included in story 8-4 commit [planning-artifacts/stories/8-1-epic-picker-no-epic-option.md] — deferred, pre-existing (documentation-only: table alignment fix + review log entry, no functional impact)
+- [x] [Review][Defer] Sprint status promotes 8-5/8-6/8-7/8-8 beyond AC #9 scope [planning-artifacts/sprint-status.yaml] — deferred, pre-existing (valid sprint management, not a defect)
