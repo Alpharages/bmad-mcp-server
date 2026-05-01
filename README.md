@@ -587,7 +587,7 @@ Custom skills are **ClickUp-integrated workflows** built on top of the standard 
 
 > **Important:** If your project uses ClickUp as the source of truth, use the custom skills below — not `bmad-sprint-planning` or other file-system workflows. Invoking `bmad-sprint-planning` on a ClickUp project will write a local `sprint-status.yaml` instead of touching ClickUp.
 
-All custom skills require `CLICKUP_MCP_MODE=write` and `planning-artifacts/PRD.md` + `planning-artifacts/architecture.md` in the project root. No `.bmad-pilot-marker` or other per-project sentinel files are needed — credentials live in the MCP server process.
+All custom skills require `CLICKUP_MCP_MODE=write`. `clickup-create-story`, `clickup-dev-implement`, and `clickup-code-review` also require planning artifacts (PRD, architecture, epics) — paths are resolved via the [doc-path cascade](#doc-path-cascade-docs-table) and default to `planning-artifacts/`. `clickup-create-bug` loads those files as optional context only and continues with a warning if any are missing. No `.bmad-pilot-marker` or other per-project sentinel files are needed — credentials live in the MCP server process.
 
 ---
 
@@ -641,6 +641,30 @@ Reviews a story implementation given a ClickUp task ID. Fetches the task require
 > — or — review task `<task-id>`
 
 **Steps:** PAT preflight → task fetch → git diff + planning artifact reader → `bmad-code-review` (adversarial review, no file writes) → review comment → status transition
+
+---
+
+### `clickup-create-bug`
+
+Creates a ClickUp bug ticket from a free-form bug report. Parses the report into a
+structured bug description — summary, steps to reproduce, expected behaviour, actual
+behaviour, impact / severity, suspected area, environment, and related links — infers
+a priority from the stated severity, and adds a `bug` tag automatically. Planning
+artifacts (PRD, architecture, epics) are located via the
+[doc-path cascade](#doc-path-cascade-docs-table) but are **optional**: the skill warns
+if any file is missing and continues rather than aborting.
+
+**Trigger:**
+
+> create a bug [description]
+> — or — report a bug [description]
+> — or — log bug [description]
+
+**Steps:** prereq + auth check → list picker → [optional] epic picker → description
+composer → duplicate check → `createTask`
+
+**Config keys (`[clickup_create_bug]`):** `target_list_id`, `default_priority`,
+`default_tags`, `pinned_epic_id`, `pinned_epic_name`
 
 ---
 
