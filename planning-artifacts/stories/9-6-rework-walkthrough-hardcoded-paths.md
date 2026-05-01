@@ -1,6 +1,6 @@
 # Story 9.6: Rework Walkthrough Hardcoded Paths
 
-Status: review
+Status: done
 
 Epic: [EPIC-9: README freshness pass](../epics/EPIC-9-readme-freshness.md)
 
@@ -192,8 +192,8 @@ custom doc paths.
 ### Review Findings
 
 - [x] [Review][Decision] Note position: AC #2 originally said "after Expected" but implementation placed it before — accepted current placement (before Expected, after "Drafted by BMAD") as the better UX; AC #2 amended to match.
-- [ ] [Review][Patch] `last_updated` annotation omits story 9-6 — `planning-artifacts/sprint-status.yaml:2` reads `(story 9-5 → review)` and `:52` reads `(story 9-5 → done)`; the 9-6 `ready-for-dev → review` transition is unrecorded. Update `last_updated` to reference story 9-6.
-- [ ] [Review][Patch] Task 7 commit pending — README and sprint-status changes landed in the story-9-5 fix commit (fea2acf) without the AC #12 message. The remaining uncommitted item is the story file; commit it using the AC #12 header `docs(readme): rework walkthrough steps 4 and 8 for configurable paths (story 9-6)` and note in the body that README.md and sprint-status.yaml changes are in the prior commit.
+- [x] [Review][Patch] `last_updated` annotation omits story 9-6 — fixed: both sprint-status.yaml annotations updated to `2026-05-01 (story 9-6 → review)`.
+- [x] [Review][Patch] Task 7 commit pending — fixed: committed as 299b772 with AC #12 header; body notes README/sprint-status changes were in prior commit fea2acf.
 - [x] [Review][Defer] Step 8 missing gitignore reminder for `.bmadmcp/config.toml` — a new user seeding ClickUp IDs may commit the file unknowingly; out of scope for AC #5 but worth a future note — deferred, pre-existing gap
 
 ## Dev Notes
