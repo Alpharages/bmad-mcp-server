@@ -1,6 +1,6 @@
 # Story 9.9: Cross-check docs/ directory
 
-Status: review
+Status: done
 
 Epic: [EPIC-9: README freshness pass](../epics/EPIC-9-readme-freshness.md)
 
