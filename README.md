@@ -308,9 +308,9 @@ git commit -m "chore: add BMAD pilot marker"
 
 Replace `<epic-id>` with the value from Step 9.
 
-**What runs.** Five sub-steps: ① prereq check (cwd + permissions + load PRD/architecture) → ② epic picker (space → Backlog → your epic) → ③ sprint-list picker → ④ description composer (synthesizes story title + body from PRD + architecture + epic context, with your review) → ⑤ `createTask`.
+**What runs.** Five sub-steps: ① prereq check (cwd + permissions + load PRD/architecture) → ② epic picker (space → Backlog → your epic; when `allow_no_epic` is `true` — the default — the list also includes `[0] No epic — create as standalone task`) → ③ sprint-list picker → ④ description composer (synthesizes story title + body from PRD + architecture + epic context, with your review) → ⑤ `createTask`.
 
-**Expected.** A ClickUp URL printed in chat, pointing at a new task that is a subtask of your epic. The task description references your PRD and architecture.
+**Expected.** A ClickUp URL printed in chat. If you picked an epic in step ②, the new task is a subtask of that epic; if you chose `[0] No epic`, it is created as a standalone top-level task. Either way, the task description references your PRD and architecture.
 
 **Fix.** If the skill stops at step 1 with a permission error, your `CLICKUP_MCP_MODE` isn't `write` — re-check Step 6. If it stops at the cwd assertion, you're not in the pilot repo — check Step 8.
 
@@ -607,13 +607,15 @@ Creates a root-level ClickUp task (epic) in the Backlog list of the active space
 
 ### `clickup-create-story`
 
-Creates a ClickUp task (story) as a subtask of a chosen epic in the active sprint list. Delegates to `bmad-create-story` for exhaustive description composition: BDD acceptance criteria, task/subtask checklist, architecture guardrails, previous-story intelligence from git, and web research. When `bmad-create-story` improves upstream, this skill inherits those improvements automatically.
+Creates a ClickUp task (story) in the active sprint list — as a subtask of a chosen epic, or as a standalone top-level task when no epic parent is needed. Delegates to `bmad-create-story` for exhaustive description composition: BDD acceptance criteria, task/subtask checklist, architecture guardrails, previous-story intelligence from git, and web research. When `bmad-create-story` improves upstream, this skill inherits those improvements automatically.
 
 **Trigger:**
 
 > Invoke the `clickup-create-story` skill against epic `<epic-id>`.
 
-**Steps:** prereq + auth check → epic picker → sprint-list picker → `bmad-create-story` (description composition only, no file write) → review (Y/n/edit) → `createTask`
+**Steps:** prereq + auth check → epic picker (`[0] No epic` available when `allow_no_epic = true`) → sprint-list picker → `bmad-create-story` (description composition only, no file write) → review (Y/n/edit) → `createTask`
+
+**Config key:** `[clickup_create_story].allow_no_epic` (boolean, default `true`) — set to `false` to hide the `[0] No epic` entry and always require an epic parent.
 
 **Optional but recommended:** `planning-artifacts/epics-and-stories.md` (enables full BDD criteria from story spec)
 
