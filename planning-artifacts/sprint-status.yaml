@@ -1,5 +1,5 @@
 # generated: 2026-04-21
-# last_updated: 2026-05-01 (story 9-2 → review)
+# last_updated: 2026-05-01 (story 9-2 → done)
 # project: bmad-mcp-server
 # project_key: NOKEY
 # tracking_system: file-system
@@ -49,7 +49,7 @@
 #   So EPIC-1 has 8 bullets but only 7 stories.
 
 generated: 2026-04-21
-last_updated: 2026-05-01 (story 9-1 → done)
+last_updated: 2026-05-01 (story 9-2 → done)
 project: bmad-mcp-server
 project_key: NOKEY
 tracking_system: file-system
@@ -158,7 +158,7 @@ development_status:
   # EPIC-9: README freshness pass
   epic-9: in-progress
   9-1-readme-staleness-audit: done
-  9-2-document-doc-path-cascade: review
+  9-2-document-doc-path-cascade: done
   9-3-document-bug-skill: backlog
   9-4-document-no-epic-option: backlog
   9-5-expand-configuration-reference: backlog

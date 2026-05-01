@@ -1,6 +1,6 @@
 # Story 9.2: Document Doc-Path Cascade in README
 
-Status: review
+Status: done
 
 Epic: [EPIC-9: README freshness pass](../epics/EPIC-9-readme-freshness.md)
 
@@ -302,3 +302,8 @@ Kimi Code CLI (k1.6)
 - `README.md`
 - `planning-artifacts/sprint-status.yaml`
 - `planning-artifacts/stories/9-2-document-doc-path-cascade.md`
+
+### Review Findings
+
+- [x] [Review][Patch] `sprint-status.yaml` `last_updated` data field inconsistency [`planning-artifacts/sprint-status.yaml`:52] — The comment header (line 2) was updated to `(story 9-2 → review)` but the YAML data field was updated to `(story 9-1 → done)`. Both fields are meant to describe the same last-updated event; they now describe different transitions. Fix: change data field to `2026-05-01 (story 9-2 → review)`.
+- [x] [Review][Dismiss] Commit body says "ready-for-dev → review" but actual sprint-status transition was `backlog → review` — commit body narrative only; all file content is correct.
