@@ -1,6 +1,6 @@
 # Story 8.8: Pilot Quickstart Update — No-Epic Option
 
-Status: review
+Status: done
 
 Epic: [EPIC-8: No-epic stories (standalone tasks)](../epics/EPIC-8-no-epic-stories.md)
 
@@ -395,3 +395,15 @@ target is in this repo, so no pilot-repo cwd switch was required).
 - `planning-artifacts/sprint-status.yaml` — `8-8-pilot-quickstart-update: ready-for-dev` → `review`; `last_updated` line updated.
 - `planning-artifacts/stories/8-8-pilot-quickstart-update.md` — Tasks/Subtasks
   checkboxes, Dev Agent Record, Status field.
+
+### Review Findings
+
+- [x] [Review][Patch] `allow_no_epic` lacks "story skill only" annotation in shared config-keys section [docs/clickup-quickstart.md:161-163] — The bullet sits in the section "Available keys per skill table (`[clickup_create_epic]` / `[clickup_create_story]`)". Sibling key `pinned_sprint_folder_id` is annotated "story skill only"; `allow_no_epic` lacks the same annotation despite being story-only per `step-02-epic-picker.md` cascade and `.bmadmcp/config.example.toml`. Reader could plausibly add it under `[clickup_create_epic]` and observe no behavior change. Suggested fix: append ", story skill only" to the bullet (e.g., "`allow_no_epic`, story skill only — `true` (default) shows ...").
+- [x] [Review][Patch] Step-02 line wraps inline code span across hard newline; line 293 lazy-continues at column 0 [docs/clickup-quickstart.md:291-293] — The inline code span `` `[0] No epic — create as standalone task` `` is split across a hard newline; line 293 begins at column 0 inside what should be a list-item paragraph. Renders correctly via CommonMark (newline-in-code-span = space; lazy continuation), but visually broken in source and fragile to a future prettier reflow. Suggested fix: rewrap so the backticked label is on a single line, or break the sentence outside the code span.
+- [x] [Review][Defer] "description composed from PRD + architecture only" overstates scope [docs/clickup-quickstart.md:243, :319] — deferred, wording is verbatim from story spec AC #4 and dev notes; per `step-04-description-composer.md` the `epics_content` is still loaded as cross-cutting reference even on the no-epic path. If the simplification is wrong, treat as a separate spec/EPIC-9 cleanup.
+- [x] [Review][Defer] "epic context is skipped" oversimplifies vs. step-04 branch 3b [docs/clickup-quickstart.md:298] — deferred, wording verbatim from story spec dev notes. Step-04 branch 3b sentinelizes epic context (`Epic: (none — standalone task)`) rather than skipping the description composer entirely.
+- [x] [Review][Defer] Empty-Backlog Y/n fallback only mentioned in config description, not in Invoke section — deferred, story explicitly limits scope to AC #1–#5 touch-points; readers learn about empty-Backlog only from the config bullet. Candidate for EPIC-9 README freshness pass.
+- [x] [Review][Defer] `_(none — standalone task)_` underscore vs `*…*` asterisk emission [docs/clickup-quickstart.md:299] — deferred, wording verbatim from story spec; renders identically (italic). Affects only operators who grep transcripts for the literal underscore form.
+- [x] [Review][Defer] Picker label inconsistency — `[0] No epic` (short) vs full label [docs/clickup-quickstart.md:161 vs :292, :298] — deferred, config-knob short form was prescribed verbatim by AC #5; long form matches step files. Both are technically correct; consolidation belongs to a future doc consistency pass.
+- [x] [Review][Defer] "Set `false`" missing the verb "to" [docs/clickup-quickstart.md:162] — deferred, wording verbatim from story spec AC #5.
+- [x] [Review][Defer] Commit `Co-Authored-By: Claude Sonnet 4.6` mismatches Dev Agent Record `claude-opus-4-7` — deferred, attribution discrepancy only; no code/doc impact.

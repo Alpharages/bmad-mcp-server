@@ -158,9 +158,10 @@ Available keys per skill table (`[clickup_create_epic]` /
 - `pinned_sprint_folder_id` — pin a specific sprint folder ID, story skill
   only (see
   [`two-sprint-folders-in-team-space`](../planning-artifacts/friction-log.md#two-sprint-folders-in-team-space)).
-- `allow_no_epic` — `true` (default) shows the `[0] No epic` picker entry and
-  enables the empty-Backlog Y/n fallback. Set `false` to require an epic on every
-  invocation and restore the original hard-stop when the Backlog list is empty.
+- `allow_no_epic`, story skill only — `true` (default) shows the `[0] No epic`
+  picker entry and enables the empty-Backlog Y/n fallback. Set `false` to require
+  an epic on every invocation and restore the original hard-stop when the Backlog
+  list is empty.
 
 All keys are optional and default to unset. Pinning both `pinned_space_id`
 and `pinned_backlog_list_id` produces the full short-circuit (zero ClickUp
@@ -289,8 +290,8 @@ The skill walks five steps in this order:
 
 1. `step-01-prereq-check` — cwd assertion, permission gate, PRD / architecture load
 2. `step-02-epic-picker` — space picker → Backlog list → epic selector; when
-   `allow_no_epic` is `true` (the default), a `[0] No epic — create as standalone
-task` entry is prepended to the list
+   `allow_no_epic` is `true` (the default), a
+   `[0] No epic — create as standalone task` entry is prepended to the list
 3. `step-03-sprint-list-picker` — sprint folder → sprint list selector
 4. `step-04-description-composer` — story title, description synthesis, user review
 5. `step-05-create-task` — pre-creation summary, `createTask` call, URL output
