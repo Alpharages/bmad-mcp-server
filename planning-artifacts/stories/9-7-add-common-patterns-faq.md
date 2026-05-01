@@ -1,6 +1,6 @@
 # Story 9.7: Add Common Patterns FAQ
 
-Status: review
+Status: done
 
 Epic: [EPIC-9: README freshness pass](../epics/EPIC-9-readme-freshness.md)
 
@@ -193,6 +193,11 @@ information described.
 - [x] **Task 6 — Commit (AC: #13)**
   - [x] Stage `README.md`, story file, `sprint-status.yaml`.
   - [x] Commit with header + body per AC #13.
+
+### Review Findings
+
+- [x] [Review][Patch] `sprint-status.yaml` body `last_updated` annotation says `story 9-7 → ready-for-dev` but actual transition is `→ review` [planning-artifacts/sprint-status.yaml:52]
+- [x] [Review][Patch] FAQ entry 4 says ClickUp credentials are passed "on each call" — HTTP transport extracts them from the session-init request only and caches per session; inconsistent with README line ~244 [README.md, Common patterns § Entry 4]
 
 ## Dev Notes
 

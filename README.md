@@ -815,12 +815,11 @@ always require an epic parent, set `allow_no_epic = false` under
 
 #### I need to share credentials per-team via HTTP
 
-Run the HTTP transport (see [Self-hosting](#self-hosting-http)). ClickUp
-credentials are passed as request headers (`X-ClickUp-Api-Key`,
-`X-ClickUp-Team-Id`) on each call — every team member authenticates
-independently from the same server instance. The server `.env` only needs
-`PORT`, `BMAD_API_KEY`, and optionally `BMAD_DEBUG`; no ClickUp credentials
-are stored server-side.
+Run the HTTP transport (see [Self-hosting](#self-hosting-http)). Each user
+adds `X-ClickUp-Api-Key` and `X-ClickUp-Team-Id` to the `headers` block of
+their MCP client config — the server reads them at session init and holds
+them in-memory for that session only. No ClickUp credentials are stored
+server-side or needed in the server's `.env`.
 
 #### How do I pin space/list IDs to skip pickers
 
