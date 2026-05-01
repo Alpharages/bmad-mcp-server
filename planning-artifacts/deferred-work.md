@@ -17,6 +17,12 @@
 - Rule (f) assumes all assumption posts precede the M2 summary, but "WHEN TO POST" permits any point between step 3 and step 5 — including post-M2 / pre-step-5. Such late-stage assumptions will post to ClickUp but will not appear in any summary. Either tighten "WHEN TO POST" to pre-M2, or add a "late-assumption trailer" to step 5's status-transition comment.
 - Frontmatter default `{assumption_count}: ''` collides with the workflow.md-documented state "write mode was active but no assumption was successfully posted." A reviewer cannot distinguish "step 6 never invoked" from "step 6 invoked and all posts failed." No current downstream step reads `{assumption_count}`, so this is latent; resolve when the M2 summary starts consuming the counter by introducing a dedicated sentinel (e.g., `'-'` for never-invoked, `''` for invoked-no-success).
 
+## Deferred from: code review of 8-7-skill-docs-no-epic (2026-05-01)
+
+- `workflow.md:19` Epic picker prose: "Setting `allow_no_epic = false` ... restores the original hard-stop **when the Backlog list is empty**" — qualifier reads as if the hard-stop is conditional on empty Backlog. Behaviour is correct (the `[0]` entry is hidden in all cases; the hard-stop only manifests when Backlog is empty), but the phrasing invites misreading. Polish in a follow-up doc pass.
+- `workflow.md:19` overview elides the `allow_no_epic` boolean-coercion warning emitted by `step-02-epic-picker.md:35-39` (string/int values warn and default to `true`). Acceptable for an overview file, but a one-line note would help configurators avoid quoting the value in `.bmadmcp/config.toml`.
+- No-epic + pinned-config interaction is undocumented. When both `pinned_space_id` and `pinned_backlog_list_id` are set, the picker is skipped (per `step-02-epic-picker.md:42`), but the empty-Backlog Y/n fallback and `[0]` entry still apply. Add an explanatory note in step-02 (not workflow.md) the next time pinning behaviour is touched.
+
 ## Deferred from: code review of 8-3-create-task-omit-parent (2026-05-01)
 
 - Condition gap in `{epic_id}` conditionals (instructions 2 and 8): whitespace-only or null/undefined `{epic_id}` falls into the epic branch (truthy) or neither branch, risking a corrupt API call or missing output. Pre-existing design limitation of the no-epic feature from story 8-1; apply a project-wide guard when formalising the variable-type contract for step frontmatter.

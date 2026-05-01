@@ -198,6 +198,20 @@ into individual step files.
         `planning-artifacts/sprint-status.yaml`.
   - [x] Commit with header + body per AC #19.
 
+### Review Findings
+
+Code review of commit `27e14d3` (2026-05-01). All 19 ACs verified PASS by the
+Acceptance Auditor. Adversarial layers (Blind Hunter + Edge Case Hunter) surfaced
+two doc-vs-code mismatches the spec did not catch:
+
+- [x] [Review][Patch] Italic delimiter mismatch in pre-creation summary phrase [`workflow.md:43`] — patched: changed `` `_(none — standalone task)_` `` to `` `*(none — standalone task)*` `` with explicit "(rendered as italic)" annotation, mirroring step-05's actual emission at lines 59 & 122. AC #12's prescribed literal is now superseded by this corrected wording.
+- [x] [Review][Patch] "No epic context is passed" oversimplifies branch 3b [`workflow.md:35`] — patched: changed "no epic context is passed to `bmad-create-story`" to "only sentinel placeholders (`Epic: (none — standalone task)`, `Epic description: (none)`) are passed to `bmad-create-story` in place of real epic content". Reflects the actual behaviour at `step-04-description-composer.md:64-74`. AC #9's prescribed wording is now superseded.
+- [x] [Review][Defer] `allow_no_epic = false` hard-stop scope reads as conditional [`workflow.md:19`] — deferred, overview-level wording polish.
+- [x] [Review][Defer] Boolean-coercion warning for `allow_no_epic` undocumented in overview [`workflow.md:19`] — deferred, step-02 is authoritative for coercion detail.
+- [x] [Review][Defer] No-epic + pinned-config interaction undocumented [`workflow.md:19`] — deferred, edge case worth a follow-up doc note in step-02.
+
+Dismissed (8): sentinel-as-empty-string terminology, `getTaskById` reference idiom, `branch 3a/3b` label anchors, voice difference between steps 04/05 (different artifacts), `generated:` field in sprint-status (creation date), missing-key default-to-true behaviour, `getTaskById`-vs-`{epic_description}` overview omission, "contains no Epic field" outcome-vs-mechanism phrasing, Y/n negative-branch wording.
+
 ## Dev Notes
 
 ### Summary of EPIC-8 implementation already shipped

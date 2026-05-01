@@ -32,7 +32,7 @@ Step 3 MUST complete with a non-empty `{sprint_list_id}` before the workflow pro
 
 ## Description Composer
 
-Delegates to the `bmad-create-story` workflow in content-composition mode (skip file writes, return content). `bmad-create-story` performs exhaustive artifact analysis: BDD acceptance criteria, ordered task/subtask checklist, architecture guardrails, previous-story intelligence from git, and web research for latest tech. When `{epic_id}` is non-empty (branch 3a), epic context is pre-supplied from the ClickUp fetch so story discovery is skipped. When `{epic_id}` is `''` (branch 3b — no-epic path), `getTaskById` is skipped, no epic context is passed to `bmad-create-story`, and the composed description contains no "Epic:" or "Parent epic:" field. When `bmad-create-story` improves upstream, this skill inherits those improvements automatically. Presents the composed description for review (Y/n/edit) and stores the confirmed text in `{task_description}`.
+Delegates to the `bmad-create-story` workflow in content-composition mode (skip file writes, return content). `bmad-create-story` performs exhaustive artifact analysis: BDD acceptance criteria, ordered task/subtask checklist, architecture guardrails, previous-story intelligence from git, and web research for latest tech. When `{epic_id}` is non-empty (branch 3a), epic context is pre-supplied from the ClickUp fetch so story discovery is skipped. When `{epic_id}` is `''` (branch 3b — no-epic path), `getTaskById` is skipped, only sentinel placeholders (`Epic: (none — standalone task)`, `Epic description: (none)`) are passed to `bmad-create-story` in place of real epic content, and the composed description contains no "Epic:" or "Parent epic:" field. When `bmad-create-story` improves upstream, this skill inherits those improvements automatically. Presents the composed description for review (Y/n/edit) and stores the confirmed text in `{task_description}`.
 
 See: [./steps/step-04-description-composer.md](./steps/step-04-description-composer.md)
 
@@ -40,7 +40,7 @@ Step 4 MUST complete with a non-empty `{task_description}` before the workflow p
 
 ## Task Creation
 
-Validates all required context from steps 01–04, calls `searchTasks` to check for duplicate task names in the target sprint list, presents a pre-creation summary for user confirmation, then calls `createTask`. When `{epic_id}` is non-empty, the call includes `parent_task_id: {epic_id}`; when `{epic_id}` is `''` (no-epic path), `parent_task_id` is omitted entirely. The pre-creation summary shows `_(none — standalone task)_` as the parent-epic line when `{epic_id}` is empty, so the user can confirm intent before the API call. The created task's `{created_task_id}` and `{created_task_url}` are stored on success.
+Validates all required context from steps 01–04, calls `searchTasks` to check for duplicate task names in the target sprint list, presents a pre-creation summary for user confirmation, then calls `createTask`. When `{epic_id}` is non-empty, the call includes `parent_task_id: {epic_id}`; when `{epic_id}` is `''` (no-epic path), `parent_task_id` is omitted entirely. The pre-creation summary shows `*(none — standalone task)*` (rendered as italic) as the parent-epic line when `{epic_id}` is empty, so the user can confirm intent before the API call. The created task's `{created_task_id}` and `{created_task_url}` are stored on success.
 
 See: [./steps/step-05-create-task.md](./steps/step-05-create-task.md)
 
