@@ -56,6 +56,16 @@ Scope notes: {scope_notes or empty}
 - **Step 3 (Architecture analysis):** Run in full.
 - **Step 4 (Web research):** Run in full.
 - **Step 5 (Create comprehensive story file):** Run the COMPOSITION only — produce the full story document content. Do NOT write to any local file. Return the composed content.
+  - **CRITICAL — Context-rich implementation guidance:** The composed document MUST be dev-agent-ready. It MUST include:
+    - **Specific file paths** — exact source files, modules, or directories that need to be created or modified (e.g., `src/services/auth.ts`, `tests/unit/auth.test.ts`).
+    - **Implementation approach** — a concise exit solution: what to change, where to add new code vs. update existing code, and the expected code structure or pattern to follow.
+    - **Architecture guardrails** — relevant patterns, conventions, or constraints from the architecture that MUST be followed, cited with file references where possible.
+    - **Previous-story intelligence** — if prior stories in the same epic exist, reference established patterns, file naming conventions, or recently modified files to maintain continuity.
+  - **CRITICAL — QA section:** The composed document MUST include a dedicated `## QA / Testing Notes` section with:
+    - Test scenarios derived from each acceptance criterion (Given / When / Then format).
+    - Edge cases and boundary conditions to verify.
+    - Regression risks — existing features or integrations that could be affected.
+    - Any test data, environment, or prerequisite setup QA needs.
 - **Step 6 (Update sprint status):** Skip entirely. ClickUp task creation (step 5 of this skill) is the equivalent.
 
 #### Branch 3b — No-epic path (`{epic_id}` is `''`)
@@ -81,6 +91,16 @@ Scope notes: {scope_notes or empty}
 - **Step 3 (Architecture analysis):** Run in full.
 - **Step 4 (Web research):** Run in full.
 - **Step 5 (Create comprehensive story file):** Run COMPOSITION only — produce the full story document content. **Do NOT include an "Epic:" or "Parent epic:" field anywhere in the document.** Do NOT write to any local file. Return the composed content.
+  - **CRITICAL — Context-rich implementation guidance:** The composed document MUST be dev-agent-ready. It MUST include:
+    - **Specific file paths** — exact source files, modules, or directories that need to be created or modified (e.g., `src/services/auth.ts`, `tests/unit/auth.test.ts`).
+    - **Implementation approach** — a concise exit solution: what to change, where to add new code vs. update existing code, and the expected code structure or pattern to follow.
+    - **Architecture guardrails** — relevant patterns, conventions, or constraints from the architecture that MUST be followed, cited with file references where possible.
+    - **Previous-story intelligence** — if prior stories in the same epic exist, reference established patterns, file naming conventions, or recently modified files to maintain continuity.
+  - **CRITICAL — QA section:** The composed document MUST include a dedicated `## QA / Testing Notes` section with:
+    - Test scenarios derived from each acceptance criterion (Given / When / Then format).
+    - Edge cases and boundary conditions to verify.
+    - Regression risks — existing features or integrations that could be affected.
+    - Any test data, environment, or prerequisite setup QA needs.
 - **Step 6 (Update sprint status):** Skip entirely. ClickUp task creation (step 5 of this skill) is the equivalent.
 
 > **Convention:** `{epic_id}` = `''` is the sentinel for "no parent". It is intentionally passed to `bmad-create-story` as an empty epic block so the workflow's full artifact analysis (PRD, architecture) still runs but the resulting description contains no epic association.
@@ -88,6 +108,18 @@ Scope notes: {scope_notes or empty}
 ### 4. Capture the composed content
 
 After `bmad-create-story` completes its composition, capture the full story document it produced as `{task_description}`. This is the content that will become the ClickUp task description.
+
+**Context-rich guardrail:** Scan `{task_description}` to ensure it contains specific file-path references (e.g., `src/...`, `lib/...`, `tests/...`) and an implementation approach. If the content is vague (no concrete file paths or exit solution), append a `## Implementation Notes` section before the footer with:
+  - **Files to touch** — inferred from the architecture and acceptance criteria.
+  - **Exit solution** — step-by-step implementation plan: what to create, what to update, and how to wire it.
+
+**QA section guardrail:** Scan `{task_description}` for a heading that matches `## QA / Testing Notes` (case-insensitive, allowing minor variations such as `## QA Notes`, `## Testing Notes`, or `## Test Cases`).
+- If a matching heading is found → no action needed; proceed.
+- If the heading is **missing** → generate the `## QA / Testing Notes` section from the story content and append it before the footer line (or at the end of the document if no footer is present). The generated section MUST include:
+  1. **Test Scenarios** — one per acceptance criterion, in BDD Given/When/Then format.
+  2. **Edge Cases & Boundaries** — boundary conditions, invalid inputs, and negative paths.
+  3. **Regression Risks** — adjacent features or integrations that could break.
+  4. **Test Data / Setup** — any special data, accounts, or environment config QA needs.
 
 If `{scope_notes}` is non-empty and not already included by `bmad-create-story`, append a `## Scope Notes` section before the footer line.
 

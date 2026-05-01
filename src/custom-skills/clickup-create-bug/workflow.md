@@ -30,7 +30,7 @@ See: [./steps/step-03-epic-picker.md](./steps/step-03-epic-picker.md)
 
 ## Description Composer
 
-Parses the user's free-form bug report into a bug-shaped description template:
+Parses the user's free-form bug report into a context-rich, dev-agent-ready description template that rivals `bmad-create-story` depth:
 
 - **Summary** — one-line coerced title
 - **Steps to reproduce**
@@ -40,6 +40,17 @@ Parses the user's free-form bug report into a bug-shaped description template:
 - **Suspected area**
 - **Environment**
 - **Related links**
+- **Traced Requirements** — epic/story context and PRD requirements traced from planning artifacts, ensuring the fix aligns with original intent
+- **Code Location** — exact file paths, function names, and line numbers investigated from the codebase
+- **Root Cause** — analysis of the specific logic path or state mismatch causing the failure, cross-referenced with architecture guardrails
+- **Suggested Fix** — minimal code change required, which file(s) to modify, what kind of change, and which architecture patterns MUST be preserved
+- **QA / Testing Notes** — verification steps, edge cases, regression areas, and test environment guidance for the QA team
+
+Before composing the description, the skill performs two enrichment passes:
+1. **Deep artifact analysis (BMAD-style)** — traces the suspected area through epics, PRD, and architecture to extract acceptance criteria, functional requirements, and tech constraints.
+2. **Code investigation** — scans the bug report for stack traces/file references, then searches the suspected area using **GitNexus when available** (knowledge-graph queries for execution flows and symbol context) or falls back to file search/grep when GitNexus is absent. Reads relevant source files to derive precise location data, root cause, and a fix approach.
+
+This ensures the dev agent receives an exit solution grounded in both planning artifacts and live code intelligence.
 
 No `bmad-create-story` delegation — the composer extracts these sections directly from the user's report.
 

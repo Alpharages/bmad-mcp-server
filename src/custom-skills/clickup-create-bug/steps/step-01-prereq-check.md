@@ -88,13 +88,20 @@ Run these two checks in order. If either fails, emit the corresponding error blo
 
      The skill MUST NOT stop.
 
-6. **Confirm and continue.** Report to the user:
+6. **Detect GitNexus availability.** Check whether the project has a GitNexus index by looking for `.gitnexus/meta.json` in the project root (or by testing whether the `gitnexus_query` / `query` tool is available). Set `{gitnexus_available}`:
+   - If found / available → `true`. Emit: `🔍 GitNexus index detected — code investigation will use knowledge-graph queries.`
+   - If not found / unavailable → `false`. Emit: `ℹ️ GitNexus not detected — code investigation will fall back to file search and grep.`
+
+   This is a non-blocking check; the skill proceeds regardless.
+
+7. **Confirm and continue.** Report to the user:
 
    ```
    ✅ Prereq check complete:
    - PRD:          <prd_info.path> [<prd_info.layer>] — <present|missing>
    - Architecture: <arch_info.path> [<arch_info.layer>] — <present|missing>
    - Epics:        <epics_info.path> [<epics_info.layer>] — <found N file(s)|not found>
+   - GitNexus:     <available|not available>
    ```
 
    Then proceed to the next step regardless of which soft-load slots are empty.
