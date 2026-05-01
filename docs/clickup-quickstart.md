@@ -158,6 +158,9 @@ Available keys per skill table (`[clickup_create_epic]` /
 - `pinned_sprint_folder_id` — pin a specific sprint folder ID, story skill
   only (see
   [`two-sprint-folders-in-team-space`](../planning-artifacts/friction-log.md#two-sprint-folders-in-team-space)).
+- `allow_no_epic` — `true` (default) shows the `[0] No epic` picker entry and
+  enables the empty-Backlog Y/n fallback. Set `false` to require an epic on every
+  invocation and restore the original hard-stop when the Backlog list is empty.
 
 All keys are optional and default to unset. Pinning both `pinned_space_id`
 and `pinned_backlog_list_id` produces the full short-circuit (zero ClickUp
@@ -232,10 +235,12 @@ and
 
 ## Invoke clickup-create-story
 
-The `clickup-create-story` skill creates a ClickUp task as a subtask of a chosen
-epic in the active sprint list, with a description composed from the pilot repo's
-`planning-artifacts/PRD.md` + `planning-artifacts/architecture.md` + the epic's
-ClickUp body. See
+The `clickup-create-story` skill creates a ClickUp task in the active sprint list —
+as a subtask of a chosen epic (the default), or as a standalone top-level task when
+no epic parent is needed (ops tasks, research spikes, ad-hoc work) — with a
+description composed from the pilot repo's `planning-artifacts/PRD.md` +
+`planning-artifacts/architecture.md` + the epic's ClickUp body (or PRD +
+architecture only on the no-epic path). See
 [`src/custom-skills/clickup-create-story/SKILL.md`](../src/custom-skills/clickup-create-story/SKILL.md)
 and
 [`workflow.md`](../src/custom-skills/clickup-create-story/workflow.md)
@@ -283,10 +288,17 @@ comment block for the documented-not-fixed explanation.
 The skill walks five steps in this order:
 
 1. `step-01-prereq-check` — cwd assertion, permission gate, PRD / architecture load
-2. `step-02-epic-picker` — space picker → Backlog list → epic selector
+2. `step-02-epic-picker` — space picker → Backlog list → epic selector; when
+   `allow_no_epic` is `true` (the default), a `[0] No epic — create as standalone
+task` entry is prepended to the list
 3. `step-03-sprint-list-picker` — sprint folder → sprint list selector
 4. `step-04-description-composer` — story title, description synthesis, user review
 5. `step-05-create-task` — pre-creation summary, `createTask` call, URL output
+
+Selecting `[0]` routes the skill through the no-epic path: epic context is skipped,
+the pre-creation summary shows _(none — standalone task)_ as the parent-epic line
+for confirmation, and the created task is a top-level entry in the sprint list with
+no parent.
 
 At the end of step 1, you should see the following verbatim message:
 
@@ -303,6 +315,8 @@ for the historical precedent.
 - A new ClickUp subtask under the chosen epic.
 - The task's description composed from PRD + architecture + epic context.
 - The task's URL printed back in the conversation.
+- On the no-epic path: a new top-level ClickUp task in the sprint list, with no
+  parent, and a description composed from PRD + architecture only.
 
 **Safety note:** Post-5-7, the epic-picker filters out subtasks so they do not
 surface as candidate epics in future runs (see
@@ -644,5 +658,6 @@ the ticket was created correctly despite them.
 | ---------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 2026-04-28 | ready-for-dev | Initial quickstart created via story 5-8. Covers post-5-7 skill contract: cwd-assertion, both invocation paths, broadened review-status match set, Template B PR field, PAT-prefix preflight, pinned-ID config knobs. Lands `gh-auth-prerequisite-undocumented` and `multi-repo-cwd-handling-undocumented` friction-log entries. |
 | 2026-05-01 | ready-for-dev | Added `Invoke clickup-create-bug` section (CB trigger, five-step walkthrough, soft-load warning wording). Added Planning-artifacts-missing pitfall entry. Added `[clickup_create_bug]` config keys to pinned-ID reference. |
+| 2026-05-01 | ready-for-dev | Story 8-8: documented the no-epic option in `Invoke clickup-create-story` — updated What-the-skill-does paragraph, step-02 line, added no-epic path note and success bullet, and added `allow_no_epic` config key to `[clickup_create_story]` pinned-ID reference. |
 
 <!-- prettier-ignore-end -->
