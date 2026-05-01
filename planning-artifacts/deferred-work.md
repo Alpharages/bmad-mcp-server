@@ -34,6 +34,10 @@
 - `findBmmSkillsRoot` in `src/core/resource-loader.ts` probes `['src/bmm-skills', 'bmm-skills', 'src/custom-skills', 'custom-skills']` in order and stops at the first hit. If anyone later vendors an upstream skill into `src/bmm-skills/`, the scanner will stop there and silently stop finding `clickup-create-story` / `clickup-dev-implement`. Pre-existing from story 2.7; fix by scanning all matched roots and unioning, or by pinning custom-skills to a non-ambiguous root.
 - `BMAD_GIT_AUTO_UPDATE=true` (default) will silently pull upstream changes to `bmad-agent-dev/customize.toml`. If upstream ever renames the `DS` code (e.g. `DS → DI`), the `_bmad/custom/bmad-agent-dev.toml` override keyed on `DS` would convert from "replace matching entry" into "append new code", shipping both the old and new routing with no test failure. Broader platform concern already flagged in story 3-9 Out of Scope; consider a CI guardrail that pins the upstream customize.toml hash and fails when the upstream DS code drifts.
 
+## Deferred from: code review of 9-6-rework-walkthrough-hardcoded-paths (2026-05-01)
+
+- Step 8 missing gitignore reminder for `.bmadmcp/config.toml` — a new user who seeds ClickUp IDs may unknowingly commit credentials; AC #5 doesn't require this note but a one-liner reminder ("add `.bmadmcp/config.toml` to your `.gitignore`") would reduce accidental secret commits. Address in a future doc pass.
+
 ## Deferred from: code review of 8-8-pilot-quickstart-update (2026-05-01)
 
 - `docs/clickup-quickstart.md:243, :319` "description composed from PRD + architecture only" overstates scope — wording is verbatim from story 8-8 spec AC #4, but per `step-04-description-composer.md` the `epics_content` is still loaded as cross-cutting reference on the no-epic path. If the simplification is wrong, treat as a separate spec/EPIC-9 cleanup.
