@@ -1,6 +1,6 @@
 # Story 9.3: Document Bug-Creation Skill in README
 
-Status: review
+Status: done
 
 Epic: [EPIC-9: README freshness pass](../epics/EPIC-9-readme-freshness.md)
 
@@ -131,6 +131,10 @@ place.
 - [x] **Task 5 — Commit (AC: #11)**
   - [x] Stage `README.md`, story file, `sprint-status.yaml`.
   - [x] Commit with header + body per AC #11.
+
+### Review Findings
+
+- [x] [Review][Patch] `last_updated` YAML value says `ready-for-dev` instead of `review` [`planning-artifacts/sprint-status.yaml:52`] — resolved by overwrite (story 9-4 commit updated the line)
 
 ## Dev Notes
 

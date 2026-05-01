@@ -1,6 +1,6 @@
 # Story 9.4: Add No-Epic Option Note to README
 
-Status: review
+Status: done
 
 Epic: [EPIC-9: README freshness pass](../epics/EPIC-9-readme-freshness.md)
 
