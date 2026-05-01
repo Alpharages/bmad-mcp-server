@@ -168,6 +168,16 @@ Fill in the content one of two ways:
 - **By hand.** Use headings like `## Goals`, `## Non-goals`, `## Requirements`, `## Acceptance criteria`.
 - **Drafted by BMAD.** Ask: _"Have John draft `planning-artifacts/PRD.md` for [feature]. Then have Winston draft `planning-artifacts/architecture.md`."_
 
+> **Note.** If your docs already exist at a different path (e.g. `docs/PRD.md`), configure them in `.bmadmcp/config.toml` instead of moving files:
+>
+> ```toml
+> [docs]
+> prd_path          = "docs/PRD.md"
+> architecture_path = "docs/architecture.md"
+> ```
+>
+> See [Doc-path cascade](#doc-path-cascade-docs-table) for the full `[docs]` table.
+
 **Expected.** Both files exist and contain real content describing your project / feature.
 
 ---
@@ -261,24 +271,34 @@ The skills assume a specific layout. Set this up once per workspace.
 
 ---
 
-### Step 8 — Add the pilot marker to your repo
+### Step 8 — (Optional) Create a project-local config
 
-The skills check this sentinel file at every invocation to confirm they're running in the right repo. Without it, every skill invocation fails at step 1.
+The skills work without any project-local config file — on the first run they auto-discover your ClickUp space and list, then save the IDs back to `.bmadmcp/config.toml` so subsequent runs skip discovery. Create the file now if you want to seed those IDs upfront, or if your planning docs don't live at the default `planning-artifacts/` paths.
 
 **Action.** In your project root:
 
 ```bash
-cat > .bmad-pilot-marker <<'EOF'
-bmad-pilot-marker: 1
-repo: your-org/your-repo
-EOF
-git add .bmad-pilot-marker
-git commit -m "chore: add BMAD pilot marker"
+mkdir -p .bmadmcp
+# Copy the example schema, or create the file from scratch
+# cp .bmadmcp/config.example.toml .bmadmcp/config.toml
 ```
 
-**Expected.** `cat .bmad-pilot-marker` shows the two-line content. The file is committed.
+Then create (or edit) `.bmadmcp/config.toml` with the keys you need — all are optional:
 
-**Fix.** If you forget this and run a skill, you'll see _"❌ cwd assertion failed."_ Create the file and retry.
+```toml
+# Shared ClickUp IDs — skills auto-fill these after the first successful picker run
+[clickup]
+# pinned_space_id        = ""
+# pinned_space_name      = ""
+# pinned_backlog_list_id = ""
+
+# Only needed when planning docs don't live in planning-artifacts/
+# [docs]
+# prd_path          = "..."
+# architecture_path = "..."
+```
+
+**Expected.** Either `.bmadmcp/config.toml` exists with your values, or you skip this step entirely — the first skill invocation auto-discovers and populates it.
 
 ---
 
@@ -312,7 +332,7 @@ Replace `<epic-id>` with the value from Step 9.
 
 **Expected.** A ClickUp URL printed in chat. If you picked an epic in step ②, the new task is a subtask of that epic; if you chose `[0] No epic`, it is created as a standalone top-level task. Either way, the task description references your PRD and architecture.
 
-**Fix.** If the skill stops at step 1 with a permission error, your `CLICKUP_MCP_MODE` isn't `write` — re-check Step 6. If it stops at the cwd assertion, you're not in the pilot repo — check Step 8.
+**Fix.** If the skill stops at step 1 with a permission error, your `CLICKUP_MCP_MODE` isn't `write` — re-check Step 6. If it stops at the cwd assertion, you're not inside the project repo — open your AI client from the project root and try again.
 
 ---
 
@@ -357,7 +377,7 @@ For the comprehensive runbook with every edge case, escape hatch, and historical
 | -------------------------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Client doesn't see the bmad tool                         | Server didn't start                                    | Run the binary directly: `node /path/to/build/index.js`. Watch stderr for the error.                                                                                      |
 | "ClickUp tools disabled — missing required env vars"     | Credentials not reaching the server                    | **stdio:** add to `env:` block in MCP config, not just your shell. **HTTP:** add `X-ClickUp-Api-Key` and `X-ClickUp-Team-Id` to the `headers:` block. Restart the client. |
-| Skill stops at step 1 with "cwd assertion failed"        | Running the skill outside the pilot repo               | `cd` into the pilot repo before invoking, or create `.bmad-pilot-marker` if missing.                                                                                      |
+| Skill stops at step 1 with "cwd assertion failed"        | Running the skill outside the project repo             | `cd` into the project repo before invoking the skill.                                                                                                                      |
 | `createTask` returns `400 ITEM_137`                      | Cross-list layout but "Tasks in Multiple Lists" is OFF | Either turn the ClickApp on, or use same-list layout (epic + story in Backlog).                                                                                           |
 | `gh pr create` fails with org-access error               | Wrong `gh` account active                              | `gh auth status`, then `gh auth switch --user <handle>`.                                                                                                                  |
 | Status didn't transition after implement                 | Sprint list's review-state name isn't in the match set | Rename the status to one of: `in review`, `ready for review`, `code review`, `pending review`, `awaiting review`. Or update manually.                                     |
@@ -674,7 +694,7 @@ composer → duplicate check → `createTask`
 
 ### Project-local config (`.bmadmcp/config.toml`)
 
-All four `clickup-create-*` skills discover the active space and Backlog list by
+All three `clickup-create-*` skills discover the active space and Backlog list by
 calling ClickUp on every invocation — typically `getCurrentSpace` → `pickSpace` →
 `searchSpaces`, then a tree scan. To pin those IDs and skip the round-trips, drop a
 project-local `.bmadmcp/config.toml` at the project root. Skills **auto-save**
@@ -691,7 +711,7 @@ pinned_backlog_list_id = "..."   # auto-saved after first picker run
 # Per-skill overrides (take precedence over [clickup])
 [clickup_create_story]
 pinned_sprint_folder_id = "..."  # bypass sprint-folder disambiguation when >1 sprint folder exists
-allow_no_epic           = true   # set false to always require an epic parent
+# allow_no_epic         = false  # uncomment to always require an epic parent
 
 [clickup_create_bug]
 target_list_id  = "..."  # pin target list; skips list picker
