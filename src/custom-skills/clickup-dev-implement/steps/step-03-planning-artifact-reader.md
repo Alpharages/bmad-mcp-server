@@ -5,6 +5,7 @@ tech_spec_loaded: ''
 project_context_loaded: ''
 task_ac_list: ''
 task_subtasks: ''
+resolve_doc_paths_result: ''
 ---
 
 # Step 3: Planning Artifact Reader & Context Builder
@@ -12,8 +13,8 @@ task_subtasks: ''
 ## RULES
 
 1. **Read-only:** This step uses the IDE's native Read file tool only. No ClickUp API calls are made in this step. No files are written or modified.
-2. **PRD required:** If `planning-artifacts/PRD.md` cannot be read, emit the PRD-not-found error block and **stop** — do not proceed to step 4 (implementation loop).
-3. **Architecture required:** If `planning-artifacts/architecture.md` cannot be read, emit the architecture-not-found error block and **stop** — do not proceed to step 4 (implementation loop).
+2. **PRD required:** If the file at `data.prd.path` (resolved by `resolve-doc-paths`) is missing or cannot be read, emit the PRD-not-found error block and **stop** — do not proceed to step 4 (implementation loop).
+3. **Architecture required:** If the file at `data.architecture.path` (resolved by `resolve-doc-paths`) is missing or cannot be read, emit the architecture-not-found error block and **stop** — do not proceed to step 4 (implementation loop).
 4. **Tech-spec best-effort:** If `planning-artifacts/tech-spec.md` is absent, set `{tech_spec_loaded}` = `'false'` and **continue**.
 5. **project-context best-effort:** If `project-context.md` is absent, set `{project_context_loaded}` = `'false'` and **continue**.
 6. **Contract:** `{prd_loaded}` and `{architecture_loaded}` MUST be `'true'` by the time this step completes.
@@ -22,33 +23,54 @@ task_subtasks: ''
 
 ### Load planning artifacts
 
-1. Read `planning-artifacts/PRD.md`. If it fails, emit the PRD-not-found error block and stop.
+1. **Call `bmad({ operation: 'resolve-doc-paths' })`.** No `projectRoot` argument — the operation defaults to the server's configured project root. Store the full response as `{resolve_doc_paths_result}`. Extract:
+   - `data.prd` → contains `.path` and `.layer`
+   - `data.architecture` → contains `.path` and `.layer`
+   - `data.warnings` → array of warning strings
+
+2. **Emit cascade warnings.** If `data.warnings` is non-empty, emit each warning to the user as a `⚠️`-prefixed line before proceeding.
+
+3. **Check PRD file.** Verify whether `data.prd.path` exists. If it does not exist, emit the following error block and stop:
 
    ```
    ❌ **Planning artifact missing — PRD.md not found**
 
-   The `clickup-dev-implement` skill could not read `planning-artifacts/PRD.md`.
+   The `clickup-dev-implement` skill could not read the PRD at the resolved path.
 
    **Why this is fatal:** The PRD defines product requirements and functional scope. Without it, the Dev agent cannot make scope-aware implementation decisions.
 
-   **What to do:** Ensure `planning-artifacts/PRD.md` exists in the project root, then re-invoke the Dev agent with task `{task_id}`.
+   - PRD: <data.prd.path> [<data.prd.layer>] — **MISSING**
+
+   **How to override doc paths:**
+   1. Per-project (highest priority): add `[docs].prd_path` to `.bmadmcp/config.toml`
+   2. BMAD-config: set `[bmm].planning_artifacts` in `_bmad/config.toml`
+   3. Default (no config needed): place file at `planning-artifacts/PRD.md`
+
+   **What to do:** Add the missing file at the resolved path, adjust your config to point to an existing file, then re-invoke the Dev agent with task `{task_id}`.
    ```
 
-2. Set `{prd_loaded}` = `'true'`. PRD content is now in conversation context.
+   If the file exists, set `{prd_loaded}` = `'true'`. PRD content is now in conversation context.
 
-3. Read `planning-artifacts/architecture.md`. If it fails, emit the architecture-not-found error block and stop.
+4. **Check architecture file.** Verify whether `data.architecture.path` exists. If it does not exist, emit the following error block and stop:
 
    ```
    ❌ **Planning artifact missing — architecture.md not found**
 
-   The `clickup-dev-implement` skill could not read `planning-artifacts/architecture.md`.
+   The `clickup-dev-implement` skill could not read the architecture document at the resolved path.
 
    **Why this is fatal:** The architecture document defines the technical stack, patterns, and constraints the Dev agent must follow.
 
-   **What to do:** Ensure `planning-artifacts/architecture.md` exists in the project root, then re-invoke the Dev agent with task `{task_id}`.
+   - Architecture: <data.architecture.path> [<data.architecture.layer>] — **MISSING**
+
+   **How to override doc paths:**
+   1. Per-project (highest priority): add `[docs].architecture_path` to `.bmadmcp/config.toml`
+   2. BMAD-config: set `[bmm].planning_artifacts` in `_bmad/config.toml`
+   3. Default (no config needed): place file at `planning-artifacts/architecture.md`
+
+   **What to do:** Add the missing file at the resolved path, adjust your config to point to an existing file, then re-invoke the Dev agent with task `{task_id}`.
    ```
 
-4. Set `{architecture_loaded}` = `'true'`. Architecture content is now in conversation context.
+   If the file exists, set `{architecture_loaded}` = `'true'`. Architecture content is now in conversation context.
 
 5. Attempt to read `planning-artifacts/tech-spec.md`. If found, set `{tech_spec_loaded}` = `'true'`; otherwise set `'false'` and emit:
 
@@ -77,8 +99,8 @@ The ClickUp task description from step 2 is already in conversation context. Ext
     ✅ **Context loaded**
 
     **Planning artifacts:**
-    - PRD: `planning-artifacts/PRD.md` — loaded
-    - Architecture: `planning-artifacts/architecture.md` — loaded
+    - PRD: <data.prd.path> [<data.prd.layer>] — loaded
+    - Architecture: <data.architecture.path> [<data.architecture.layer>] — loaded
     - Tech spec: `planning-artifacts/tech-spec.md` — {loaded | not found, skipped}
     - Project context: `project-context.md` — {loaded | not found, skipped}
 

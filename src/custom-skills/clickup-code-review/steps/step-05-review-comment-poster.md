@@ -44,7 +44,7 @@ comment_id: ''
 
 ---
 
-*Review performed by `clickup-code-review` via BMAD MCP Server.*
+_Review performed by `clickup-code-review` via BMAD MCP Server._
 ```
 
 > Use `✅ APPROVED` or `❌ CHANGES REQUESTED` based on `{review_verdict}`. All other fields substituted verbatim.

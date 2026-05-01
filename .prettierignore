@@ -8,3 +8,6 @@ test-results/
 
 # Vendored third-party sources (do not modify)
 src/tools/clickup/
+
+# LLM instruction step files — formatting must be preserved for test assertions
+src/custom-skills/clickup-create-story/steps/

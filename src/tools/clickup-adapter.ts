@@ -1,6 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument */
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { validateClickUpEnv, type ClickUpMode, type ClickUpSessionCredentials } from '../utils/clickup-env.js';
+import {
+  validateClickUpEnv,
+  type ClickUpMode,
+  type ClickUpSessionCredentials,
+} from '../utils/clickup-env.js';
 import type { ClickUpSessionState } from './clickup-session.js';
 import { registerSpacePickerTools } from './clickup-space-picker.js';
 import { logger } from '../utils/logger.js';

@@ -5,7 +5,11 @@ import { fileURLToPath } from 'node:url';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js';
 import { BMADServerLiteMultiToolGit } from './server.js';
-import { validateClickUpEnv, type ClickUpMode, type ClickUpSessionCredentials } from './utils/clickup-env.js';
+import {
+  validateClickUpEnv,
+  type ClickUpMode,
+  type ClickUpSessionCredentials,
+} from './utils/clickup-env.js';
 
 interface Session {
   transport: StreamableHTTPServerTransport;
@@ -20,7 +24,7 @@ let runWithClickUpCredentials: RunWithCredsFn | null = null;
 async function ensureRunWithCredentials(): Promise<RunWithCredsFn | null> {
   if (runWithClickUpCredentials !== null) return runWithClickUpCredentials;
   try {
-    const mod = await import('./tools/clickup/src/shared/config.js') as {
+    const mod = (await import('./tools/clickup/src/shared/config.js')) as {
       runWithClickUpCredentials?: RunWithCredsFn;
     };
     runWithClickUpCredentials = mod.runWithClickUpCredentials ?? null;
@@ -30,11 +34,19 @@ async function ensureRunWithCredentials(): Promise<RunWithCredsFn | null> {
   return runWithClickUpCredentials;
 }
 
-function extractClickUpCredentials(req: IncomingMessage): ClickUpSessionCredentials | undefined {
-  const apiKey = (req.headers['x-clickup-api-key'] as string | undefined)?.trim();
-  const teamId = (req.headers['x-clickup-team-id'] as string | undefined)?.trim();
+function extractClickUpCredentials(
+  req: IncomingMessage,
+): ClickUpSessionCredentials | undefined {
+  const apiKey = (
+    req.headers['x-clickup-api-key'] as string | undefined
+  )?.trim();
+  const teamId = (
+    req.headers['x-clickup-team-id'] as string | undefined
+  )?.trim();
   if (!apiKey || !teamId) return undefined;
-  const modeRaw = (req.headers['x-clickup-mode'] as string | undefined)?.trim().toLowerCase();
+  const modeRaw = (req.headers['x-clickup-mode'] as string | undefined)
+    ?.trim()
+    .toLowerCase();
   const mode: ClickUpMode =
     modeRaw === 'read-minimal' || modeRaw === 'read' || modeRaw === 'write'
       ? modeRaw
@@ -99,7 +111,9 @@ async function handleMcp(
       const session = sessions.get(sessionId)!;
       const run = session.credentials ? await ensureRunWithCredentials() : null;
       if (run && session.credentials) {
-        await run(session.credentials, () => session.transport.handleRequest(req, res, body));
+        await run(session.credentials, () =>
+          session.transport.handleRequest(req, res, body),
+        );
       } else {
         await session.transport.handleRequest(req, res, body);
       }
@@ -150,7 +164,9 @@ async function handleMcp(
     const session = sessions.get(sessionId)!;
     const run = session.credentials ? await ensureRunWithCredentials() : null;
     if (run && session.credentials) {
-      await run(session.credentials, () => session.transport.handleRequest(req, res));
+      await run(session.credentials, () =>
+        session.transport.handleRequest(req, res),
+      );
     } else {
       await session.transport.handleRequest(req, res);
     }

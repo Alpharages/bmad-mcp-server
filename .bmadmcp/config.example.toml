@@ -1,0 +1,73 @@
+# bmad-mcp-server project-local config.
+#
+# Copy this file to `.bmadmcp/config.toml` (same directory) and fill in the
+# values that apply to your project. The actual `config.toml` is gitignored;
+# `config.example.toml` (this file) is committed as the schema reference.
+#
+# Path: `{project-root}/.bmadmcp/config.toml`
+# Read by: clickup-create-epic, clickup-create-story, clickup-create-bug,
+#          clickup-dev-implement, clickup-code-review custom skills.
+#
+# All keys are optional. Unset keys preserve the original picker behaviour
+# (interactive space + list + folder selection on every invocation).
+
+# ---------------------------------------------------------------------------
+# clickup — shared defaults (consumed by all clickup-create-* skills)
+# ---------------------------------------------------------------------------
+# Pinning both `pinned_space_id` and `pinned_backlog_list_id` makes both
+# create skills skip space/backlog discovery entirely on every invocation.
+# Skills auto-save these values after the first successful picker run.
+# Per-skill sections below can override individual keys.
+
+[clickup]
+# pinned_space_id        = ""    # ClickUp space ID (digits only)
+# pinned_space_name      = ""    # Display name; falls back to "(pinned)" if unset
+# pinned_backlog_list_id = ""    # ClickUp list ID for the Backlog list
+
+# ---------------------------------------------------------------------------
+# clickup-create-epic — per-skill overrides (take precedence over [clickup])
+# ---------------------------------------------------------------------------
+
+[clickup_create_epic]
+# (uncomment and set keys here to override [clickup] values for this skill only)
+
+# ---------------------------------------------------------------------------
+# clickup-create-story — per-skill overrides (take precedence over [clickup])
+# ---------------------------------------------------------------------------
+
+[clickup_create_story]
+# pinned_sprint_folder_id = ""   # Bypass sprint-folder disambiguation when >1 sprint folder exists
+# allow_no_epic           = true   # Set false to hide the "no epic" option and always require an epic parent
+
+# ---------------------------------------------------------------------------
+# clickup-create-bug — per-skill config
+# ---------------------------------------------------------------------------
+
+[clickup_create_bug]
+# target_list_id   = ""    # Pin the target list for bug tickets (skips list picker)
+# default_priority = ""    # Override severity-inferred priority (1=urgent,2=high,3=normal,4=low)
+# default_tags     = []    # Extra tags added beyond the automatic "bug" tag
+# pinned_epic_id   = ""    # Pin the epic parent (skips epic picker)
+# pinned_epic_name = ""    # Display name for the pinned epic
+
+# ---------------------------------------------------------------------------
+# Doc-path cascade
+# ---------------------------------------------------------------------------
+# `clickup-create-story`, `clickup-dev-implement`, and `clickup-code-review`
+# call `resolve-doc-paths` at startup to locate the PRD, architecture document,
+# and epics directory. By default they look under `planning-artifacts/`. If your
+# project stores these files elsewhere, uncomment the keys below and set the
+# correct paths (relative to project root or absolute). Resolution is per-key:
+# overriding only one key leaves the others to be resolved by the BMAD config
+# chain or the default layer.
+
+[docs]
+# prd_path          = ""    # Path to PRD (default: planning-artifacts/PRD.md)
+# architecture_path = ""    # Path to architecture doc (default: planning-artifacts/architecture.md)
+# epics_path        = ""    # Path to epics file or directory; trailing / marks a directory (default: planning-artifacts/epics/)
+# planning_dir      = ""    # Base directory for default filenames (default: planning-artifacts/)
+
+# Example for a project with docs in docs/ rather than planning-artifacts/:
+# prd_path          = "docs/specs/PRD.md"
+# architecture_path = "docs/architecture/overview.md"
+# epics_path        = "docs/epics/"

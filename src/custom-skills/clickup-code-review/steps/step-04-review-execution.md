@@ -40,6 +40,7 @@ Review mode: full
 ```
 
 `bmad-code-review` will:
+
 - Run its parallel adversarial review layers (Blind Hunter, Edge Case Hunter, Acceptance Auditor)
 - Triage findings into blocking and non-blocking categories
 - Present a structured review report

@@ -46,7 +46,7 @@ The BMAD MCP Server is a **Node.js TypeScript library** that implements the Mode
 ┌──────────────────────▼──────────────────────────────────────┐
 │            Engine Layer (bmad-engine.ts)                     │
 │  - BMADEngine (transport-agnostic business logic)           │
-│  - Operations: list, read, execute                          │
+│  - Operations: list, read, execute, search, resolve-doc-paths │
 │  - Agent/workflow execution orchestration                   │
 └──────────────────────┬──────────────────────────────────────┘
                        │
@@ -65,7 +65,7 @@ The BMAD MCP Server is a **Node.js TypeScript library** that implements the Mode
 | ------------- | -------------------------- | ------------------------------------------------------------ |
 | **Transport** | MCP SDK                    | JSON-RPC protocol, stdio communication                       |
 | **Server**    | BMADServerLiteMultiToolGit | MCP request routing, tool/resource handlers                  |
-| **Tool**      | bmad-unified               | Unified tool with 4 operations (list, read, execute, search) |
+| **Tool**      | bmad-unified               | Unified tool with 5 operations (list, read, execute, search, resolve-doc-paths) |
 | **Engine**    | BMADEngine                 | Business logic, operation execution, validation              |
 | **Loader**    | ResourceLoaderGit          | Multi-source content loading, caching, Git support           |
 
@@ -162,6 +162,7 @@ getResource(relativePath: string): ResourceFile | undefined
 - `read` - Inspect definitions (read-only, no execution)
 - `execute` - Run agents/workflows with context (performs actions)
 - `search` - Find by name/description (optional, config-toggleable)
+- `resolve-doc-paths` - Resolve PRD/architecture/epics doc paths via the doc-path cascade
 
 **Operation Handlers:**
 
@@ -493,7 +494,7 @@ Each layer has single responsibility:
 ## References
 
 - **MCP Specification:** https://modelcontextprotocol.io/
-- **BMAD Method:** https://github.com/bmad-code-org/BMAD-METHOD
+- **BMAD Method:** https://github.com/Alpharages/BMAD-METHOD
 - **TypeScript:** https://www.typescriptlang.org/
 - **Vitest:** https://vitest.dev/
 

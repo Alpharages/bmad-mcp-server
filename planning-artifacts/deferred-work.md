@@ -17,7 +17,33 @@
 - Rule (f) assumes all assumption posts precede the M2 summary, but "WHEN TO POST" permits any point between step 3 and step 5 — including post-M2 / pre-step-5. Such late-stage assumptions will post to ClickUp but will not appear in any summary. Either tighten "WHEN TO POST" to pre-M2, or add a "late-assumption trailer" to step 5's status-transition comment.
 - Frontmatter default `{assumption_count}: ''` collides with the workflow.md-documented state "write mode was active but no assumption was successfully posted." A reviewer cannot distinguish "step 6 never invoked" from "step 6 invoked and all posts failed." No current downstream step reads `{assumption_count}`, so this is latent; resolve when the M2 summary starts consuming the counter by introducing a dedicated sentinel (e.g., `'-'` for never-invoked, `''` for invoked-no-success).
 
+## Deferred from: code review of 8-7-skill-docs-no-epic (2026-05-01)
+
+- `workflow.md:19` Epic picker prose: "Setting `allow_no_epic = false` ... restores the original hard-stop **when the Backlog list is empty**" — qualifier reads as if the hard-stop is conditional on empty Backlog. Behaviour is correct (the `[0]` entry is hidden in all cases; the hard-stop only manifests when Backlog is empty), but the phrasing invites misreading. Polish in a follow-up doc pass.
+- `workflow.md:19` overview elides the `allow_no_epic` boolean-coercion warning emitted by `step-02-epic-picker.md:35-39` (string/int values warn and default to `true`). Acceptable for an overview file, but a one-line note would help configurators avoid quoting the value in `.bmadmcp/config.toml`.
+- No-epic + pinned-config interaction is undocumented. When both `pinned_space_id` and `pinned_backlog_list_id` are set, the picker is skipped (per `step-02-epic-picker.md:42`), but the empty-Backlog Y/n fallback and `[0]` entry still apply. Add an explanatory note in step-02 (not workflow.md) the next time pinning behaviour is touched.
+
+## Deferred from: code review of 8-3-create-task-omit-parent (2026-05-01)
+
+- Condition gap in `{epic_id}` conditionals (instructions 2 and 8): whitespace-only or null/undefined `{epic_id}` falls into the epic branch (truthy) or neither branch, risking a corrupt API call or missing output. Pre-existing design limitation of the no-epic feature from story 8-1; apply a project-wide guard when formalising the variable-type contract for step frontmatter.
+- `{epic_name}` not validated when `{epic_id}` is non-empty: instruction 1 intentionally exempts `{epic_name}` from required-variable check (story 8-1 design), but a blank `{epic_name}` with a set `{epic_id}` emits `**<nothing>** (\`abc123\`)` in the pre-creation and success summaries with no warning. Address when adding per-variable format validation to the skill.
+- `{created_task_url}` duplicated in the success block (instruction 8): both the `- URL:` line and the "Open the task in ClickUp:" line reference the same variable. Each conditional branch must be updated twice for any URL-line change. Pre-existing design; consider consolidating in a future step-05 refactor.
+
 ## Deferred from: code review of 3-9-dev-config-toml-wiring (2026-04-23)
 
 - `findBmmSkillsRoot` in `src/core/resource-loader.ts` probes `['src/bmm-skills', 'bmm-skills', 'src/custom-skills', 'custom-skills']` in order and stops at the first hit. If anyone later vendors an upstream skill into `src/bmm-skills/`, the scanner will stop there and silently stop finding `clickup-create-story` / `clickup-dev-implement`. Pre-existing from story 2.7; fix by scanning all matched roots and unioning, or by pinning custom-skills to a non-ambiguous root.
 - `BMAD_GIT_AUTO_UPDATE=true` (default) will silently pull upstream changes to `bmad-agent-dev/customize.toml`. If upstream ever renames the `DS` code (e.g. `DS → DI`), the `_bmad/custom/bmad-agent-dev.toml` override keyed on `DS` would convert from "replace matching entry" into "append new code", shipping both the old and new routing with no test failure. Broader platform concern already flagged in story 3-9 Out of Scope; consider a CI guardrail that pins the upstream customize.toml hash and fails when the upstream DS code drifts.
+
+## Deferred from: code review of 9-6-rework-walkthrough-hardcoded-paths (2026-05-01)
+
+- Step 8 missing gitignore reminder for `.bmadmcp/config.toml` — a new user who seeds ClickUp IDs may unknowingly commit credentials; AC #5 doesn't require this note but a one-liner reminder ("add `.bmadmcp/config.toml` to your `.gitignore`") would reduce accidental secret commits. Address in a future doc pass.
+
+## Deferred from: code review of 8-8-pilot-quickstart-update (2026-05-01)
+
+- `docs/clickup-quickstart.md:243, :319` "description composed from PRD + architecture only" overstates scope — wording is verbatim from story 8-8 spec AC #4, but per `step-04-description-composer.md` the `epics_content` is still loaded as cross-cutting reference on the no-epic path. If the simplification is wrong, treat as a separate spec/EPIC-9 cleanup.
+- `docs/clickup-quickstart.md:298` "epic context is skipped" oversimplifies vs. step-04 branch 3b — wording verbatim from story 8-8 spec dev notes. Step-04 branch 3b sentinelizes epic context (`Epic: (none — standalone task)`) rather than skipping the description composer entirely. Polish in a doc consistency pass.
+- `docs/clickup-quickstart.md` Invoke clickup-create-story section never mentions the empty-Backlog Y/n fallback — readers learn about it only from the `allow_no_epic` config bullet. Story 8-8 explicitly limits scope to AC #1–#5 touch-points; candidate for EPIC-9 README freshness pass.
+- `docs/clickup-quickstart.md:299` `_(none — standalone task)_` (underscore italic) does not match step-05 emission `*(none — standalone task)*` (asterisk italic). Renders identically; affects only operators who grep transcripts for the literal underscore form. Wording verbatim from story spec.
+- `docs/clickup-quickstart.md:161 vs :292, :298` picker label inconsistency — config-knob short form `[0] No epic` (verbatim from AC #5) versus full label `[0] No epic — create as standalone task` in step-02 line and no-epic path note (matches step files). Consolidate in a future doc consistency pass.
+- `docs/clickup-quickstart.md:162` "Set `false`" missing the verb "to" — minor grammar nit; wording verbatim from story 8-8 spec AC #5.
+- Commit `f75c45b` `Co-Authored-By: Claude Sonnet 4.6` mismatches story Dev Agent Record `claude-opus-4-7`. Attribution discrepancy only; no code/doc impact.

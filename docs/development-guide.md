@@ -12,7 +12,7 @@ Complete development workflow for the BMAD MCP Server - from setup through testi
 **Tech Stack:**
 
 - **Language:** TypeScript 5.7.2 (strict mode, ES2022)
-- **Runtime:** Node.js 18+
+- **Runtime:** Node.js 22.14.0 (pinned in `.nvmrc`)
 - **Protocol:** MCP SDK 1.0.4
 - **Testing:** Vitest 4.0.3
 - **Linting:** ESLint 9.17.0 + Prettier 3.4.2
@@ -25,7 +25,7 @@ Complete development workflow for the BMAD MCP Server - from setup through testi
 
 **Required:**
 
-- Node.js 18+ (`node --version`)
+- Node.js 22.14.0 (`node --version` — see `.nvmrc`)
 - npm 8+ (`npm --version`)
 - Git
 
@@ -38,7 +38,7 @@ Complete development workflow for the BMAD MCP Server - from setup through testi
 
 ```bash
 # Clone repository
-git clone https://github.com/mkellerman/bmad-mcp-server.git
+git clone https://github.com/Alpharages/bmad-mcp-server.git
 cd bmad-mcp-server
 
 # Install dependencies
@@ -472,9 +472,9 @@ Create `.vscode/launch.json`:
 
 ```typescript
 // Enable debug logging
-const DEBUG = process.env.DEBUG === 'true';
+const BMAD_DEBUG = process.env.BMAD_DEBUG === '1' || process.env.BMAD_DEBUG === 'true';
 
-if (DEBUG) {
+if (BMAD_DEBUG) {
   console.error('[DEBUG] Engine initialized');
 }
 ```
@@ -636,11 +636,18 @@ npm install bmad-mcp-server@alpha
 
 ## Environment Variables
 
-| Variable    | Purpose               | Default           |
-| ----------- | --------------------- | ----------------- |
-| `BMAD_ROOT` | Override project root | Current directory |
-| `DEBUG`     | Enable debug logging  | `false`           |
-| `NODE_ENV`  | Environment mode      | `development`     |
+| Variable | Purpose | Default |
+|---|---|---|
+| `BMAD_ROOT` | Override BMAD installation root | Auto-discovered |
+| `BMAD_DEBUG` | Enable verbose debug logging (`1` or `true`) | `false` |
+| `NODE_ENV` | Environment (`test`, `development`, `production`) | `development` |
+| `BMAD_GIT_AUTO_UPDATE` | Auto-update Git cache | `true` |
+| `BMAD_REQUIRE_CLICKUP` | Hard-fail at boot if ClickUp vars missing | unset |
+| `CLICKUP_API_KEY` | Per-user ClickUp personal token | unset |
+| `CLICKUP_TEAM_ID` | Workspace ID (7–10 digits) | unset |
+| `CLICKUP_MCP_MODE` | Tool surface: `read-minimal`, `read`, `write` | `write` |
+| `PORT` | HTTP port for `src/http-server.ts` | `3000` |
+| `BMAD_API_KEY` | API key for HTTP-transport authentication | unset |
 
 **Usage:**
 
@@ -649,7 +656,7 @@ npm install bmad-mcp-server@alpha
 BMAD_ROOT=/custom/path npm run dev
 
 # Enable debug logging
-DEBUG=true npm run dev
+BMAD_DEBUG=1 npm run dev
 ```
 
 ---
@@ -692,13 +699,13 @@ node --inspect build/index.js
 - [MCP Specification](https://modelcontextprotocol.io/)
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/)
 - [Vitest Documentation](https://vitest.dev/)
-- [BMAD Method](https://github.com/bmad-code-org/BMAD-METHOD)
+- [BMAD Method](https://github.com/Alpharages/BMAD-METHOD)
 
 ### Getting Help
 
-- **Issues:** https://github.com/mkellerman/bmad-mcp-server/issues
+- **Issues:** https://github.com/Alpharages/bmad-mcp-server/issues
 - **Discussions:** GitHub Discussions
-- **BMAD Method:** https://github.com/bmad-code-org/BMAD-METHOD
+- **BMAD Method:** https://github.com/Alpharages/BMAD-METHOD
 
 ### Test Structure
 
@@ -875,7 +882,7 @@ npm publish
 | `npm run lint`         | Check code style and errors | Before commit            |
 | `npm run lint:fix`     | Auto-fix linting issues     | After seeing lint errors |
 | `npm run format`       | Format code with Prettier   | Before commit            |
-| `npm run guard:src-js` | Ensure no JS in src/        | Pre-commit hook          |
+
 
 ### Testing
 
@@ -891,18 +898,14 @@ npm publish
 
 ### BMAD Integration
 
-| Command               | Description                  | When to Use              |
-| --------------------- | ---------------------------- | ------------------------ |
-| `npm run bmad`        | Execute BMAD commands        | Testing BMAD integration |
-| `npm run cli`         | Interactive BMAD CLI         | Exploring BMAD features  |
-| `npm run lite:list`   | List available MCP tools     | Verifying tool discovery |
-| `npm run doctor:show` | Show BMAD system diagnostics | Troubleshooting          |
+| Command | Description | When to Use |
+| ------- | ----------- | ----------- |
+| `npm run cli` | Interactive BMAD CLI | Exploring BMAD features |
 
 ### Maintenance
 
 | Command               | Description               | When to Use       |
 | --------------------- | ------------------------- | ----------------- |
-| `npm run test:report` | Generate HTML test report | After test runs   |
 | `npm run precommit`   | Run all pre-commit checks | Manual pre-commit |
 | `npm run prepare`     | Post-install hook         | After npm install |
 
@@ -939,10 +942,7 @@ npm run test:ui
 
 ```bash
 # Enable debug logging
-DEBUG=1 npm run dev
-
-# Check BMAD paths
-npm run doctor:show -- --full
+BMAD_DEBUG=1 npm run dev
 ```
 
 ### Development Tools
@@ -1092,19 +1092,19 @@ npm audit --audit-level high
 - [README.md](../README.md) - Project overview
 - [API Contracts](api-contracts.md) - MCP tools and internal APIs
 - [Architecture](architecture.md) - System design and components
-- [Source Tree Analysis](source-tree-analysis.md) - File and directory purposes
+
 
 ### External Links
 
-- [BMAD Method](https://github.com/bmad-code-org/BMAD-METHOD) - Original methodology
+- [BMAD Method](https://github.com/Alpharages/BMAD-METHOD) - Original methodology
 - [MCP Specification](https://modelcontextprotocol.io/specification) - Protocol documentation
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/) - Language reference
 - [Vitest Documentation](https://vitest.dev/) - Testing framework
 
 ### Community
 
-- **Issues:** [GitHub Issues](https://github.com/mkellerman/bmad-mcp-server/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/mkellerman/bmad-mcp-server/discussions)
+- **Issues:** [GitHub Issues](https://github.com/Alpharages/bmad-mcp-server/issues)
+- **Discussions:** [GitHub Discussions](https://github.com/Alpharages/bmad-mcp-server/discussions)
 - **Contributing:** See [CONTRIBUTING.md](../CONTRIBUTING.md) (if exists)
 
 ---

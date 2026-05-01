@@ -25,7 +25,7 @@ created_task_url: ''
 
 ## INSTRUCTIONS
 
-1. **Verify all required context variables are set.** Check that `{sprint_list_id}`, `{sprint_list_name}`, `{epic_id}`, `{epic_name}`, `{story_title}`, and `{task_description}` are all non-empty. If any are missing, emit the following verbatim (replacing `{MISSING or present}` with the actual runtime status of each variable) and stop:
+1. **Verify all required context variables are set.** Check that `{sprint_list_id}`, `{sprint_list_name}`, `{story_title}`, and `{task_description}` are all non-empty. (`{epic_id}` and `{epic_name}` may be intentionally empty on the no-epic path.) If any of the four required variables are missing, emit the following verbatim (replacing `{MISSING or present}` with the actual runtime status of each variable) and stop:
 
    > ❌ **Task creation failed — missing upstream context**
    >
@@ -33,23 +33,31 @@ created_task_url: ''
    >
    > - `{sprint_list_id}` — {MISSING or present} (set by step 3: sprint-list picker)
    > - `{sprint_list_name}` — {MISSING or present} (set by step 3: sprint-list picker)
-   > - `{epic_id}` — {MISSING or present} (set by step 2: epic picker)
-   > - `{epic_name}` — {MISSING or present} (set by step 2: epic picker)
    > - `{story_title}` — {MISSING or present} (set by step 4: description composer)
    > - `{task_description}` — {MISSING or present} (set by step 4: description composer)
    >
-   > **Why:** All six variables are required parameters for `createTask`. Without them, the task cannot be created or will be created with incomplete data.
+   > **Why:** All four variables are required parameters for `createTask`. Without them, the task cannot be created or will be created with incomplete data.
    >
    > **What to do:** Re-run from step 1 to ensure all prerequisite steps have completed successfully, then return to this step.
 
-2. **Present the pre-creation summary.** Emit the following verbatim:
+2. **Present the pre-creation summary.**
+   - When `{epic_id}` is non-empty, emit the following verbatim:
 
-   > 📋 **Task creation summary**
-   >
-   > - Title: **{story_title}**
-   > - List: **{sprint_list_name}** (`{sprint_list_id}`)
-   > - Parent epic: **{epic_name}** (`{epic_id}`)
-   > - Description: composed ✓
+     > 📋 **Task creation summary**
+     >
+     > - Title: **{story_title}**
+     > - List: **{sprint_list_name}** (`{sprint_list_id}`)
+     > - Parent epic: **{epic_name}** (`{epic_id}`)
+     > - Description: composed ✓
+
+   - When `{epic_id}` is `''`, emit the following verbatim:
+
+     > 📋 **Task creation summary**
+     >
+     > - Title: **{story_title}**
+     > - List: **{sprint_list_name}** (`{sprint_list_id}`)
+     > - Parent epic: *(none — standalone task)*
+     > - Description: composed ✓
 
 3. **Check for duplicate tasks.** Call `searchTasks` with `terms: ["{story_title}"]` and `list_ids: ["{sprint_list_id}"]`. Scan the returned tasks for a name that matches `{story_title}` case-insensitively.
    - If `searchTasks` returns `No tasks available or index could not be built.` or no matching task is found, proceed to step 4.
@@ -72,7 +80,7 @@ created_task_url: ''
    - `list_id: "{sprint_list_id}"`
    - `name: "{story_title}"`
    - `description: "{task_description}"`
-   - `parent_task_id: "{epic_id}"`
+   - `parent_task_id: "{epic_id}"` — include ONLY if `{epic_id}` is non-empty; omit the parameter entirely when `{epic_id}` is `''`
 
    Do NOT pass `status`, `priority`, `assignees`, `due_date`, `start_date`, `time_estimate`, or `tags` — let ClickUp apply list defaults so the team lead can configure them in the UI after creation.
 
@@ -91,17 +99,30 @@ created_task_url: ''
 
 7. **Store the created task identifiers.** Set `{created_task_id}` and `{created_task_url}` from the parsed values.
 
-8. **Confirm success.** Emit the following verbatim:
+8. **Confirm success.**
+   - When `{epic_id}` is non-empty, emit the following verbatim:
 
-   > ✅ **ClickUp story created successfully!**
-   >
-   > - Task: **{story_title}**
-   > - Task ID: `{created_task_id}`
-   > - URL: {created_task_url}
-   > - Parent epic: **{epic_name}** (`{epic_id}`)
-   > - Sprint list: **{sprint_list_name}**
-   >
-   > Open the task in ClickUp: {created_task_url}
+     > ✅ **ClickUp story created successfully!**
+     >
+     > - Task: **{story_title}**
+     > - Task ID: `{created_task_id}`
+     > - URL: {created_task_url}
+     > - Parent epic: **{epic_name}** (`{epic_id}`)
+     > - Sprint list: **{sprint_list_name}**
+     >
+     > Open the task in ClickUp: {created_task_url}
+
+   - When `{epic_id}` is `''`, emit the following verbatim:
+
+     > ✅ **ClickUp story created successfully!**
+     >
+     > - Task: **{story_title}**
+     > - Task ID: `{created_task_id}`
+     > - URL: {created_task_url}
+     > - Parent epic: *(none — standalone task)*
+     > - Sprint list: **{sprint_list_name}**
+     >
+     > Open the task in ClickUp: {created_task_url}
 
 ## NEXT
 

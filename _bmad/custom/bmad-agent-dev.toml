@@ -23,18 +23,13 @@ code = "DS"
 description = "Implement a ClickUp task end-to-end — fetch task + parent-epic context, read planning artifacts, implement code, post progress comments, transition status"
 skill = "clickup-dev-implement"
 
-# Per-skill configuration knobs (story 5-7).
-# Both keys are optional; leave unset to preserve the original picker
-# behaviour (multi-list / multi-folder disambiguation prompts).
+[[agent.menu]]
+code = "CB"
+description = "Create a ClickUp bug ticket from a free-form bug report"
+skill = "clickup-create-bug"
 
-[clickup_create_story]
-# Pin a specific Backlog list ID to bypass step-02-epic-picker's multi-list
-# disambiguation when more than one list named "Backlog" exists in the chosen
-# space (two-backlog-lists-in-team-space, story 5-7). Default: unset.
-# pinned_backlog_list_id = ""
-
-# Pin a specific Sprint folder ID to bypass step-03-sprint-list-picker's
-# multi-folder disambiguation when more than one folder containing "sprint"
-# exists in the chosen space (two-sprint-folders-in-team-space, story 5-7).
-# Default: unset.
-# pinned_sprint_folder_id = ""
+# Per-skill configuration (pinned space / list / folder IDs) lives in
+# `.bmadmcp/config.toml` at the project root, not here. That file is
+# project-agnostic, gitignored at the project level, and intended for
+# additional MCP-server configs in the future.
+# See: .bmadmcp/config.example.toml in this repo for the schema.

@@ -23,6 +23,9 @@ import {
   getAgentExecutionPrompt,
   getWorkflowExecutionPrompt,
 } from '../config.js';
+import { resolveDocPaths } from '../utils/doc-path-resolver.js';
+import type { ResolvedDocPaths } from '../utils/doc-path-resolver.js';
+import { logger } from '../utils/logger.js';
 
 // ============================================================================
 // Core Types (Transport-Agnostic)
@@ -614,6 +617,26 @@ export class BMADEngine {
         text: this.formatWorkflowNotFound(params.workflow),
       };
     }
+  }
+
+  /**
+   * Get the absolute project root the engine is configured to use.
+   * Delegates to the loader's accessor.
+   */
+  public getProjectRoot(): string {
+    return this.loader.getProjectRoot();
+  }
+
+  /**
+   * Resolve PRD/architecture/epics doc paths via the EPIC-6 cascade.
+   * Async wrapper around the sync resolver; logs warnings as a side effect.
+   */
+  public async resolveDocPaths(projectRoot: string): Promise<ResolvedDocPaths> {
+    const result = await Promise.resolve(resolveDocPaths(projectRoot));
+    for (const warning of result.warnings) {
+      logger.warn(warning);
+    }
+    return result;
   }
 
   // ============================================================================

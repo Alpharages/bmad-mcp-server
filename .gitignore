@@ -99,3 +99,7 @@ bin/graph
 
 # _bmad personal overrides (team overrides in _bmad/custom/*.toml are committed)
 _bmad/custom/*.user.toml
+
+# bmad-mcp-server project-local config (config.example.toml is committed)
+.bmadmcp/config.toml
+.gitnexus
