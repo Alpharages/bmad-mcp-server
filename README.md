@@ -371,19 +371,21 @@ For deeper diagnosis, set `BMAD_DEBUG=1` in your env block — verbose logs go t
 
 ### Unified `bmad` tool
 
-A single MCP tool with four operations replaces what would otherwise be dozens of per-agent tools:
+A single MCP tool with five operations replaces what would otherwise be dozens of per-agent tools:
 
-| Operation | Purpose                                |
-| --------- | -------------------------------------- |
-| `list`    | Enumerate available agents / workflows |
-| `read`    | Inspect an agent or workflow           |
-| `execute` | Run an agent or workflow with context  |
-| `search`  | Search BMAD content                    |
+| Operation           | Purpose                                                            |
+| ------------------- | ------------------------------------------------------------------ |
+| `list`              | Enumerate available agents / workflows                             |
+| `read`              | Inspect an agent or workflow                                       |
+| `execute`           | Run an agent or workflow with context                              |
+| `search`            | Search BMAD content                                                |
+| `resolve-doc-paths` | Resolve PRD / architecture / epics paths via the three-layer cascade |
 
 ```typescript
 { operation: "execute", agent: "analyst", message: "Analyze the SaaS market for X" }
 { operation: "execute", workflow: "prd", message: "Create a PRD for a task app" }
 { operation: "list", query: "agents" }
+{ operation: "resolve-doc-paths" }
 ```
 
 ### Specialized agents
@@ -672,29 +674,39 @@ composer → duplicate check → `createTask`
 
 ### Project-local config (`.bmadmcp/config.toml`)
 
-`clickup-create-epic` and `clickup-create-story` discover the active space, the
-Backlog list, and (for the story skill) the sprint folder by calling ClickUp on
-every invocation — typically `getCurrentSpace` → `pickSpace` → `searchSpaces`,
-then a tree scan. To pin those IDs and skip the round-trips, drop a project-local
-`.bmadmcp/config.toml` at the project root:
+All four `clickup-create-*` skills discover the active space and Backlog list by
+calling ClickUp on every invocation — typically `getCurrentSpace` → `pickSpace` →
+`searchSpaces`, then a tree scan. To pin those IDs and skip the round-trips, drop a
+project-local `.bmadmcp/config.toml` at the project root. Skills **auto-save**
+discovered IDs back to `config.toml` after the first successful picker run, so
+subsequent invocations skip discovery automatically:
 
 ```toml
-[clickup_create_epic]
-pinned_space_id        = "..."
-pinned_space_name      = "..."   # display only
-pinned_backlog_list_id = "..."
+# Shared ClickUp defaults — inherited by all clickup-create-* skills
+[clickup]
+pinned_space_id        = "..."   # auto-saved after first picker run
+pinned_space_name      = "..."   # display only; falls back to "(pinned)" if unset
+pinned_backlog_list_id = "..."   # auto-saved after first picker run
 
+# Per-skill overrides (take precedence over [clickup])
 [clickup_create_story]
-pinned_space_id         = "..."
-pinned_space_name       = "..."
-pinned_backlog_list_id  = "..."
-pinned_sprint_folder_id = "..."
+pinned_sprint_folder_id = "..."  # bypass sprint-folder disambiguation when >1 sprint folder exists
+allow_no_epic           = true   # set false to always require an epic parent
+
+[clickup_create_bug]
+target_list_id  = "..."  # pin target list; skips list picker
+default_priority = ""    # 1=urgent · 2=high · 3=normal · 4=low
+default_tags     = []    # extra tags added beyond automatic "bug" tag
+pinned_epic_id   = ""    # pin epic parent; skips epic picker
+pinned_epic_name = ""    # display name for the pinned epic
 ```
 
-When **both** `pinned_space_id` and `pinned_backlog_list_id` are set, the
-picker steps skip every ClickUp discovery call and jump straight to the local
-content steps. Pinning only one yields a partial short-circuit (see the step
-files for exact behaviour). All keys are optional.
+When **both** `pinned_space_id` and `pinned_backlog_list_id` are set in
+`[clickup]`, the picker steps skip every ClickUp discovery call and jump straight
+to the local content steps. Pinning only one yields a partial short-circuit (see
+the step files for exact behaviour). Per-skill sections override individual
+`[clickup]` keys — useful when different skills target different spaces. All keys
+are optional.
 
 The file is intended to be gitignored at the project level (per-developer or
 per-project IDs aren't checked in). See
@@ -854,6 +866,7 @@ command:
 | `BMAD_ROOT`            | auto          | Override BMAD installation root                        |
 | `BMAD_DEBUG`           | `false`       | Verbose logging via `src/utils/logger.ts`              |
 | `BMAD_GIT_AUTO_UPDATE` | `true`        | Auto-refresh Git-cached BMAD content (CI sets `false`) |
+| `BMAD_REQUIRE_CLICKUP` | unset         | `1`/`true` → hard-fail at boot if ClickUp vars missing |
 | `BMAD_API_KEY`         | unset         | API key for HTTP transport                             |
 | `PORT`                 | `3000`        | HTTP port                                              |
 | `NODE_ENV`             | `development` | `test` / `development` / `production`                  |

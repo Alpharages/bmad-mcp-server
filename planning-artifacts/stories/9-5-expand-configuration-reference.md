@@ -1,6 +1,6 @@
 # Story 9.5: Expand Configuration Reference
 
-Status: ready-for-dev
+Status: review
 
 Epic: [EPIC-9: README freshness pass](../epics/EPIC-9-readme-freshness.md)
 
@@ -179,39 +179,39 @@ so that I can configure the server correctly without having to read the source c
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1 — Update operations count and table (AC: #1, #2)**
-  - [ ] Change "four operations" to "five operations" (verify exact line with `grep -n`).
-  - [ ] Append `resolve-doc-paths` row to the operations table.
+- [x] **Task 1 — Update operations count and table (AC: #1, #2)**
+  - [x] Change "four operations" to "five operations" (verify exact line with `grep -n`).
+  - [x] Append `resolve-doc-paths` row to the operations table.
 
-- [ ] **Task 2 — Add `resolve-doc-paths` usage example (AC: #3)**
-  - [ ] Add `{ operation: "resolve-doc-paths" }` line to the TypeScript code block.
+- [x] **Task 2 — Add `resolve-doc-paths` usage example (AC: #3)**
+  - [x] Add `{ operation: "resolve-doc-paths" }` line to the TypeScript code block.
 
-- [ ] **Task 3 — Update Project-local config intro paragraph (AC: #4)**
-  - [ ] Replace the opening paragraph per the target text in AC #4.
+- [x] **Task 3 — Update Project-local config intro paragraph (AC: #4)**
+  - [x] Replace the opening paragraph per the target text in AC #4.
 
-- [ ] **Task 4 — Replace config code block (AC: #5)**
-  - [ ] Replace the entire TOML code block with the accurate structure per AC #5.
-  - [ ] Preserve the `[docs]` table section below it — do not touch it.
+- [x] **Task 4 — Replace config code block (AC: #5)**
+  - [x] Replace the entire TOML code block with the accurate structure per AC #5.
+  - [x] Preserve the `[docs]` table section below it — do not touch it.
 
-- [ ] **Task 5 — Update explanatory paragraph after code block (AC: #6)**
-  - [ ] Replace the "When **both** `pinned_space_id`…" paragraph per AC #6.
+- [x] **Task 5 — Update explanatory paragraph after code block (AC: #6)**
+  - [x] Replace the "When **both** `pinned_space_id`…" paragraph per AC #6.
 
-- [ ] **Task 6 — Add `BMAD_REQUIRE_CLICKUP` to Configuration reference (AC: #7)**
-  - [ ] Insert `BMAD_REQUIRE_CLICKUP` row between `BMAD_GIT_AUTO_UPDATE` and
+- [x] **Task 6 — Add `BMAD_REQUIRE_CLICKUP` to Configuration reference (AC: #7)**
+  - [x] Insert `BMAD_REQUIRE_CLICKUP` row between `BMAD_GIT_AUTO_UPDATE` and
         `BMAD_API_KEY` in the env-var table.
 
-- [ ] **Task 7 — Update sprint-status.yaml (AC: #9)**
-  - [ ] Set `9-5-expand-configuration-reference`: `backlog` → `review`.
-  - [ ] Update `last_updated` field.
+- [x] **Task 7 — Update sprint-status.yaml (AC: #9)**
+  - [x] Set `9-5-expand-configuration-reference`: `ready-for-dev` → `review`.
+  - [x] Update `last_updated` field.
 
-- [ ] **Task 8 — Regression verification (AC: #10)**
-  - [ ] `git diff --stat -- 'src/**/*.ts'` → empty.
-  - [ ] `git diff --stat -- tests/` → empty.
-  - [ ] `npm run build && npm run lint` → clean.
+- [x] **Task 8 — Regression verification (AC: #10)**
+  - [x] `git diff --stat -- 'src/**/*.ts'` → empty.
+  - [x] `git diff --stat -- tests/` → empty.
+  - [x] `npm run build && npm run lint` → clean.
 
-- [ ] **Task 9 — Commit (AC: #11)**
-  - [ ] Stage `README.md`, story file, `sprint-status.yaml`.
-  - [ ] Commit with header + body per AC #11.
+- [x] **Task 9 — Commit (AC: #11)**
+  - [x] Stage `README.md`, story file, `sprint-status.yaml`.
+  - [x] Commit with header + body per AC #11.
 
 ## Dev Notes
 
