@@ -1,6 +1,6 @@
 # Story 9.8: Verify Anchors and Links
 
-Status: review
+Status: done
 
 Epic: [EPIC-9: README freshness pass](../epics/EPIC-9-readme-freshness.md)
 
@@ -22,7 +22,8 @@ so that the ISC license badge link resolves to actual license text instead of a
 
 ### Internal-anchor audit (pre-verified — no changes required)
 
-1. All nav-row anchors resolve to existing `##` headings:
+1. All nav-row anchors resolve to existing `##` headings (nav-row source:
+   README.md line 10):
 
    | Anchor | Heading | Status |
    |--------|---------|--------|
