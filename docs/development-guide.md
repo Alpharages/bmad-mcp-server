@@ -906,7 +906,6 @@ npm publish
 
 | Command               | Description               | When to Use       |
 | --------------------- | ------------------------- | ----------------- |
-
 | `npm run precommit`   | Run all pre-commit checks | Manual pre-commit |
 | `npm run prepare`     | Post-install hook         | After npm install |
 
