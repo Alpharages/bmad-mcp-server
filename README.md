@@ -15,7 +15,7 @@ A Model Context Protocol server that exposes the [BMAD Method](https://github.co
 
 ## Overview
 
-The BMAD MCP Server gives MCP-capable AI clients (Claude Desktop, Claude Code, VS Code Copilot, Cline, …) universal access to the BMAD methodology — **9 specialized agents** and **26 automated workflows** — through a single unified `bmad` tool. Configure it once and use it across every project, with no per-project file copying.
+The BMAD MCP Server gives MCP-capable AI clients (Claude Desktop, Claude Code, VS Code Copilot, Cline, …) universal access to the BMAD methodology — **6 specialized agents** and **29 automated workflows** — through a single unified `bmad` tool. Configure it once and use it across every project, with no per-project file copying.
 
 **What is BMAD?** A software-development methodology with role-specialized AI agents (Analyst, Architect, Developer, UX Designer, PM, SM, …) and pre-built workflows for common tasks (PRD, architecture, debugging, ATDD, …).
 
@@ -118,9 +118,9 @@ This walkthrough is the canonical happy path from "I just installed the server" 
 
 > List all BMAD agents.
 
-**Expected.** A response listing **9 agents**: Mary (analyst), Winston (architect), Amelia (dev), Sally (ux-designer), Murat (qa), John (pm), Bob (sm), Diana (debug), and a tech-writer.
+**Expected.** A response listing **6 agents**: Mary (analyst), Winston (architect), Amelia (dev), Sally (ux-designer), John (pm), and a tech-writer.
 
-**Fix.** If your client doesn't see the tool, the server didn't start. Re-check the [Quick start](#quick-start) snippet, restart your client. As a CLI sanity check, run `npm run cli:list-agents` in your local clone — if that prints 9 agents, the server itself is healthy and the issue is in your client config. If that fails, run the binary directly (`node /path/to/build/index.js`) and read stderr.
+**Fix.** If your client doesn't see the tool, the server didn't start. Re-check the [Quick start](#quick-start) snippet, restart your client. As a CLI sanity check, run `npm run cli:list-agents` in your local clone — if that prints 6 agents, the server itself is healthy and the issue is in your client config. If that fails, run the binary directly (`node /path/to/build/index.js`) and read stderr.
 
 ---
 
@@ -394,17 +394,14 @@ A single MCP tool with four operations replaces what would otherwise be dozens o
 | Winston  | System Architect | `architect`   |
 | Amelia   | Developer        | `dev`         |
 | Sally    | UX Designer      | `ux-designer` |
-| Murat    | Test Architect   | `qa`          |
 | John     | Product Manager  | `pm`          |
-| Bob      | Scrum Master     | `sm`          |
-| Diana    | Debug Specialist | `debug`       |
 | (writer) | Tech Writer      | `tech-writer` |
 
 Run `npm run cli:list-agents` for the live list.
 
-### Workflows (26)
+### Workflows (29)
 
-Includes `prd`, `architecture`, `debug-inspect`, `atdd`, `ux-design`, `party-mode`, and 20 more. Run `npm run cli:list-workflows` for the full list.
+Includes `prd`, `architecture`, `debug-inspect`, `atdd`, `ux-design`, `party-mode`, and 23 more. Run `npm run cli:list-workflows` for the full list.
 
 ### MCP capabilities
 
@@ -684,20 +681,39 @@ will land alongside.
 
 `clickup-create-story`, `clickup-dev-implement`, and `clickup-code-review` call
 `resolve-doc-paths` at startup to locate the PRD, architecture document, and
-epics directory. By default they look under `planning-artifacts/`, but projects
-with non-standard layouts can override individual paths via the `[docs]` table
-in `.bmadmcp/config.toml`:
+epics directory. Each path is resolved independently through three layers
+(highest → lowest priority):
+
+1. **`.bmadmcp/config.toml` `[docs]` table** — per-project override. Set any
+   key here to skip the lower layers for that path only.
+2. **BMAD config chain** — reads `_bmad/config.toml` →
+   `_bmad/config.user.toml` → `_bmad/custom/config.toml` →
+   `_bmad/custom/config.user.toml` and uses `[bmm].planning_artifacts` as the
+   base directory.
+3. **Hardcoded default** — `{project-root}/planning-artifacts/` (pre-EPIC-6
+   behavior preserved).
+
+The `[docs]` table supports four keys:
+
+| Key                 | Resolves                                                                | Default                              |
+| ------------------- | ----------------------------------------------------------------------- | ------------------------------------ |
+| `prd_path`          | Path to PRD (absolute or project-root-relative)                         | `planning-artifacts/PRD.md`          |
+| `architecture_path` | Path to architecture doc                                                | `planning-artifacts/architecture.md` |
+| `epics_path`        | Path to epics file or directory (trailing `/` marks a directory)        | `planning-artifacts/epics/`          |
+| `planning_dir`      | Base directory for default filenames when a per-key override is not set | `planning-artifacts/`                |
+
+**Example — project with docs in `docs/`:**
 
 ```toml
 [docs]
 prd_path          = "docs/specs/PRD.md"
 architecture_path = "docs/architecture/overview.md"
+epics_path        = "docs/epics/"
 ```
 
-Resolution is **per-key**: overriding only `prd_path` leaves `architecture_path`
-and `epics_path` to be resolved by the BMAD config chain or the hardcoded
-default. See [`CLAUDE.md`](./CLAUDE.md#doc-path-cascade) for the full cascade
-order and contributor-level detail.
+Resolution is **per-key**: setting only `prd_path` leaves `architecture_path`
+and `epics_path` to fall through to layer 2 or 3. See
+[`CLAUDE.md`](./CLAUDE.md#doc-path-cascade) for contributor-level detail.
 
 ---
 
