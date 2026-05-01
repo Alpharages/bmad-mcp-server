@@ -7,7 +7,7 @@
 
 A Model Context Protocol server that exposes the [BMAD Method](https://github.com/Alpharages/BMAD-METHOD) to AI assistants.
 
-[Quick start](#quick-start) · [Walkthrough](#your-first-session--a-beginner-walkthrough) · [ClickUp](#clickup-integration) · [Custom Skills](#custom-skills) · [Self-hosting](#self-hosting-http) · [Docs](#documentation)
+[Quick start](#quick-start) · [Walkthrough](#your-first-session--a-beginner-walkthrough) · [ClickUp](#clickup-integration) · [Custom Skills](#custom-skills) · [Common patterns](#common-patterns) · [Self-hosting](#self-hosting-http) · [Docs](#documentation)
 
 </div>
 
@@ -776,6 +776,59 @@ and `epics_path` to fall through to layer 2 or 3. See
 ---
 
 Custom skill source lives in `src/custom-skills/`. See [`src/custom-skills/README.md`](./src/custom-skills/README.md) for the extension boundary convention.
+
+---
+
+## Common patterns
+
+#### My docs aren't in `planning-artifacts/`
+
+Set the `[docs]` table in `.bmadmcp/config.toml` — each key resolves
+independently, so only override the paths that differ from the default:
+
+```toml
+[docs]
+prd_path          = "docs/PRD.md"
+architecture_path = "docs/architecture/overview.md"
+epics_path        = "docs/epics/"
+```
+
+See [Doc-path cascade](#doc-path-cascade-docs-table) for the full key reference
+and three-layer resolution order.
+
+#### I want to file a bug
+
+Say `create a bug [description]` (or `report a bug …` / `log bug …`). The
+`clickup-create-bug` skill picks the target list, optionally links the bug to an
+epic, and composes a structured ticket (repro / expected / actual / impact /
+suspected area). Planning artifacts are loaded as optional context — the skill
+continues with a warning if any are missing. See
+[clickup-create-bug](#clickup-create-bug).
+
+#### This work doesn't fit under any epic
+
+`clickup-create-story` supports standalone tasks: when `allow_no_epic = true`
+(the default), the epic picker includes `[0] No epic — create as standalone
+task`. Selecting it creates a top-level ClickUp task with no parent epic. To
+always require an epic parent, set `allow_no_epic = false` under
+`[clickup_create_story]`. See [clickup-create-story](#clickup-create-story).
+
+#### I need to share credentials per-team via HTTP
+
+Run the HTTP transport (see [Self-hosting](#self-hosting-http)). ClickUp
+credentials are passed as request headers (`X-ClickUp-Api-Key`,
+`X-ClickUp-Team-Id`) on each call — every team member authenticates
+independently from the same server instance. The server `.env` only needs
+`PORT`, `BMAD_API_KEY`, and optionally `BMAD_DEBUG`; no ClickUp credentials
+are stored server-side.
+
+#### How do I pin space/list IDs to skip pickers
+
+Set `pinned_space_id` and `pinned_backlog_list_id` in the `[clickup]` section
+of `.bmadmcp/config.toml`. When both are set, picker discovery is bypassed
+entirely. In practice you usually don't need to do this manually — skills
+auto-save discovered IDs back to the file after the first successful picker run.
+See [Project-local config](#project-local-config-bmadmcpconfigtoml).
 
 ---
 
