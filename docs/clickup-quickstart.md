@@ -90,6 +90,12 @@ the operator's responsibility — the preflight cannot substitute for it.
 
 ### Pilot repo cloned with `.bmad-pilot-marker`
 
+> **Note (2026-05-01):** The `.bmad-pilot-marker` sentinel check was removed
+> from the skill source files during post-EPIC-5 refinement. This section is
+> retained as historical context; you no longer need to create this file for
+> the skills to run. See README §Step 8 (story 9-6) for the corresponding
+> README update.
+
 > Addresses half of:
 > [`multi-repo-cwd-handling-undocumented`](../planning-artifacts/friction-log.md#multi-repo-cwd-handling-undocumented)
 
@@ -553,7 +559,6 @@ active account has push access to the pilot repo's GitHub org.
 **Symptom:** The cwd-assertion `❌` error block fires at step 1.
 
 **Pre-empt:** Run `pwd` before invoking; confirm it prints the pilot repo root.
-Place `.bmad-pilot-marker` at the pilot repo root per [§Prerequisites](#prerequisites).
 
 **Recovery:** `cd` to the pilot repo and re-invoke. Or use the disclosed-deviation
 escape hatch (absolute-path `Read` + Dev Agent Record disclosure) if `cd` is not

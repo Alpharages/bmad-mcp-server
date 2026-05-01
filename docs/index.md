@@ -3,15 +3,20 @@
 **Version:** 4.0.0  
 **Last Updated:** November 6, 2025
 
-Welcome to the BMAD MCP Server documentation - bringing the power of the [BMAD Method](https://github.com/bmad-code-org/BMAD-METHOD) to AI assistants through the Model Context Protocol.
+Welcome to the BMAD MCP Server documentation - bringing the power of the [BMAD Method](https://github.com/Alpharages/BMAD-METHOD) to AI assistants through the Model Context Protocol.
 
 ---
 
 ## Essential Documentation
 
-### � [README.md](../README.md)
+### 📄 [README.md](../README.md)
 
 **Start here** - Project overview, installation, quick start, and usage guide.
+
+### 📋 [ClickUp Quickstart](./clickup-quickstart.md)
+
+Team-lead guide for invoking ClickUp-routed skills (`clickup-create-story`,
+`clickup-dev-implement`, `clickup-create-bug`).
 
 ### 🏗️ [Architecture](./architecture.md)
 
@@ -25,7 +30,7 @@ MCP tools API, resources, prompts, completions, and TypeScript APIs.
 
 Includes the [ClickUp Tools reference](./api-contracts.md#clickup-tools) with per-tool schemas and modes.
 
-### � [Development Guide](./development-guide.md)
+### 🛠️ [Development Guide](./development-guide.md)
 
 Development workflow, testing, building, contributing, and troubleshooting.
 
@@ -38,7 +43,7 @@ Development workflow, testing, building, contributing, and troubleshooting.
 **Want to use BMAD through your AI assistant?**
 
 1. Installation → [README.md](../README.md)
-2. Configuration → [README.md - Setup](../README.md#-installation)
+2. Configuration → [README.md - Setup](../README.md#quick-start)
 3. Usage → [API Contracts - MCP Tools](./api-contracts.md#mcp-tools-api)
 
 ### For Developers
@@ -54,10 +59,10 @@ Development workflow, testing, building, contributing, and troubleshooting.
 
 ## Additional Resources
 
-- **BMAD Method:** https://github.com/bmad-code-org/BMAD-METHOD
+- **BMAD Method:** https://github.com/Alpharages/BMAD-METHOD
 - **MCP Specification:** https://modelcontextprotocol.io/
-- **Repository:** https://github.com/mkellerman/bmad-mcp-server
-- **Issues:** https://github.com/mkellerman/bmad-mcp-server/issues
+- **Repository:** https://github.com/Alpharages/bmad-mcp-server
+- **Issues:** https://github.com/Alpharages/bmad-mcp-server/issues
 
 ---
 
@@ -95,29 +100,23 @@ This approach:
 
 ---
 
-## Additional Resources
-
----
-
 ## 📚 Documentation Structure
 
 ### Core Documentation
 
-\`\`\`
+```
 ├── 📄 README.md # Project overview
-├── 📄 deployment-guide.md # Installation and deployment
 ├── 📄 api-contracts.md # MCP tools and APIs
-└── 📄 architecture.md # System design
-\`\`\`
+├── 📄 architecture.md # System design
+└── 📄 clickup-quickstart.md # Team-lead ClickUp quickstart
+```
 
 ### Development Documentation
 
-\`\`\`
+```
 ├── 📄 development-guide.md # Development workflow
-├── 📄 testing-guide.md # Testing strategy
-├── 📄 project-overview.md # Project foundation
 └── 📄 CHANGELOG.md # Version history
-\`\`\`
+```
 
 ---
 
@@ -126,12 +125,10 @@ This approach:
 | Document                                  | Purpose                              | Audience                |
 | ----------------------------------------- | ------------------------------------ | ----------------------- |
 | [README.md](../README.md)                 | Project introduction and quick start | Everyone                |
-| [Deployment Guide](deployment-guide.md)   | Installation and configuration       | Users, Admins           |
 | [Architecture](architecture.md)           | System design and components         | Developers              |
 | [API Contracts](api-contracts.md)         | Tool and API reference               | Developers, Integrators |
+| [ClickUp Quickstart](clickup-quickstart.md) | Team-lead ClickUp skill guide        | Team Leads              |
 | [Development Guide](development-guide.md) | Development workflow                 | Contributors            |
-| [Testing Guide](testing-guide.md)         | Test strategy and examples           | Contributors            |
-| [Project Overview](project-overview.md)   | Technical foundation                 | Everyone                |
 
 ---
 
@@ -148,6 +145,6 @@ Found an issue or want to improve the docs?
 
 ## 📞 Getting Help
 
-- **Issues:** [GitHub Issues](https://github.com/mkellerman/bmad-mcp-server/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/mkellerman/bmad-mcp-server/discussions)
+- **Issues:** [GitHub Issues](https://github.com/Alpharages/bmad-mcp-server/issues)
+- **Discussions:** [GitHub Discussions](https://github.com/Alpharages/bmad-mcp-server/discussions)
 - **Documentation:** You're reading it! Start with [README.md](../README.md)

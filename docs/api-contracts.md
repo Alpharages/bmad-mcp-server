@@ -29,20 +29,21 @@ The BMAD MCP Server exposes two API layers:
 - `read` - Inspect agent/workflow definitions (read-only, no execution)
 - `execute` - Run agents/workflows with user context (performs actions)
 - `search` - Find agents/workflows by name/description (optional)
+- `resolve-doc-paths` - Resolve PRD/architecture/epics doc paths via the doc-path cascade
 
 #### Tool Schema
 
 ```json
 {
   "name": "bmad",
-  "description": "Execute BMAD agents and workflows. Provides access to all BMAD modules.\n\n**Operations:**\n- `list`: Discover available agents/workflows/modules/resources\n- `read`: Inspect agent or workflow details (read-only, no execution)\n- `execute`: Run agent or workflow with user context (performs actions)\n\n**Available Agents:**\n\nBMM Module:\n  - analyst (Mary): Business Analyst\n  - architect (Winston): Architect\n  - debug (Diana): Debug Specialist\n  - dev (Amelia): Developer Agent\n  - pm (John): Product Manager\n  ...\n\n**Available Workflows:**\n\nBMM Module:\n  - prd: Product Requirements Document workflow\n  - architecture: Architecture design workflow\n  - debug-inspect: Comprehensive debugging workflow\n  ...\n\n**Usage Guide:**\n\n**When to use each operation:**\n- `list` - User asks \"what agents/workflows are available?\"\n- `read` - User asks \"what does the analyst do?\"\n- `execute` - User wants to actually run an agent/workflow\n\n**Examples:**\n\nDiscovery:\n  { operation: \"list\", query: \"agents\" }\n  { operation: \"list\", query: \"workflows\", module: \"bmm\" }\n\nCapability Query:\n  { operation: \"read\", type: \"agent\", agent: \"analyst\" }\n  { operation: \"read\", type: \"workflow\", workflow: \"prd\" }\n\nExecution:\n  { operation: \"execute\", agent: \"analyst\", message: \"Help me brainstorm\" }\n  { operation: \"execute\", workflow: \"prd\", message: \"Create PRD for app\" }\n",
+  "description": "Execute BMAD agents and workflows. Provides access to all BMAD modules.\n\n**Operations:**\n- `list`: Discover available agents/workflows/modules/resources\n- `read`: Inspect agent or workflow details (read-only, no execution)\n- `execute`: Run agent or workflow with user context (performs actions)\n- `search`: Find agents/workflows by query\n- `resolve-doc-paths`: Resolve PRD/architecture/epics paths via doc-path cascade\n\n**Available Agents:**\n\n1-ANALYSIS Module:\n  - analyst (Mary — Business Analyst)\n  - tech-writer (Paige — Technical Writer)\n\n3-SOLUTIONING Module:\n  - architect (Winston — System Architect)\n\n4-IMPLEMENTATION Module:\n  - dev (Amelia — Senior Software Engineer)\n\n2-PLAN-WORKFLOWS Module:\n  - pm (John — Product Manager)\n  - ux-designer (Sally — UX Designer)\n\n**Available Workflows:**\n\nCUSTOM-SKILLS Module:\n  - prd: Product Requirements Document workflow\n  - architecture: Architecture design workflow\n  - bmad-dev-story: Story implementation workflow\n  - clickup-create-story: ClickUp story creation workflow\n  ...\n\n**Usage Guide:**\n\n**When to use each operation:**\n- `list` - User asks \"what agents/workflows are available?\"\n- `read` - User asks \"what does the analyst do?\"\n- `execute` - User wants to actually run an agent/workflow\n- `search` - User wants to find agents/workflows by query\n- `resolve-doc-paths` - User needs to resolve PRD/architecture/epics paths\n\n**Examples:**\n\nDiscovery:\n  { operation: \"list\", query: \"agents\" }\n  { operation: \"list\", query: \"workflows\", module: \"bmm\" }\n\nCapability Query:\n  { operation: \"read\", type: \"agent\", agent: \"analyst\" }\n  { operation: \"read\", type: \"workflow\", workflow: \"prd\" }\n\nExecution:\n  { operation: \"execute\", agent: \"analyst\", message: \"Help me brainstorm\" }\n  { operation: \"execute\", workflow: \"prd\", message: \"Create PRD for app\" }\n",
   "inputSchema": {
     "type": "object",
     "properties": {
       "operation": {
         "type": "string",
-        "enum": ["list", "read", "execute"],
-        "description": "Operation type:\n- list: Get available agents/workflows/modules\n- read": Inspect agent or workflow details\n- execute: Run agent or workflow"
+        "enum": ["list", "read", "execute", "search", "resolve-doc-paths"],
+        "description": "Operation type:\n- list: Get available agents/workflows/modules\n- read: Inspect agent or workflow details\n- execute: Run agent or workflow\n- search: Find agents/workflows by query\n- resolve-doc-paths: Resolve PRD/architecture/epics paths via doc-path cascade"
       },
       "query": {
         "type": "string",
@@ -121,7 +122,7 @@ The BMAD MCP Server exposes two API layers:
   "content": [
     {
       "type": "text",
-      "text": "Available Agents:\n\n**BMM Module:**\n- analyst (Mary) - Business Analyst\n- architect (Winston) - Architect\n- debug (Diana) - Debug Specialist\n..."
+      "text": "Available Agents:\n\n**1-ANALYSIS Module:**\n- analyst (Mary) - Business Analyst\n- tech-writer (Paige) - Technical Writer\n\n**3-SOLUTIONING Module:**\n- architect (Winston) - System Architect\n\n**4-IMPLEMENTATION Module:**\n- dev (Amelia) - Senior Software Engineer\n\n**2-PLAN-WORKFLOWS Module:**\n- pm (John) - Product Manager\n- ux-designer (Sally) - UX Designer\n..."
     }
   ]
 }
@@ -212,6 +213,28 @@ The BMAD MCP Server exposes two API layers:
   ]
 }
 ```
+
+---
+
+#### Operation 5: resolve-doc-paths
+
+**Purpose:** Resolve the paths to PRD, architecture, and epics documents through
+the three-layer doc-path cascade.
+
+**Example:**
+
+```json
+{
+  "operation": "resolve-doc-paths"
+}
+```
+
+**Response:** Paths object with `prd`, `architecture`, and `epics` resolved paths plus
+the resolution layer that applied (`default` | `bmad-config` | `bmadmcp-config`).
+
+**Use case:** Called by `clickup-create-story`, `clickup-dev-implement`, and
+`clickup-code-review` at skill startup to locate planning artifacts regardless
+of where they live in the project.
 
 ---
 
@@ -918,7 +941,7 @@ npm run test:e2e
 
 - **MCP Specification:** https://modelcontextprotocol.io/specification/
 - **MCP SDK:** https://github.com/modelcontextprotocol/typescript-sdk
-- **BMAD Method:** https://github.com/bmad-code-org/BMAD-METHOD
+- **BMAD Method:** https://github.com/Alpharages/BMAD-METHOD
 
           "description": "What to search (for operation=search). Default: all"
         }
