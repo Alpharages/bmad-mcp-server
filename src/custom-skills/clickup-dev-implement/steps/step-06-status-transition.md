@@ -74,3 +74,7 @@ transition_target: ''
    > **What to do (optional):** Verify that `CLICKUP_API_KEY` has permission to update this task, then manually set the status to `{transition_target}` in ClickUp if needed.
 
 > **Refinement source:** `step-05-in-review-literal-match-miss`, `step-05-match-set-too-narrow` (story 5-7).
+
+## NEXT
+
+After step 6 completes (whether or not the transition succeeded), proceed to [step-09-cross-story-context.md](./step-09-cross-story-context.md) if `{implementation_complete}` = `'true'` AND (`{assumption_count}` > 0 OR `{clarification_count}` > 0). Otherwise the skill ends here.

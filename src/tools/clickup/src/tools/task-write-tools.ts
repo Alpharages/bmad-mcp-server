@@ -106,10 +106,10 @@ export function registerTaskToolsWrite(server: McpServer, userData: any) {
         "Updates various aspects of an existing task including dependencies and relationships.",
         "ALWAYS include the task URL (https://app.clickup.com/t/TASK_ID) when updating or referencing tasks.",
         "Use getListInfo first to see valid status options.",
-        "SAFETY FEATURE: Description updates are APPEND-ONLY to prevent data loss - existing content is preserved.",
+        "DESCRIPTION OPTIONS: Use `append_description` to add content to the existing description (safe, preserves history). Use `replace_description` to fully replace the description (destructive — use when the existing description is stale or the user explicitly asks to delete the old content).",
         "STATUS UPDATES: Use the `addComment` tool for progress reports, work logs, and status updates rather than the task description.",
         "Task descriptions should contain requirements, specifications, and core task information.",
-        "LINKING IN DESCRIPTIONS: When appending descriptions, include links to related tasks, lists, or external resources.",
+        "LINKING IN DESCRIPTIONS: When appending or replacing descriptions, include links to related tasks, lists, or external resources.",
         "IMPORTANT: When updating tasks (especially when booking time or adding progress), ensure the status makes sense for the work being done - tasks in 'backlog' or 'closed' states usually shouldn't have active work.",
         "Suggest appropriate status transitions and always provide the clickable task URL in responses."
       ];
@@ -125,6 +125,7 @@ export function registerTaskToolsWrite(server: McpServer, userData: any) {
       task_id: z.string().min(6).max(9).describe("The 6-9 character task ID to update"),
       name: taskNameSchema.optional(),
       append_description: z.string().optional().describe("Optional markdown content to APPEND to existing task description (preserves existing content for safety)"),
+      replace_description: z.string().optional().describe("Optional markdown content to REPLACE the entire task description (destructive — use only when the existing description is stale or the user explicitly asks to delete the old content)"),
       status: z.string().optional().describe("Optional new status name - use getListInfo to see valid options"),
       priority: taskPrioritySchema,
       due_date: taskDueDateSchema,
@@ -143,7 +144,7 @@ export function registerTaskToolsWrite(server: McpServer, userData: any) {
       idempotentHint: false,
       openWorldHint: true
     },
-    async ({ task_id, name, append_description, status, priority, due_date, start_date, time_estimate, tags, parent_task_id, assignees, blocking, waiting_on, linked_tasks }) => {
+    async ({ task_id, name, append_description, replace_description, status, priority, due_date, start_date, time_estimate, tags, parent_task_id, assignees, blocking, waiting_on, linked_tasks }) => {
       try {
         const userData = await getCurrentUser();
 
@@ -218,9 +219,11 @@ export function registerTaskToolsWrite(server: McpServer, userData: any) {
           }
         }
 
-        // Handle append-only description update with markdown support
+        // Handle description updates
         let finalDescription: string | undefined;
-        if (append_description) {
+        if (replace_description !== undefined) {
+          finalDescription = replace_description;
+        } else if (append_description) {
           const currentDescription = taskData.markdown_description || "";
           const timestamp = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
           const separator = currentDescription.trim() ? "\n\n---\n" : "";
@@ -285,7 +288,7 @@ export function registerTaskToolsWrite(server: McpServer, userData: any) {
         }
 
         const responseLines = formatTaskResponse(updatedTask, 'updated', {
-          name, append_description, status, priority, due_date, start_date, time_estimate, tags, parent_task_id, assignees, blocking, waiting_on, linked_tasks
+          name, append_description, replace_description, status, priority, due_date, start_date, time_estimate, tags, parent_task_id, assignees, blocking, waiting_on, linked_tasks
         }, userData);
 
         // Add dependency update results if any
@@ -333,6 +336,7 @@ export function registerTaskToolsWrite(server: McpServer, userData: any) {
         "- The response will include the new task's clickable URL - always share this link",
         "Use getListInfo first to understand the list context and available statuses.",
         "Task descriptions support full markdown formatting including **bold**, *italic*, lists, links, and code blocks.",
+        "DEPENDENCIES: Use waiting_on to block this task on others, blocking to make others wait on this task, and linked_tasks for related-but-non-blocking associations. Dependencies are set via separate API calls after task creation.",
         "BEST PRACTICE: Every task creation should result in sharing the clickable task URL for future reference."
       ];
 
@@ -354,7 +358,10 @@ export function registerTaskToolsWrite(server: McpServer, userData: any) {
       time_estimate: taskTimeEstimateSchema,
       tags: taskTagsSchema,
       parent_task_id: z.string().optional().describe("Optional parent task ID to create this as a subtask"),
-      assignees: z.array(z.string()).optional().describe(createAssigneeDescription(userData))
+      assignees: z.array(z.string()).optional().describe(createAssigneeDescription(userData)),
+      waiting_on: z.array(z.string()).optional().describe("Optional array of task IDs that this task should wait on (this task is blocked by those tasks)"),
+      blocking: z.array(z.string()).optional().describe("Optional array of task IDs that this task should block (those tasks will wait on this one)"),
+      linked_tasks: z.array(z.string()).optional().describe("Optional array of task IDs to link as related tasks without blocking")
     },
     {
       readOnlyHint: false,
@@ -362,7 +369,7 @@ export function registerTaskToolsWrite(server: McpServer, userData: any) {
       idempotentHint: false,
       openWorldHint: true
     },
-    async ({ list_id, name, description, status, priority, due_date, start_date, time_estimate, tags, parent_task_id, assignees }) => {
+    async ({ list_id, name, description, status, priority, due_date, start_date, time_estimate, tags, parent_task_id, assignees, waiting_on, blocking, linked_tasks }) => {
       try {
         const userData = await getCurrentUser();
         const currentUserId = userData.user.id;
@@ -392,9 +399,24 @@ export function registerTaskToolsWrite(server: McpServer, userData: any) {
 
         const createdTask = await response.json();
 
+        // Set up dependencies via separate API calls (ClickUp creation endpoint does not support them)
+        let dependencyUpdateResults: string[] = [];
+        if (blocking !== undefined || waiting_on !== undefined || linked_tasks !== undefined) {
+          const emptyTaskData = { blocking: [], waiting_on: [], linked_tasks: [] };
+          dependencyUpdateResults = await updateTaskDependencies(
+            createdTask.id,
+            emptyTaskData,
+            { blocking, waiting_on, linked_tasks }
+          );
+        }
+
         const responseLines = formatTaskResponse(createdTask, 'created', {
-          list_id, name, description, status, priority, due_date, start_date, time_estimate, tags, parent_task_id, assignees
+          list_id, name, description, status, priority, due_date, start_date, time_estimate, tags, parent_task_id, assignees, blocking, waiting_on, linked_tasks
         }, userData);
+
+        if (dependencyUpdateResults.length > 0) {
+          responseLines.push('dependency_warnings: ' + dependencyUpdateResults.join('; '));
+        }
 
         return {
           content: [

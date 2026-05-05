@@ -104,14 +104,14 @@ target_list_name: ''
 
 7. **Parse selection.** Validate the user's response is a number between 1 and N; if invalid, re-present the list and ask again. Set `{target_list_id}` to the selected list's ID and `{target_list_name}` to its name.
 
-8. **Auto-save discovered values.** If `{target_list_id}` was set by interactive selection in instruction 7 (i.e., NOT from a pinned config value), persist the choice so future runs skip the picker:
+8. **Auto-save discovered values.** Always persist the resolved list and space IDs after instruction 7 completes, so future runs skip the picker:
 
    a. Use the Write/Edit tool to write `target_list_id = {target_list_id}` into the `[clickup_create_bug]` section of `.bmadmcp/config.toml`.
    - If the file does not exist, create it with just the `[clickup_create_bug]` section.
    - If the file exists but has no `[clickup_create_bug]` section, append the section.
    - If the `[clickup_create_bug]` section already exists, update the key only if it is absent or empty.
 
-   b. If the space was resolved interactively (instructions 2–4, not from a pinned `[clickup].pinned_space_id`), also write `pinned_space_id` and `pinned_space_name` into the `[clickup]` section using the same create-or-append-or-skip-if-set logic.
+   b. Also write `pinned_space_id` and `pinned_space_name` into the `[clickup]` section using the same create-or-append-or-skip-if-set logic.
 
    c. Before writing each key, check whether it already exists with a non-empty value. If it does and the current value differs from the discovered value, emit a non-fatal warning:
    `⚠️ .bmadmcp/config.toml already has [{section}].{key} set — not overwriting. Update manually if needed.`
