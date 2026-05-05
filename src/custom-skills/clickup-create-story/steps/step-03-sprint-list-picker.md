@@ -84,7 +84,7 @@ sprint_list_name: ''
 
 4. Store the identified folder's ID in `{sprint_folder_id}`.
 
-5. **Auto-save sprint folder (user disambiguation only).** If `{sprint_folder_id}` was set by user disambiguation in instruction 3 — i.e., more than one folder whose name contains "sprint" was found and the user chose from the list — persist the choice:
+5. **Auto-save sprint folder.** Always persist `{sprint_folder_id}` after instruction 4 completes, so future runs skip folder discovery:
 
    a. Use the Write/Edit tool to write `pinned_sprint_folder_id = {sprint_folder_id}` into the `[clickup_create_story]` section of `.bmadmcp/config.toml`.
    - If the file does not exist, create it with just the `[clickup_create_story]` section.
@@ -96,7 +96,7 @@ sprint_list_name: ''
    and skip the write.
 
    c. After a successful write, confirm:
-   `✅ Sprint folder saved to .bmadmcp/config.toml ([clickup_create_story].pinned_sprint_folder_id) — future disambiguation prompts will be skipped.`
+   `✅ Sprint folder saved to .bmadmcp/config.toml ([clickup_create_story].pinned_sprint_folder_id) — future runs will skip folder discovery.`
 
    d. If the write fails for any reason (permission error, disk error), emit a non-fatal warning and continue — auto-save is supplemental, the skill session is not interrupted.
 

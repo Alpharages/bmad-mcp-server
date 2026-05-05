@@ -58,7 +58,7 @@ epic_name: ''
 
    Scan the tree for a list whose name matches `Backlog` (case-insensitive). If found, set `{backlog_list_id}` automatically (do not ask the user). If NOT found, present all lists visible in the tree and ask: "I couldn't find a list named 'Backlog'. Enter the name or number of the list that holds your epics."
 
-7. **Auto-save discovered values to `[clickup]`.** If the backlog list in instruction 6 was resolved via the interactive picker (scan or user choice) — i.e., NOT from a pinned config value — persist the discovered space and list IDs so future runs skip the picker:
+7. **Auto-save discovered values to `[clickup]`.** Always persist the resolved space and backlog list IDs after instruction 6 completes, so future runs skip the picker:
 
    a. Use the Write/Edit tool to write `pinned_space_id`, `pinned_space_name`, and `pinned_backlog_list_id` into the `[clickup]` section of `.bmadmcp/config.toml`.
    - If the file does not exist, create it with just the `[clickup]` section.
