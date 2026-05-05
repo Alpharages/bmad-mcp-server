@@ -8,6 +8,7 @@ backlog_list_id: ''
 
 ## RULES
 
+- **Config-first.** MUST read `.bmadmcp/config.toml` and resolve all effective pinned values (instruction 0) BEFORE calling any ClickUp tool or presenting any picker to the user. Do not call `getCurrentSpace`, `pickSpace`, `searchSpaces`, or any other tool until the config short-circuit in instruction 0 has been evaluated.
 - **Near-read-only.** This step calls only `pickSpace`, `getCurrentSpace`, `clearCurrentSpace`, and `searchSpaces`. No writes to ClickUp.
 - **Early-exit.** Stop the skill run immediately if the user cannot identify a space, or if no Backlog list exists in the chosen space.
 

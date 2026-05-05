@@ -9,10 +9,11 @@ target_list_name: ''
 
 ## RULES
 
-1. **Mode requirement.** `searchSpaces` is not registered in `read-minimal` mode; `CLICKUP_MCP_MODE` MUST be `read` or `write`. Since `createTask` in step 5 requires `write`, the practical minimum for the full skill is `write` mode.
-2. **Read-only.** This step calls only `getCurrentSpace`, `clearCurrentSpace`, `pickSpace`, and `searchSpaces`. MUST NOT call any ClickUp write tool.
-3. **Blocking.** MUST NOT proceed to step 3 if `{target_list_id}` or `{space_id}` is empty at the end of this step.
-4. **No fabrication.** MUST NOT invent or assume a list ID. Always display the enumerated list and wait for explicit user selection when no pinned value is present.
+1. **Config-first.** MUST read `.bmadmcp/config.toml` and resolve all effective pinned values (instruction 1) BEFORE calling any ClickUp tool or presenting any picker to the user. Do not call `getCurrentSpace`, `pickSpace`, `searchSpaces`, or any other tool until the config short-circuit in instruction 1 has been evaluated.
+2. **Mode requirement.** `searchSpaces` is not registered in `read-minimal` mode; `CLICKUP_MCP_MODE` MUST be `read` or `write`. Since `createTask` in step 5 requires `write`, the practical minimum for the full skill is `write` mode.
+3. **Read-only.** This step calls only `getCurrentSpace`, `clearCurrentSpace`, `pickSpace`, and `searchSpaces`. MUST NOT call any ClickUp write tool.
+4. **Blocking.** MUST NOT proceed to step 3 if `{target_list_id}` or `{space_id}` is empty at the end of this step.
+5. **No fabrication.** MUST NOT invent or assume a list ID. Always display the enumerated list and wait for explicit user selection when no pinned value is present.
 
 ## INSTRUCTIONS
 
