@@ -85,3 +85,7 @@ Step 6 is discretionary (like step 4's M3+ template), invoked zero or more times
    > **Impact:** This assumption will not be recorded in ClickUp. Implementation continues unaffected.
    >
    > **What to do (optional):** Verify that `CLICKUP_API_KEY` has permission to comment on this task, then manually post the assumption in ClickUp if it matters for reviewers.
+
+## CROSS-STORY PROPAGATION NOTE
+
+Assumptions posted by this step are automatically evaluated for cross-story impact at the end of the session by [step-09-cross-story-context.md](./step-09-cross-story-context.md). Low- and medium-confidence assumptions that affect shared code boundaries (API, schema, auth, config, shared utilities) will be propagated as context comments to incomplete sibling stories. No action needed here — this happens automatically after step 6 completes.

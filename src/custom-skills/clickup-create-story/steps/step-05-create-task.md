@@ -19,9 +19,9 @@ created_task_url: ''
 
 - (b) **One-shot write rule.** `createTask` is called exactly once per skill execution. The step MUST NOT retry on a successful response and MUST NOT call `createTask` a second time for any reason (not on re-presentation, not on network retry).
 
-- (c) **Duplicate-check rule.** Before calling `createTask`, the step MUST call `searchTasks({ terms: ["{story_title}"], list_ids: ["{sprint_list_id}"] })` and scan the results for a task whose name matches `{story_title}` exactly (case-insensitive). If a match is found, emit the duplicate warning (AC #4) and require the user to type the literal character `y` (lower-case) to proceed; any other input (including Enter alone) aborts.
+- (c) **Duplicate-check rule.** Before calling `createTask`, the step MUST call `searchTasks({ terms: ["{story_title}"], list_ids: ["{sprint_list_id}"] })` and scan the results for a task whose name matches `{story_title}` exactly (case-insensitive). If a match is found, emit the duplicate warning (instruction 3) and require the user to type `y`, `u`, or Enter to proceed.
 
-- (d) **Blocking-on-error rule.** If `createTask` returns an error response (i.e., the response text contains `Error creating task:` or the `task_id:` line is absent), emit the standard creation-error block (AC #5), surface the raw error text, and stop. MUST NOT silently proceed or produce a partial success message.
+- (d) **Blocking-on-error rule.** If `createTask` returns an error response (i.e., the response text contains `Error creating task:` or the `task_id:` line is absent), emit the standard creation-error block (instruction 7), surface the raw error text, and stop. MUST NOT silently proceed or produce a partial success message.
 
 ## INSTRUCTIONS
 
@@ -70,21 +70,75 @@ created_task_url: ''
      >
      > **Creating a second task with the same name may cause confusion.**
      >
-     > Type `y` to create a duplicate anyway, or press Enter to abort. [y/N]
+     > - Type `y` to create a duplicate anyway.
+     > - Type `u` to **replace** the existing task's description with the newly composed one (old description will be deleted).
+     > - Press Enter to abort. [y/u/N]
 
-     Wait for user input: if the user types `y`, continue to step 4; otherwise emit `❌ Task creation cancelled — duplicate detected.` and stop.
+     Wait for user input:
+     - If the user types `y`, continue to step 4.
+     - If the user types `u`, call `updateTask` with `task_id: "{existing_task_id}"` and `replace_description: "{task_description}"`. On success emit `✅ Existing task description replaced.` and stop (do NOT proceed to step 4). On error emit the raw error text and stop.
+     - Otherwise emit `❌ Task creation cancelled — duplicate detected.` and stop.
 
-4. **Confirm with user.** Ask: `Confirm creating this ClickUp task? [Y/n]` Default answer is Y (proceed if user presses Enter). If the user types `n`, emit `❌ Task creation cancelled by user.` and stop.
+4. **Infer and confirm dependencies.**
 
-5. **Create the task.** Call `createTask` with exactly these parameters and no others:
+   **Auto-inference phase.** Scan `{task_description}` AND the epic description (`{epic_description}`) for dependency signals:
+   - Explicit sections: `## Dependencies`, `## Blocked By`, `## Blocks`, `## Prerequisites`
+   - Story/task references in any section: patterns like `Story X-Y`, `Epic X`, quoted task titles, or task IDs
+   - Natural-language phrases: "depends on", "blocked by", "blocks", "must be completed before/after", "requires", "prerequisite"
+
+   For each reference found, call `searchTasks({ terms: ["<referenced title or story key>"] })` (no `list_ids` filter — dependencies can live in any list) to resolve it to a task ID. Classify each resolved task:
+   - `waiting_on` — if this story is blocked by it or it is a prerequisite
+   - `blocking` — if this story must be completed before it
+   - `linked` — if the reference is informational / related-only
+
+   **Propose to user.** After inference emit ONE of:
+
+   a) If any dependencies were inferred:
+
+   > 🔗 **Inferred dependencies**
+   >
+   > - Waiting on: `{waiting_on_ids}` — {task names} _(only if non-empty)_
+   > - Blocking: `{blocking_ids}` — {task names} _(only if non-empty)_
+   > - Linked: `{linked_ids}` — {task names} _(only if non-empty)_
+   >
+   > Confirm these dependencies? [Y/edit/n]
+
+   - `Y` or Enter → use the inferred lists as `{waiting_on_ids}`, `{blocking_ids}`, `{linked_ids}` and proceed.
+   - `edit` → ask the three correction questions in sequence (each skippable with Enter), replacing the inferred lists.
+   - `n` → clear all three lists to `[]` and proceed without any dependencies.
+
+   b) If no dependencies were inferred:
+
+   > 🔗 **No dependencies detected in the description.**
+   >
+   > Want to add manual dependencies? [y/N]
+
+   - `y` → ask the three questions in sequence (each skippable with Enter):
+     1. **Waiting on** (comma-separated task IDs, or Enter to skip) → `{waiting_on_ids}`
+     2. **Blocking** (comma-separated task IDs, or Enter to skip) → `{blocking_ids}`
+     3. **Linked** (comma-separated task IDs, or Enter to skip) → `{linked_ids}`
+   - Enter/`n` → set all three lists to `[]` and proceed.
+
+   If any of the three lists are non-empty, append dependency lines to the pre-creation summary previously emitted:
+
+   > - Waiting on: `{waiting_on_ids joined as comma-separated list}` _(only if non-empty)_
+   > - Blocking: `{blocking_ids joined as comma-separated list}` _(only if non-empty)_
+   > - Linked: `{linked_ids joined as comma-separated list}` _(only if non-empty)_
+
+5. **Confirm with user.** Ask: `Confirm creating this ClickUp task? [Y/n]` Default answer is Y (proceed if user presses Enter). If the user types `n`, emit `❌ Task creation cancelled by user.` and stop.
+
+6. **Create the task.** Call `createTask` with exactly these parameters and no others:
    - `list_id: "{sprint_list_id}"`
    - `name: "{story_title}"`
    - `description: "{task_description}"`
    - `parent_task_id: "{epic_id}"` — include ONLY if `{epic_id}` is non-empty; omit the parameter entirely when `{epic_id}` is `''`
+   - `waiting_on: {waiting_on_ids}` — include ONLY if `{waiting_on_ids}` is non-empty
+   - `blocking: {blocking_ids}` — include ONLY if `{blocking_ids}` is non-empty
+   - `linked_tasks: {linked_ids}` — include ONLY if `{linked_ids}` is non-empty
 
    Do NOT pass `status`, `priority`, `assignees`, `due_date`, `start_date`, `time_estimate`, or `tags` — let ClickUp apply list defaults so the team lead can configure them in the UI after creation.
 
-6. **Parse the `createTask` response.** Extract the value after `task_id:` as `{created_task_id}`. Extract the value after `url:` as `{created_task_url}`.
+7. **Parse the `createTask` response.** Extract the value after `task_id:` as `{created_task_id}`. Extract the value after `url:` as `{created_task_url}`.
    - If `task_id:` is absent or the response begins with `Error creating task:`, emit the following verbatim (replacing `{raw_error_text}` with the full text of the `createTask` response) and stop:
 
      > ❌ **Task creation failed — ClickUp API error**
@@ -95,11 +149,12 @@ created_task_url: ''
      >
      > **Why:** The ClickUp API rejected the request. Common causes: invalid `list_id`, invalid `parent_task_id`, insufficient token permissions, or a transient network error.
      >
-     > **What to do:** Review the error above. If the list or epic IDs are incorrect, re-run steps 2–3 to re-select them. If the error indicates a permission issue, check that your `CLICKUP_API_KEY` token has create-task permission on the target list (story 2.9 will add explicit gating). To retry, re-invoke step 5 after resolving the underlying issue.
+     > **What to do:** Review the error above. If the list or epic IDs are incorrect, re-run steps 2–3 to re-select them. If the error indicates a permission issue, check that your `CLICKUP_API_KEY` token has create-task permission on the target list. To retry, re-invoke step 5 after resolving the underlying issue.
+   - If the response contains `dependency_warnings:`, surface those lines as non-fatal warnings after the success message.
 
-7. **Store the created task identifiers.** Set `{created_task_id}` and `{created_task_url}` from the parsed values.
+8. **Store the created task identifiers.** Set `{created_task_id}` and `{created_task_url}` from the parsed values.
 
-8. **Confirm success.**
+9. **Confirm success.**
    - When `{epic_id}` is non-empty, emit the following verbatim:
 
      > ✅ **ClickUp story created successfully!**
@@ -109,6 +164,9 @@ created_task_url: ''
      > - URL: {created_task_url}
      > - Parent epic: **{epic_name}** (`{epic_id}`)
      > - Sprint list: **{sprint_list_name}**
+     > - Waiting on: `{waiting_on_ids}` _(only if non-empty)_
+     > - Blocking: `{blocking_ids}` _(only if non-empty)_
+     > - Linked: `{linked_ids}` _(only if non-empty)_
      >
      > Open the task in ClickUp: {created_task_url}
 
@@ -121,9 +179,12 @@ created_task_url: ''
      > - URL: {created_task_url}
      > - Parent epic: *(none — standalone task)*
      > - Sprint list: **{sprint_list_name}**
+     > - Waiting on: `{waiting_on_ids}` _(only if non-empty)_
+     > - Blocking: `{blocking_ids}` _(only if non-empty)_
+     > - Linked: `{linked_ids}` _(only if non-empty)_
      >
      > Open the task in ClickUp: {created_task_url}
 
 ## NEXT
 
-Step 5 is the terminal step of the `clickup-create-story` skill. There are no further steps. End the workflow after step 8.
+Step 5 is the terminal step of the `clickup-create-story` skill. There are no further steps. End the workflow after step 9.

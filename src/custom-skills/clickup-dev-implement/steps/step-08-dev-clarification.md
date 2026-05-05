@@ -123,3 +123,7 @@ When the dev replies, the agent applies INSTRUCTIONS step (7):
 3. Set `{pending_clarification}` = `'false'` and continue implementation with the resolution applied.
 
 If the dev's reply itself introduces a new step-7-class ambiguity, invoke step 7 again; `{clarification_count}` increments for each cycle.
+
+## CROSS-STORY PROPAGATION NOTE
+
+All resolved clarifications are automatically propagated to incomplete sibling stories at the end of the session by [step-09-cross-story-context.md](./step-09-cross-story-context.md). Because clarifications are scope-changing by definition, every resolved clarification is always propagated (no eligibility filter). The Template F resolution comment posted here is what step-09 reads to compose the context comment. No action needed — this happens automatically after step 6 completes.

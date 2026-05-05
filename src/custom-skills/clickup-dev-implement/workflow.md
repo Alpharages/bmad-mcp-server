@@ -74,3 +74,11 @@ Invoked at the agent's discretion, zero or more times; posts a markdown "Dev Cla
 See: [./steps/step-08-dev-clarification.md](./steps/step-08-dev-clarification.md)
 
 `{clarification_count}`, `{last_clarification_comment_id}`, and `{pending_clarification}` are independent of steps 5 and 7 counters.
+
+## Cross-Story Context Propagation
+
+Invoked once after step 6 completes, if `{implementation_complete}` = `'true'` AND any assumptions or clarifications were logged during this session. Re-fetches the current task's comments, identifies decisions with cross-story impact (using the eligibility matrix in step 9), discovers incomplete sibling stories in the same epic and sprint list, and posts a standardised "Context Update from Story N" comment on each affected sibling. Entirely non-blocking — failures are warned and skipped.
+
+See: [./steps/step-09-cross-story-context.md](./steps/step-09-cross-story-context.md)
+
+`{propagation_count}` is available after this step. Step 9 is the terminal step of the skill.
