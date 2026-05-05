@@ -12,7 +12,7 @@ task_description: ''
 - **Delegate to bmad-create-story.** Do NOT compose an ad-hoc description here. Invoke the `bmad-create-story` workflow via the `bmad` tool (`execute` operation, workflow name `bmad-create-story`). The exhaustive artifact analysis, BDD criteria generation, architecture guardrail extraction, previous-story intelligence, and web research all live there and stay in sync with upstream automatically.
 - **Content-composition mode only.** Instruct `bmad-create-story` to produce story content but NOT write to any local file. The composed content is captured here and posted as the ClickUp task description in step 5.
 - **Skip file-system side-effects.** Skip steps 5 (write story file) and 6 (update sprint-status.yaml) of `bmad-create-story`. ClickUp is the record.
-- **No fabrication.** `bmad-create-story` must not invent requirements not traceable to planning artifacts or the epic ClickUp task.
+- **No fabrication.** `bmad-create-story` must not invent requirements with no basis in any available context. When planning docs are present, trace requirements to them. When they are absent, derive intent from available code context (`{fallback_code_context}`: README, source structure, git history, manifest) and the epic ClickUp task — do not guess at business requirements that cannot be inferred from any of these sources.
 - **Blocking.** MUST NOT continue to step 5 if `{task_description}` is empty at the end of this step.
 - **No-epic override.** When `{epic_id}` is `''`, instruction 3 MUST use branch 3b (the no-epic override block). The composed description MUST NOT contain an "Epic:" or "Parent epic:" field or reference.
 
@@ -43,16 +43,17 @@ Execute the `bmad-create-story` workflow via the `bmad` tool with the following 
 Story title: {story_title}
 Epic: {epic_name} ({epic_id})
 Epic description: {epic_description}
-PRD content: already loaded in conversation context (from step 1: prereq check)
-Architecture content: already loaded in conversation context
+PRD content: {if prd_available=true: 'already loaded in conversation context (from step 1)' | 'NOT AVAILABLE — derive intent from fallback code context and epic description below'}
+Architecture content: {if arch_available=true: 'already loaded in conversation context (from step 1)' | 'NOT AVAILABLE — derive architectural patterns from source structure and git history below'}
 Epics-and-stories content: {epics_content — already loaded in step 1, or empty}
+Fallback code context: {fallback_code_context — present only when one or more planning docs were absent; empty string otherwise}
 Scope notes: {scope_notes or empty}
 ```
 
 **Override instructions for bmad-create-story:**
 
 - **Step 1 (Determine target story):** Skip discovery from sprint-status. Story is pre-supplied: `story_title` = `{story_title}`, epic context = above. Set `story_key` from the title.
-- **Step 2 (Load and analyze core artifacts):** Run in full — PRD, architecture, epics-and-stories content are already in conversation context. Use them directly without re-reading files.
+- **Step 2 (Load and analyze core artifacts):** Run in full — use whatever is available in context. When a planning doc is present, use it as the primary source for that artifact. When it is absent, derive intent from `{fallback_code_context}` (README, source tree, git log, manifest) and the epic ClickUp task description. Do not re-read files already in context.
 - **Step 3 (Architecture analysis):** Run in full.
 - **Step 4 (Web research):** Run in full.
 - **Step 5 (Create comprehensive story file):** Run the COMPOSITION only — produce the full story document content. Do NOT write to any local file. Return the composed content.
@@ -78,16 +79,17 @@ Execute `bmad-create-story` with the following no-epic pre-supplied context and 
 Story title: {story_title}
 Epic: (none — standalone task)
 Epic description: (none)
-PRD content: already loaded in conversation context (from step 1: prereq check)
-Architecture content: already loaded in conversation context
+PRD content: {if prd_available=true: 'already loaded in conversation context (from step 1)' | 'NOT AVAILABLE — derive intent from fallback code context below'}
+Architecture content: {if arch_available=true: 'already loaded in conversation context (from step 1)' | 'NOT AVAILABLE — derive architectural patterns from source structure and git history below'}
 Epics-and-stories content: {epics_content — available for general technical context only; do NOT look for an epic-specific section}
+Fallback code context: {fallback_code_context — present only when one or more planning docs were absent; empty string otherwise}
 Scope notes: {scope_notes or empty}
 ```
 
 **Override instructions for bmad-create-story:**
 
 - **Step 1 (Determine target story):** Skip discovery from sprint-status. Story is pre-supplied: `story_title` = `{story_title}`. No epic parent — set `epic_num` to none; set `story_key` = kebab-case of `{story_title}`.
-- **Step 2 (Load and analyze core artifacts):** Run in full — but do NOT extract epic-specific content from `{epics_content}` (there is no epic parent for this story). Use PRD and architecture as the primary context. Epics content is available for general technical reference only (e.g., cross-cutting constraints, shared terminology).
+- **Step 2 (Load and analyze core artifacts):** Run in full — but do NOT extract epic-specific content from `{epics_content}` (there is no epic parent for this story). When a planning doc is present, use it as the primary source. When it is absent, derive intent from `{fallback_code_context}` (README, source tree, git log, manifest). Epics content is available for general technical reference only (e.g., cross-cutting constraints, shared terminology).
 - **Step 3 (Architecture analysis):** Run in full.
 - **Step 4 (Web research):** Run in full.
 - **Step 5 (Create comprehensive story file):** Run COMPOSITION only — produce the full story document content. **Do NOT include an "Epic:" or "Parent epic:" field anywhere in the document.** Do NOT write to any local file. Return the composed content.
@@ -108,6 +110,15 @@ Scope notes: {scope_notes or empty}
 ### 4. Capture the composed content
 
 After `bmad-create-story` completes its composition, capture the full story document it produced as `{task_description}`. This is the content that will become the ClickUp task description.
+
+**Missing-docs banner.** If `{prd_available}` = `false` OR `{arch_available}` = `false`, prepend the following notice block to `{task_description}` before the first heading so reviewers know which sources were used:
+
+```
+> ⚠️ **Planning docs partially absent** — this story was composed from available context only.
+> Missing: {comma-separated list of absent docs, e.g. "PRD, Architecture doc"}
+> Context used: {comma-separated list of fallback sources that were available, e.g. "README, source tree, git history"}
+> Add the missing docs and regenerate for a richer description.
+```
 
 **Context-rich guardrail:** Scan `{task_description}` to ensure it contains specific file-path references (e.g., `src/...`, `lib/...`, `tests/...`) and an implementation approach. If the content is vague (no concrete file paths or exit solution), append a `## Implementation Notes` section before the footer with:
   - **Files to touch** — inferred from the architecture and acceptance criteria.

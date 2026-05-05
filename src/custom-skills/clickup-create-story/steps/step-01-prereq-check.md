@@ -3,6 +3,9 @@ prd_content: ''
 architecture_content: ''
 epics_content: ''
 resolve_doc_paths_result: ''
+prd_available: 'false'
+arch_available: 'false'
+fallback_code_context: ''
 ---
 
 # Step 1: Prereq File Check
@@ -11,7 +14,7 @@ resolve_doc_paths_result: ''
 
 - `CLICKUP_MCP_MODE=write` is required. If `createTask` is not in the available tool list, stop immediately.
 - Verify authentication by calling `pickSpace` directly — do NOT run shell commands (`printenv`, `env`, etc.) to check for env vars. ClickUp credentials live in the MCP server process, not in the shell.
-- If either required file is missing, **stop the entire skill run immediately**. Do not proceed to step 2.
+- Missing PRD or architecture docs are **warnings, not errors**. The skill continues with whatever context is available (code structure, git history, README, epics, existing ClickUp tasks). Do not stop the skill run because docs are absent.
 
 ## Permission Gate
 
@@ -65,39 +68,47 @@ Run these two checks in order. If either fails, emit the corresponding error blo
 
 2. **Emit cascade warnings.** If `{warnings}` is non-empty, emit each warning to the user as a `⚠️`-prefixed line before proceeding.
 
-3. **Check required files.** Verify whether each resolved path exists:
+3. **Attempt to load each planning doc.** Try to read each resolved path and set availability flags:
 
-   **Required:**
-   - `{prd_info.path}`
-   - `{arch_info.path}`
+   - If `{prd_info.path}` exists and is readable → set `{prd_available}` = `true`, read into `{prd_content}`.
+   - If not readable → set `{prd_available}` = `false`, set `{prd_content}` = `''`, emit:
 
-   Set `{prd_present}` / `{arch_present}` = `present` or `**MISSING**`.
+     ```
+     ⚠️ PRD not found at <data.prd.path> [<data.prd.layer>] — story will be derived from code context.
 
-4. **If either required file is missing, emit the following error block and stop:**
+     To add a PRD later, either place it at the resolved path or set [docs].prd_path in .bmadmcp/config.toml.
+     ```
+
+   - If `{arch_info.path}` exists and is readable → set `{arch_available}` = `true`, read into `{architecture_content}`.
+   - If not readable → set `{arch_available}` = `false`, set `{architecture_content}` = `''`, emit:
+
+     ```
+     ⚠️ Architecture doc not found at <data.architecture.path> [<data.architecture.layer>] — story will be derived from code context.
+
+     To add an architecture doc later, either place it at the resolved path or set [docs].architecture_path in .bmadmcp/config.toml.
+     ```
+
+4. **Gather fallback code context when any doc is missing.** If `{prd_available}` = `false` OR `{arch_available}` = `false`, collect the following and concatenate into `{fallback_code_context}`:
+
+   a. Read `{project-root}/README.md` if it exists — provides project purpose and tech overview.
+   b. List the top-level directory tree (one level deep under `src/`, `lib/`, `app/`, or equivalent) — shows module layout.
+   c. Run `git log --oneline -20` to capture recent commit history — reveals what has been built and the current development direction.
+   d. Read `package.json`, `pyproject.toml`, `Cargo.toml`, or equivalent manifest if present — identifies the tech stack and dependencies.
+   e. Emit:
 
    ```
-   ❌ **Prereq check failed — missing required file**
+   ℹ️ Fallback context gathered for missing docs:
+   - README: <found / not found>
+   - Source tree: <summarised>
+   - Recent git log: <N commits captured>
+   - Manifest: <found file / not found>
 
-   The `clickup-create-story` skill requires both of the following files to exist before it can proceed:
-
-   - PRD: <data.prd.path> [<data.prd.layer>] — {prd_present}
-   - Architecture: <data.architecture.path> [<data.architecture.layer>] — {arch_present}
-
-   **Why:** Story descriptions are composed from PRD and architecture context. The paths above were resolved via the cascade (not hardcoded). Without these files the description would be empty or fabricated.
-
-   **How to override doc paths:**
-   1. Per-project (highest priority): add `[docs].prd_path` / `[docs].architecture_path` to `.bmadmcp/config.toml`
-   2. BMAD-config: set `[bmm].planning_artifacts` in `_bmad/config.toml` (affects all three paths via default filenames)
-   3. Default (no config needed): place files at `planning-artifacts/PRD.md` and `planning-artifacts/architecture.md`
-
-   **What to do:** Add the missing file(s) at the resolved path(s), adjust your config to point to existing files, then re-invoke the skill.
+   Story descriptions will use this context in place of missing planning docs.
    ```
 
-5. **Load files.** Read:
-   - `{prd_info.path}` → `{prd_content}`
-   - `{arch_info.path}` → `{architecture_content}`
+   If all docs are present, set `{fallback_code_context}` = `''` and skip this instruction.
 
-6. **Load epics.** Use `{epics_info.path}` from the resolver result. Branch based on whether the path ends with `.md`:
+5. **Load epics.** Use `{epics_info.path}` from the resolver result. Branch based on whether the path ends with `.md`:
    - **If the path ends with `.md` (single file):** attempt to read it directly → `{epics_content}`.
    - **Otherwise (directory path):** list and read all `EPIC-*.md` files inside the directory, concatenate them with `---` separators → `{epics_content}`. If the directory is absent or contains no `EPIC-*.md` files, set `{epics_content}` = `''`.
 
@@ -111,19 +122,25 @@ Run these two checks in order. If either fails, emit the corresponding error blo
    - `{project-root}/planning-artifacts/ux-design.md` or similar `*ux*.md`
    - `{project-root}/planning-artifacts/tech-spec.md`
 
-7. **Confirm and continue.** Report to the user:
+6. **Confirm and continue.** Report to the user:
 
    ```
-   ✅ Prereq check passed — files loaded:
-   - PRD: <data.prd.path> [<data.prd.layer>]
-   - Architecture: <data.architecture.path> [<data.architecture.layer>]
+   ✅ Prereq check passed — context loaded:
+   - PRD: <data.prd.path> [<data.prd.layer>] — <found / NOT FOUND — fallback context in use>
+   - Architecture: <data.architecture.path> [<data.architecture.layer>] — <found / NOT FOUND — fallback context in use>
    - Epics: <data.epics.path> [<data.epics.layer>] — <found N file(s) / not found>
+   ```
+
+   If any planning doc was missing, also emit:
+
+   ```
+   ⚠️ One or more planning docs are absent. Story descriptions will be derived from available code context (README, source structure, git history). Consider adding planning docs for richer, more accurate stories.
    ```
 
    Then proceed to the next step.
 
 ## NEXT
 
-Proceed to [step-02-epic-picker.md](./step-02-epic-picker.md). The cwd-assertion result, the permission-gate verbatim message, `{prd_content}` / `{architecture_content}` / `{epics_content}`, and the full `{resolve_doc_paths_result}` (including resolved paths and their layers) are available to all downstream steps.
+Proceed to [step-02-epic-picker.md](./step-02-epic-picker.md). The permission-gate verbatim message, `{prd_content}` / `{architecture_content}` / `{epics_content}`, `{prd_available}` / `{arch_available}`, `{fallback_code_context}`, and the full `{resolve_doc_paths_result}` (including resolved paths and their layers) are available to all downstream steps.
 
 > **Refinement source:** `pwd-deviation-cwd-not-pilot-repo`, `step-01-verbatim-message-not-captured`, `stale-next-wording-in-skill-files` (story 5-7).
