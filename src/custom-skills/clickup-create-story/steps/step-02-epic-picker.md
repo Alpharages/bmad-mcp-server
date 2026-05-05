@@ -10,6 +10,7 @@ epic_name: ''
 
 ## RULES
 
+- **Config-first.** MUST read `.bmadmcp/config.toml` and resolve all effective pinned values (instruction 0) BEFORE calling any ClickUp tool or presenting any picker to the user. Do not call `getCurrentSpace`, `pickSpace`, `searchSpaces`, or any other tool until the config short-circuit in instruction 0 has been evaluated.
 - **Mode requirement.** `CLICKUP_MCP_MODE` must be `read` or `write`. `searchSpaces` is not registered in `read-minimal` mode; since `createTask` in story 2.6 requires `write` mode, the practical minimum for the full skill is `write` mode. See `src/tools/clickup-adapter.ts` lines 167–188.
 - **Near-read-only.** This step calls only `pickSpace`, `getCurrentSpace`, `clearCurrentSpace`, `searchSpaces`, and `searchTasks`. No writes to ClickUp are performed.
 - **Early-exit.** Stop the skill run immediately if the user cannot identify a space, or if no Backlog list exists in the chosen space.
