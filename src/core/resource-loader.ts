@@ -440,14 +440,47 @@ export class ResourceLoaderGit {
 
   /**
    * Load the full content for a bmm-skills workflow-skill.
-   * Concatenates SKILL.md with workflow.md (sibling file) when present.
+   * Concatenates SKILL.md, workflow.md, and any sibling steps/*.md files
+   * so the calling LLM gets every file it needs in one read — step files
+   * referenced via relative `./steps/step-NN-*.md` paths in workflow.md
+   * are otherwise unreachable through `bmad read resource` (they live
+   * inside the npm package, not under any BMAD root).
    */
   private loadBmmSkillContent(skillPath: string): string {
+    const skillDir = dirname(skillPath);
     let content = readFileSync(skillPath, 'utf-8');
-    const workflowMd = join(dirname(skillPath), 'workflow.md');
+
+    const workflowMd = join(skillDir, 'workflow.md');
     if (existsSync(workflowMd)) {
       content += '\n\n---\n\n' + readFileSync(workflowMd, 'utf-8');
     }
+
+    const stepsDir = join(skillDir, 'steps');
+    if (existsSync(stepsDir)) {
+      let stepFiles: string[] = [];
+      try {
+        stepFiles = readdirSync(stepsDir)
+          .filter((f) => f.endsWith('.md'))
+          .sort();
+      } catch {
+        stepFiles = [];
+      }
+      if (stepFiles.length > 0) {
+        content +=
+          '\n\n---\n\n' +
+          '<!-- All step files for this skill are inlined below. ' +
+          'Do not attempt to fetch them separately — the relative ' +
+          '`./steps/step-NN-*.md` references in workflow.md above ' +
+          'point to the sections that follow. -->\n';
+        for (const file of stepFiles) {
+          const stepPath = join(stepsDir, file);
+          content +=
+            `\n\n=== ./steps/${file} ===\n\n` +
+            readFileSync(stepPath, 'utf-8');
+        }
+      }
+    }
+
     return content;
   }
 

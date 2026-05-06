@@ -96,6 +96,85 @@ describe('ResourceLoader (Lite)', () => {
     expect(resource.source).toBe('project');
   });
 
+  it('inlines workflow.md and steps/*.md alongside SKILL.md for custom skills', async () => {
+    const customSkillDir = join(
+      testDir,
+      'src',
+      'custom-skills',
+      'skill-with-steps',
+    );
+    mkdirSync(join(customSkillDir, 'steps'), { recursive: true });
+    writeFileSync(
+      join(customSkillDir, 'SKILL.md'),
+      '---\nname: skill-with-steps\n---\nFollow ./workflow.md.',
+    );
+    writeFileSync(
+      join(customSkillDir, 'workflow.md'),
+      '# Workflow\nSee: [./steps/step-01-first.md](./steps/step-01-first.md)',
+    );
+    // Files written out of alphabetical order to verify sorting.
+    writeFileSync(
+      join(customSkillDir, 'steps', 'step-02-second.md'),
+      '# Step 2 — Second\nSecond step body.',
+    );
+    writeFileSync(
+      join(customSkillDir, 'steps', 'step-01-first.md'),
+      '# Step 1 — First\nFirst step body.',
+    );
+    // Non-md files in the steps dir must be ignored.
+    writeFileSync(
+      join(customSkillDir, 'steps', 'notes.txt'),
+      'not a step file',
+    );
+
+    const customLoader = new ResourceLoaderGit(testDir);
+    const resource = await customLoader.loadWorkflow('skill-with-steps');
+
+    expect(resource.content).toContain('Follow ./workflow.md.');
+    expect(resource.content).toContain('# Workflow');
+    expect(resource.content).toContain('=== ./steps/step-01-first.md ===');
+    expect(resource.content).toContain('First step body.');
+    expect(resource.content).toContain('=== ./steps/step-02-second.md ===');
+    expect(resource.content).toContain('Second step body.');
+    expect(resource.content).not.toContain('notes.txt');
+    expect(resource.content).not.toContain('not a step file');
+    // Step 1 must appear before step 2 regardless of filesystem order.
+    expect(resource.content.indexOf('step-01-first.md')).toBeLessThan(
+      resource.content.indexOf('step-02-second.md'),
+    );
+    // Inlining marker must precede the first step header so the LLM
+    // does not try to re-fetch the step files.
+    expect(resource.content.indexOf('inlined below')).toBeLessThan(
+      resource.content.indexOf('=== ./steps/step-01-first.md ==='),
+    );
+  });
+
+  it('omits the inlining marker when a custom skill has no steps directory', async () => {
+    const customSkillDir = join(
+      testDir,
+      'src',
+      'custom-skills',
+      'skill-without-steps',
+    );
+    mkdirSync(customSkillDir, { recursive: true });
+    writeFileSync(
+      join(customSkillDir, 'SKILL.md'),
+      '---\nname: skill-without-steps\n---\nNo steps here.',
+    );
+    writeFileSync(
+      join(customSkillDir, 'workflow.md'),
+      '# Workflow\nSelf-contained.',
+    );
+
+    const customLoader = new ResourceLoaderGit(testDir);
+    const resource = await customLoader.loadWorkflow('skill-without-steps');
+
+    expect(resource.content).toContain('No steps here.');
+    expect(resource.content).toContain('Self-contained.');
+    expect(resource.content).not.toContain('inlined below');
+    expect(resource.content).not.toContain('=== ./steps/');
+  });
+
   it('should resolve upstream skill from git source when project has only src/custom-skills', async () => {
     // P3: local alias for DEFAULT_BMAD_REMOTE in src/core/resource-loader.ts — keep in sync
     const BMAD_METHOD_GIT_URL =

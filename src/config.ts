@@ -156,7 +156,7 @@ This workflow has been requested to be executed.
 1. Load the full workflow definition:
    \`bmad({ operation: "read", type: "workflow", workflow: "${context.workflow}" })\`
 
-2. The returned content (SKILL.md / workflow.md) lists the steps to follow, typically as \`./steps/step-NN-*.md\` files referenced by name. Load each step file via the \`bmad\` tool with \`operation: "read", type: "resource"\` and the path printed in the workflow definition.
+2. The returned content already includes SKILL.md, workflow.md, and every \`./steps/step-NN-*.md\` file inlined under \`=== ./steps/<filename> ===\` markers. Do NOT attempt to fetch step files separately via \`read resource\` or the local filesystem — they are not reachable that way; read the inlined sections instead.
 
 3. Execute the steps in order. Call the \`bmad\` tool and any other available MCP tools (ClickUp, git, etc.) as each step requires.
 

@@ -38,8 +38,8 @@ describe('getWorkflowExecutionPrompt', () => {
     expect(out).toContain(
       'bmad({ operation: "read", type: "workflow", workflow: "clickup-code-review" })',
     );
-    expect(out).toContain('SKILL.md');
-    expect(out).toContain('./steps/step-NN-');
+    expect(out).toContain('=== ./steps/<filename> ===');
+    expect(out).toContain('Do NOT attempt to fetch step files separately');
   });
 
   it('substitutes the workflow name into the read call (no leakage between invocations)', () => {
