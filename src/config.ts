@@ -142,13 +142,25 @@ ${getResourceAccessInstructions()}
 
 ---`;
 
-  // Build handler section
+  // Custom skills have no agent handler; the fallback names the next bmad call so non-Claude MCP clients can self-drive instead of stalling.
   const handlerSection = context.agentWorkflowHandler
     ? `
 This workflow has been requested to be executed.
 
 ${context.agentWorkflowHandler}`
-    : '\nThis workflow has been requested to be executed.';
+    : `
+This workflow has been requested to be executed.
+
+**Next steps (no agent handler is registered for this workflow):**
+
+1. Load the full workflow definition:
+   \`bmad({ operation: "read", type: "workflow", workflow: "${context.workflow}" })\`
+
+2. The returned content (SKILL.md / workflow.md) lists the steps to follow, typically as \`./steps/step-NN-*.md\` files referenced by name. Load each step file via the \`bmad\` tool with \`operation: "read", type: "resource"\` and the path printed in the workflow definition.
+
+3. Execute the steps in order. Call the \`bmad\` tool and any other available MCP tools (ClickUp, git, etc.) as each step requires.
+
+4. Report results to the user only after the steps complete.`;
 
   return `${frontmatter}${resourceInstructions}${handlerSection}
 `;
