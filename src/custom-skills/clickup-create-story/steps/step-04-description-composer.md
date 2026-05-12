@@ -62,11 +62,21 @@ Scope notes: {scope_notes or empty}
     - **Implementation approach** — a concise exit solution: what to change, where to add new code vs. update existing code, and the expected code structure or pattern to follow.
     - **Architecture guardrails** — relevant patterns, conventions, or constraints from the architecture that MUST be followed, cited with file references where possible.
     - **Previous-story intelligence** — if prior stories in the same epic exist, reference established patterns, file naming conventions, or recently modified files to maintain continuity.
-  - **CRITICAL — QA section:** The composed document MUST include a dedicated `## QA / Testing Notes` section with:
+  - **CRITICAL — QA section (AI QA agent):** The composed document MUST include a dedicated `## QA / Testing Notes` section aimed at the **AI QA agent that has code access**. It MUST include:
     - Test scenarios derived from each acceptance criterion (Given / When / Then format).
     - Edge cases and boundary conditions to verify.
-    - Regression risks — existing features or integrations that could be affected.
+    - Regression risks — existing features or integrations that could be affected (cite files / modules where relevant).
     - Any test data, environment, or prerequisite setup QA needs.
+    - Suggested test types (unit / integration / e2e) and the files where new tests should live.
+  - **CRITICAL — Human QA section:** The composed document MUST also include a dedicated `## Human QA Notes` section aimed at the **human QA tester who does NOT have code access**. Human QA tests the deployed ticket on the staging/dev environment *after* the developer deploys. The section MUST include:
+    - **Deployment prerequisite** — explicit note that the developer must deploy the change to staging/dev before QA can begin; the dev should comment the build / branch / commit on the ticket once deployed.
+    - **Test environment** — staging or dev URL(s), feature flags to enable, test accounts/roles, seed data, or any environment-specific config the tester needs.
+    - **Setup & preconditions** — the state the tester must place the app/account in before each scenario (logged-in user, populated data, etc.).
+    - **Test steps (UI / API)** — black-box, click-by-click or request-by-request instructions using only the UI, deep links, or API endpoints (e.g., Postman). No code references, no file paths.
+    - **Expected visible outcomes** — what the tester should observe per step (UI elements, response payloads, notifications, emails, redirects, etc.).
+    - **Edge cases to try** — user-facing boundary scenarios (empty inputs, oversized inputs, invalid data, refresh mid-flow, slow network, back-button, double-submit).
+    - **Cross-cutting checks** — browsers, devices, screen sizes, user roles, locales, and permission combinations to spot-check.
+    - **Regression areas (manual)** — adjacent screens or flows the tester should click through to confirm nothing else broke.
 - **Step 6 (Update sprint status):** Skip entirely. ClickUp task creation (step 5 of this skill) is the equivalent.
 
 #### Branch 3b — No-epic path (`{epic_id}` is `''`)
@@ -98,11 +108,21 @@ Scope notes: {scope_notes or empty}
     - **Implementation approach** — a concise exit solution: what to change, where to add new code vs. update existing code, and the expected code structure or pattern to follow.
     - **Architecture guardrails** — relevant patterns, conventions, or constraints from the architecture that MUST be followed, cited with file references where possible.
     - **Previous-story intelligence** — if prior stories in the same epic exist, reference established patterns, file naming conventions, or recently modified files to maintain continuity.
-  - **CRITICAL — QA section:** The composed document MUST include a dedicated `## QA / Testing Notes` section with:
+  - **CRITICAL — QA section (AI QA agent):** The composed document MUST include a dedicated `## QA / Testing Notes` section aimed at the **AI QA agent that has code access**. It MUST include:
     - Test scenarios derived from each acceptance criterion (Given / When / Then format).
     - Edge cases and boundary conditions to verify.
-    - Regression risks — existing features or integrations that could be affected.
+    - Regression risks — existing features or integrations that could be affected (cite files / modules where relevant).
     - Any test data, environment, or prerequisite setup QA needs.
+    - Suggested test types (unit / integration / e2e) and the files where new tests should live.
+  - **CRITICAL — Human QA section:** The composed document MUST also include a dedicated `## Human QA Notes` section aimed at the **human QA tester who does NOT have code access**. Human QA tests the deployed ticket on the staging/dev environment *after* the developer deploys. The section MUST include:
+    - **Deployment prerequisite** — explicit note that the developer must deploy the change to staging/dev before QA can begin; the dev should comment the build / branch / commit on the ticket once deployed.
+    - **Test environment** — staging or dev URL(s), feature flags to enable, test accounts/roles, seed data, or any environment-specific config the tester needs.
+    - **Setup & preconditions** — the state the tester must place the app/account in before each scenario (logged-in user, populated data, etc.).
+    - **Test steps (UI / API)** — black-box, click-by-click or request-by-request instructions using only the UI, deep links, or API endpoints (e.g., Postman). No code references, no file paths.
+    - **Expected visible outcomes** — what the tester should observe per step (UI elements, response payloads, notifications, emails, redirects, etc.).
+    - **Edge cases to try** — user-facing boundary scenarios (empty inputs, oversized inputs, invalid data, refresh mid-flow, slow network, back-button, double-submit).
+    - **Cross-cutting checks** — browsers, devices, screen sizes, user roles, locales, and permission combinations to spot-check.
+    - **Regression areas (manual)** — adjacent screens or flows the tester should click through to confirm nothing else broke.
 - **Step 6 (Update sprint status):** Skip entirely. ClickUp task creation (step 5 of this skill) is the equivalent.
 
 > **Convention:** `{epic_id}` = `''` is the sentinel for "no parent". It is intentionally passed to `bmad-create-story` as an empty epic block so the workflow's full artifact analysis (PRD, architecture) still runs but the resulting description contains no epic association.
@@ -124,13 +144,26 @@ After `bmad-create-story` completes its composition, capture the full story docu
   - **Files to touch** — inferred from the architecture and acceptance criteria.
   - **Exit solution** — step-by-step implementation plan: what to create, what to update, and how to wire it.
 
-**QA section guardrail:** Scan `{task_description}` for a heading that matches `## QA / Testing Notes` (case-insensitive, allowing minor variations such as `## QA Notes`, `## Testing Notes`, or `## Test Cases`).
+**QA section guardrail (AI QA agent):** Scan `{task_description}` for a heading that matches `## QA / Testing Notes` (case-insensitive, allowing minor variations such as `## QA Notes`, `## Testing Notes`, or `## Test Cases`).
 - If a matching heading is found → no action needed; proceed.
 - If the heading is **missing** → generate the `## QA / Testing Notes` section from the story content and append it before the footer line (or at the end of the document if no footer is present). The generated section MUST include:
   1. **Test Scenarios** — one per acceptance criterion, in BDD Given/When/Then format.
   2. **Edge Cases & Boundaries** — boundary conditions, invalid inputs, and negative paths.
-  3. **Regression Risks** — adjacent features or integrations that could break.
+  3. **Regression Risks** — adjacent features or integrations that could break (cite files / modules where relevant).
   4. **Test Data / Setup** — any special data, accounts, or environment config QA needs.
+  5. **Suggested Test Coverage** — recommended unit / integration / e2e tests and the files where they should live.
+
+**Human QA section guardrail:** Scan `{task_description}` for a heading that matches `## Human QA Notes` (case-insensitive, allowing minor variations such as `## Manual QA Notes` or `## Human Testing Notes`).
+- If a matching heading is found → no action needed; proceed.
+- If the heading is **missing** → generate the `## Human QA Notes` section from the story content (no code references — black-box only) and append it before the footer line (or at the end of the document if no footer is present). The generated section MUST include:
+  1. **Deployment Prerequisite** — `> Developer must deploy this change to staging/dev before QA can begin. Comment the build / branch / commit ID on this ticket once the deploy is live.`
+  2. **Test Environment** — staging/dev URL(s), feature flags, test accounts/roles, seed data, or other environment config the tester needs (use "Same as staging defaults" when nothing project-specific is known).
+  3. **Setup & Preconditions** — the state the tester must place the app/account in before each scenario.
+  4. **Test Steps (UI / API)** — black-box, click-by-click or request-by-request instructions; no file paths.
+  5. **Expected Visible Outcomes** — what the tester should observe per step (UI elements, response payloads, notifications, redirects).
+  6. **Edge Cases to Try** — empty/invalid/oversized inputs, refresh mid-flow, slow network, back-button, double-submit, etc.
+  7. **Cross-cutting Checks** — browsers, devices, user roles, locales, permission combinations to spot-check.
+  8. **Regression Areas (manual)** — adjacent screens or flows to click through to confirm nothing else broke.
 
 If `{scope_notes}` is non-empty and not already included by `bmad-create-story`, append a `## Scope Notes` section before the footer line.
 

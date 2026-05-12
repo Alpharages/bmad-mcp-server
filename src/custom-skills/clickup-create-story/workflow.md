@@ -40,7 +40,12 @@ Delegates to the `bmad-create-story` workflow in content-composition mode (skip 
 - **Architecture guardrails** — relevant patterns and constraints cited with file references.
 - **Previous-story intelligence** — references to established patterns or recently modified files for continuity.
 
-**QA / Testing Notes:** The override instructions also require a dedicated `## QA / Testing Notes` section (test scenarios in BDD format, edge cases, regression risks, and test-data/setup requirements). A guardrail step checks the captured content and appends missing sections — both QA notes and an `## Implementation Notes` fallback if the document lacks concrete file paths or an exit solution.
+**QA — two audiences, two sections:** The override instructions require both:
+
+- `## QA / Testing Notes` — aimed at the **AI QA agent that has code access**. BDD test scenarios, code-level edge cases, regression risks citing files/modules, test data/setup, and suggested test coverage (unit / integration / e2e) with target test-file locations.
+- `## Human QA Notes` — aimed at the **human QA tester who does NOT have code access**. Human QA tests the deployed ticket on the staging/dev environment *after* the developer deploys. Section is black-box only (UI / API steps, expected visible outcomes, environment URL + accounts + flags, cross-browser/device/role checks, manual regression click-through) and explicitly states the deployment prerequisite.
+
+A guardrail step checks the captured content and appends either or both missing sections, plus an `## Implementation Notes` fallback if the document lacks concrete file paths or an exit solution.
 
 See: [./steps/step-04-description-composer.md](./steps/step-04-description-composer.md)
 

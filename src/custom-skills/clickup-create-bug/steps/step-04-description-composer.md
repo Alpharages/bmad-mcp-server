@@ -179,7 +179,7 @@ suggested_fix: ''
 
    ## QA / Testing Notes
 
-   _Generated from the bug report for the QA team._
+   _Generated from the bug report for the **AI QA agent** (has code access — can read failing tests, add regression coverage, and reference files/symbols)._
 
    **How to verify the fix:**
    1. Follow the reproduction steps above and confirm the issue no longer occurs.
@@ -191,13 +191,55 @@ suggested_fix: ''
    - [ ] Re-try with invalid or empty inputs where relevant.
    - [ ] Concurrent or repeated execution (if race condition suspected).
 
-   **Regression areas:**
-   - [ ] Related features or adjacent components that touch the suspected area.
+   **Regression areas (code-aware):**
+   - [ ] Related features or adjacent components that touch `{code_location}`.
    - [ ] Any integration points mentioned in the tech context or related links.
+   - [ ] Callers / callees of the modified function(s) — verify their tests still pass.
+
+   **Suggested test coverage:**
+   - Add a regression test that fails before the fix and passes after it. Suggested file: based on `{code_location}` and the project's test layout.
 
    **Test environment:**
    - Same as the environment section above, or a staging equivalent.
    - If `{traced_arch_context}` mentions specific environment constraints (e.g., feature flags, API versions), include them here.
+
+   ## Human QA Notes
+
+   _For the **human QA tester** (no code access — tests the deployed fix on staging/dev after the developer deploys)._
+
+   > **Deployment prerequisite:** The developer must deploy the fix to the staging/dev environment before QA can begin. Once deployed, the developer should comment the build / branch / commit ID on this ticket.
+
+   **Test environment:**
+   - URL: _staging / dev URL — confirm with the team if not pre-filled_
+   - Account / role: _test account or role required to reproduce_
+   - Feature flags / config: _any flags that must be enabled_
+   - Test data / seed: _accounts, records, or fixtures needed_
+
+   **Setup & preconditions:**
+   - _State the app/account must be in before starting (e.g., logged-in as admin, with at least one project, on the dashboard page)._
+
+   **Steps to verify the fix (UI / API only — no code references):**
+   1. Reproduce the original bug using the steps above — confirm the issue is gone.
+   2. Repeat the happy path and observe the expected visible outcome.
+   3. _Add scenario-specific manual checks here._
+
+   **Expected visible outcomes:**
+   - _What the tester should see / receive at each step (UI state, response, email, notification, redirect, etc.)._
+
+   **Edge cases to try (black-box):**
+   - [ ] Empty / invalid / oversized inputs.
+   - [ ] Refresh or navigate-back mid-flow.
+   - [ ] Slow / interrupted network (Chrome DevTools throttling).
+   - [ ] Double-click or rapid repeat actions.
+
+   **Cross-cutting checks:**
+   - [ ] Browsers: Chrome, Safari, Firefox (and Edge if used by the audience).
+   - [ ] Devices: desktop + mobile viewport.
+   - [ ] Roles: admin, regular user, guest (whichever apply).
+
+   **Regression areas (manual click-through):**
+   - [ ] Adjacent screens or flows that share UI with the suspected area.
+   - [ ] Navigation, login/logout, and any feature recently changed in the same release.
 
    ## Tech Context
 
@@ -215,7 +257,8 @@ suggested_fix: ''
    - The `## Tech Context` section appears only when step 5 produces at least one bullet.
    - The `## Code Location`, `## Root Cause`, and `## Suggested Fix` sections appear only when step 4 (code investigation) produces non-empty findings. If the investigation yields nothing, omit all three sections entirely — do not leave empty headings.
    - The `## Traced Requirements` section appears only when step 3 (deep artifact analysis) produces non-empty `{traced_epic_context}` or `{traced_prd_context}`.
-   - The `## QA / Testing Notes` section is always included (unless the user explicitly removes it during the edit loop).
+   - The `## QA / Testing Notes` section (AI QA agent, code-aware) is always included unless the user explicitly removes it during the edit loop.
+   - The `## Human QA Notes` section (human tester, no code access, staging/dev deploy required) is always included unless the user explicitly removes it during the edit loop.
 
    If `{target_list_name}` (set by step-02) is non-empty, append ` Target list: {target_list_name}.` to the footer line. If empty (step-02 is still a stub), omit the clause entirely — the footer MUST NOT read "Target list: ."
 

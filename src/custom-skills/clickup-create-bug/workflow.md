@@ -44,7 +44,8 @@ Parses the user's free-form bug report into a context-rich, dev-agent-ready desc
 - **Code Location** — exact file paths, function names, and line numbers investigated from the codebase
 - **Root Cause** — analysis of the specific logic path or state mismatch causing the failure, cross-referenced with architecture guardrails
 - **Suggested Fix** — minimal code change required, which file(s) to modify, what kind of change, and which architecture patterns MUST be preserved
-- **QA / Testing Notes** — verification steps, edge cases, regression areas, and test environment guidance for the QA team
+- **QA / Testing Notes** — verification steps, edge cases, code-aware regression areas, and suggested test coverage for the **AI QA agent** (has code access)
+- **Human QA Notes** — deployment prerequisite (dev must deploy to staging/dev first), staging URL + accounts + flags, black-box UI/API steps, expected visible outcomes, cross-browser/device/role checks, and manual regression click-through for the **human QA tester** (no code access)
 
 Before composing the description, the skill performs two enrichment passes:
 1. **Deep artifact analysis (BMAD-style)** — traces the suspected area through epics, PRD, and architecture to extract acceptance criteria, functional requirements, and tech constraints.
