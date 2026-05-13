@@ -2,6 +2,9 @@
 review_verdict: ''
 review_summary: ''
 review_findings: ''
+lore_enabled: ''
+lore_project_slug: ''
+lore_findings_captured: '0'
 ---
 
 # Step 4: Review Execution (via bmad-code-review)
@@ -54,6 +57,44 @@ After `bmad-code-review` completes, extract:
 - `{review_findings}` — the full structured findings list from the `bmad-code-review` output.
 
 If `bmad-code-review` does not emit an explicit verdict, derive it from the triage output: if the blocking-findings section is empty or explicitly states "none", set `{review_verdict}` = `approved`; otherwise set `{review_verdict}` = `changes_requested`.
+
+### 3b. Capture findings to Lore (optional)
+
+This step is gated on Lore being configured for the project under review.
+
+1. **Detect Lore configuration.** Attempt to read `lore.yaml` from the project root via the Read tool.
+   - If the file is missing, malformed, or lacks `project.slug`: set `{lore_enabled}` = `'false'`, `{lore_findings_captured}` = `'0'`, and skip the rest of this section silently. Continue to step 4.
+   - If `project.slug` is set: set `{lore_enabled}` = `'true'`, `{lore_project_slug}` = the slug value.
+
+2. **Skip if nothing to capture.** If `{review_verdict}` = `approved` AND `{review_findings}` is empty, skip silently.
+
+3. **Capture each finding.** For each finding in `{review_findings}`, call `capture_review_finding` on the `lore-memory-{lore_project_slug}` MCP server with:
+
+   - `external_task_id`: `{task_id}`
+   - `external_tracker_type`: `clickup`
+   - `external_task_ref`: `{task_url}`
+   - `severity`: map BMAD's blocking/non-blocking to Lore's `critical`/`high`/`medium`/`low`:
+     - blocking + AC-violation -> `critical`
+     - blocking + correctness/security -> `high`
+     - non-blocking + maintainability -> `medium`
+     - non-blocking + style/nit -> `low`
+   - `finding.title`: the finding's short label
+   - `finding.problem`: the "what's wrong" prose from the finding
+   - `finding.root_cause`: the "why this happened" prose, if `bmad-code-review` provided it
+   - `finding.fix`: the proposed fix prose
+   - `finding.prevention_rule`: a one-sentence generalised rule the Dev agent should remember next time
+   - `finding.stack_tags`: the `repos[].stack` array from the same `lore.yaml` (already read in step 1)
+   - `finding.category`: e.g. `correctness`, `security`, `performance`, `maintainability`, `style`
+   - `finding.code_pointer`: `{ file, line_start, line_end }` if the finding cites a specific location; omit otherwise
+   - `reviewer`: `bmad-code-review`
+   - `workflow`: `clickup-code-review`
+
+   Non-blocking. Each call's failure is independent — keep going on the others. Increment `{lore_findings_captured}` only on success.
+
+4. **Surface to user.** If `{lore_findings_captured}` > 0, append a single line to the verdict summary block (in step 4):
+   ```
+   Captured {lore_findings_captured} finding(s) to Lore for cross-project propagation.
+   ```
 
 ### 4. Confirm and continue
 

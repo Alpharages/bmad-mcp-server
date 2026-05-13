@@ -3,6 +3,7 @@ implementation_complete: 'false'
 files_changed: ''
 pr_url: ''
 review_continuation: 'false'
+lore_link_executed: ''
 ---
 
 # Step 4: Implementation Loop (via bmad-dev-story)
@@ -68,3 +69,16 @@ After `bmad-dev-story` completes:
 If `{implementation_complete}` = `'true'`: proceed to step 5 (M2 progress comment) and step 6 (status transition).
 
 If `{implementation_complete}` = `'false'`: surface the HALT reason from `bmad-dev-story` to the user and stop — do not post M2 or transition status.
+
+### 5. Link consulted lessons to task (Lore — optional)
+
+This step is gated on `{lore_enabled}` from step 3.
+
+- **If `{lore_enabled}` != `'true'`**, skip silently and return. Do NOT emit anything.
+- **If `{lore_consulted_lesson_ids}` is empty**, skip silently and set `{lore_link_executed}` = `'skipped'`.
+- **Otherwise**, call `link_lessons_to_task` on the `lore-memory-{lore_project_slug}` MCP server:
+  - `external_task_id`: `{task_id}`
+  - `consulted`: array parsed from `{lore_consulted_lesson_ids}`
+  - `applied`: subset of `consulted` that genuinely influenced the implementation (the Dev agent decides; default to `[]` if unsure)
+
+  Non-blocking. If the call fails, set `{lore_link_executed}` = `'false'` and continue. Do NOT halt; this is bookkeeping, not a DoD gate.

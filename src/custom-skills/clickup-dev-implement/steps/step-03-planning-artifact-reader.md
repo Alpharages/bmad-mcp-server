@@ -6,6 +6,10 @@ project_context_loaded: ''
 task_ac_list: ''
 task_subtasks: ''
 resolve_doc_paths_result: ''
+lore_enabled: ''
+lore_project_slug: ''
+lore_query_executed: ''
+lore_consulted_lesson_ids: ''
 ---
 
 # Step 3: Planning Artifact Reader & Context Builder
@@ -91,9 +95,46 @@ The ClickUp task description from step 2 is already in conversation context. Ext
 
 9. **Extract dev notes** — locate the `## Dev Notes` section in the task description. Note the Architecture Guardrails, Previous Story Context, and References subsections. These are available in conversation context for the implementation loop — no separate variable needed.
 
+### Query Lore for relevant prior lessons (optional)
+
+10. **Detect Lore configuration.** Attempt to read `lore.yaml` from the project root via the Read tool.
+
+    - If the file does not exist OR cannot be parsed as YAML OR lacks `project.slug`: set `{lore_enabled}` = `'false'`, `{lore_project_slug}` = `''`, `{lore_consulted_lesson_ids}` = `''`. Skip the rest of this section silently and proceed to step 11. Do NOT emit a warning — Lore is optional and most projects won't have it.
+    - If the file exists and `project.slug` is set: set `{lore_enabled}` = `'true'`, `{lore_project_slug}` = the slug value.
+
+    **Lore-enabled path only:**
+
+    Call `query_lessons_for_task` on the `lore-memory-{lore_project_slug}` MCP server. Best-effort — if the tool is not registered in this session, or the call fails for any reason, set `{lore_query_executed}` = `'false'`, `{lore_consulted_lesson_ids}` = `''`, emit a single-line WARNING (`WARNING: Lore configured but MCP server lore-memory-{lore_project_slug} unreachable — continuing without lessons.`) and continue. Do NOT halt.
+
+    Tool arguments:
+    - `external_task_id`: `{task_id}`
+    - `task_context.title`: `{task_name}`
+    - `task_context.description`: first 2000 chars of the task description
+    - `task_context.acceptance_criteria`: `{task_ac_list}` (or `''` if empty)
+    - `task_context.parent_epic_id`: `{epic_task_id}`
+    - `limit`: `10`
+
+    On success:
+    - Set `{lore_query_executed}` = `'true'`.
+    - Extract lesson IDs into `{lore_consulted_lesson_ids}` as a comma-separated string for step 4's linking call.
+    - If the result list is non-empty, surface the lessons inline so they steer the implementation loop:
+
+      ```
+      Prior lessons relevant to this task (from Lore):
+
+      {for each lesson:}
+        - <title> [<severity>] — <prevention rule>
+          (lesson_id: <uuid>, relevance: <score>)
+      {end}
+
+      The Dev agent SHOULD consult these before/during implementation. Lessons applied during this task will be linked to the task in step 4.
+      ```
+
+    - If the result list is empty, emit nothing and continue. (No noise; the absence of lessons is the common case until the corpus grows.)
+
 ### Emit success summary
 
-10. Emit the success summary block and continue to step 4.
+11. Emit the success summary block and continue to step 4.
 
     ```
     ✅ **Context loaded**
@@ -108,6 +149,9 @@ The ClickUp task description from step 2 is already in conversation context. Ext
     - Acceptance criteria: {count from task_ac_list, or "derived from PRD" if empty}
     - Tasks/subtasks: {count from task_subtasks, or "none in task description"}
     - Dev notes: {present | absent}
+    {if lore_enabled == 'true' AND lore_consulted_lesson_ids is non-empty:}
+    - Lore lessons consulted: {count from lore_consulted_lesson_ids}
+    {end}
 
     Proceeding to step 4 (implementation loop).
     ```
