@@ -128,4 +128,4 @@ A decision was made during implementation of the above story that may affect thi
 
 ## NEXT
 
-Step 9 is the terminal step of the `clickup-dev-implement` skill. After step 9 completes (or is skipped), the workflow ends.
+After step 9 completes (or is skipped), proceed to step 10 (Lore lesson save).

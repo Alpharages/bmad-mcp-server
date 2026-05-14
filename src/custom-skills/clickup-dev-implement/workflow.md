@@ -81,4 +81,12 @@ Invoked once after step 6 completes, if `{implementation_complete}` = `'true'` A
 
 See: [./steps/step-09-cross-story-context.md](./steps/step-09-cross-story-context.md)
 
-`{propagation_count}` is available after this step. Step 9 is the terminal step of the skill.
+`{propagation_count}` is available after this step.
+
+## Lore Lesson Save
+
+Invoked once after step 9 completes (or is skipped), if `{implementation_complete}` = `'true'`. Assesses whether this session produced lesson-eligible signals (non-obvious constraints, assumption corrections, test strategy decisions, propagation-worthy choices), deduplicates candidates against the existing Lore corpus at two layers (task-level via `query_lessons_for_task`, semantic-level via `search_similar` at ≥ 0.88 similarity), and persists only genuinely new lessons. Entirely non-blocking — skipped silently if no Lore MCP is configured for this project.
+
+See: [./steps/step-10-lore-lesson-save.md](./steps/step-10-lore-lesson-save.md)
+
+`{lesson_count}` is available after this step. Step 10 is the terminal step of the skill.

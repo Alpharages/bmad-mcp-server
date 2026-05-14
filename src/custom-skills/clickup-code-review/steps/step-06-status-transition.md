@@ -93,3 +93,7 @@ transition_target: ''
 > - **URL:** {task_url}
 >
 > Review session complete. Review comment has been posted with the required changes.
+
+## NEXT
+
+After step 6 completes (or is skipped), proceed to step 7 (Lore lesson save).

@@ -51,3 +51,11 @@ Transitions the task status based on `{review_verdict}`: approved → "approved"
 See: [./steps/step-06-status-transition.md](./steps/step-06-status-transition.md)
 
 `{transition_target}` is the matched status name, or `''` if skipped.
+
+## Lore Lesson Save
+
+Invoked once after step 6 completes (or is skipped), if `{review_verdict}` is non-empty. Assesses whether the review findings contain lesson-eligible signals (recurring anti-patterns, AC gaps, security issues, architecture violations, non-obvious test gaps), deduplicates candidates against the existing Lore corpus at two layers (task-level via `query_lessons_for_task`, semantic-level via `search_similar` at ≥ 0.88 similarity), and persists only genuinely new lessons framed as prevention patterns. Entirely non-blocking — skipped silently if no Lore MCP is configured for this project.
+
+See: [./steps/step-07-lore-lesson-save.md](./steps/step-07-lore-lesson-save.md)
+
+`{lesson_count}` is available after this step. Step 7 is the terminal step of the skill.
