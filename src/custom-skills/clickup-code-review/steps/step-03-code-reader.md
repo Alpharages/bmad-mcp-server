@@ -13,7 +13,8 @@ resolve_doc_paths_result: ''
 1. **Read-only.** This step uses shell commands and IDE Read tools only. No writes.
 2. **Must-locate-changes.** If no commits or changed files can be found, emit the no-changes error block and stop. A review with no code to examine is meaningless.
 3. **Scope limit.** Read only the files that changed — do not read the entire repo. For files larger than 500 lines, read only the changed sections (use `git diff` output to identify them).
-4. **Planning artifacts are non-fatal.** PRD and architecture paths are resolved via `bmad({ operation: 'resolve-doc-paths' })` (3-layer cascade: `.bmadmcp/config.toml [docs]` → BMAD `_bmad/config.toml` chain → `planning-artifacts/` default). If either resolved file is absent, emit the cascade-layer-aware warning and continue — the review proceeds with task-description context only.
+4. **Planning artifacts are non-fatal.** PRD and architecture paths are resolved **client-side** by you against the client project root using the 3-layer cascade (`.bmadmcp/config.toml [docs]` → BMAD `_bmad/config.toml` chain → `planning-artifacts/` default) in section 5. If either resolved file is absent, emit the cascade-layer-aware warning and continue — the review proceeds with task-description context only.
+5. **Doc-path resolution is client-side.** Run the cascade in section 5 yourself against the client project root (your current working directory). Do NOT call `bmad({ operation: 'resolve-doc-paths' })` — the MCP server may be remote and cannot see this project's files. All file reads (`.bmadmcp/config.toml`, the BMAD config chain, the planning docs themselves) are performed by you against the local filesystem.
 
 ## INSTRUCTIONS
 
@@ -44,18 +45,26 @@ For each file in `{changed_files}` (status `M` or `A`):
 
 ### 5. Load planning artifacts
 
-Call `bmad({ operation: 'resolve-doc-paths' })` with no `projectRoot` argument (defaults to the server's configured project root). Store the full response data as `{resolve_doc_paths_result}`.
+**Resolve doc paths yourself (client-side cascade).** Run the cascade below against the **client project root** — your current working directory, the project you are operating in, NOT the MCP server's filesystem. Resolve the keys `prd`, `architecture`, and `epics` **independently and per-key** (first match wins for each key — preserve the full chain; do NOT collapse it to a single `.bmadmcp/config.toml [docs]` read). Treat relative paths as relative to the project root (join them); absolute paths are used as-is. Collect any malformed/wrong-type config warnings into `{warnings}`.
 
-**If the call returns an error or `data` is absent/null:**
+Default filenames per key: `prd` → `PRD.md`, `architecture` → `architecture.md`, `epics` → `epics/` (a directory — keep the trailing slash).
 
-```
-⚠️ resolve-doc-paths operation failed: <error message>
-Review will proceed without planning-artifact context.
-```
+- **Layer 1 — `{root}/.bmadmcp/config.toml` `[docs]` table.** Read `{root}/.bmadmcp/config.toml`.
+  - Absent → skip this layer.
+  - Present but not valid TOML → add warning `<path>: malformed TOML — <reason>; falling back to BMAD / default for all doc paths`, then skip this layer.
+  - Parses with a `[docs]` table:
+    - **Per-key path settings** (`prd_path`, `architecture_path`, `epics_path`): for each key, if the setting is present but is **not** a non-empty string, add warning `<path> [docs].<setting>: expected non-empty string, got <type>; ignoring this layer for key '<key>'` (emit this even if `planning_dir` later fills the key). If it is a non-empty string, resolve that key to its path with layer `bmadmcp-config`.
+    - **`planning_dir`** (base dir for any key still unresolved): if it is a non-empty string, resolve each still-unset key to `<planning_dir>/<default filename>` with layer `bmadmcp-config`. If `planning_dir` is present but not a non-empty string, add warning `<path> [docs].planning_dir: expected non-empty string, got <type>; ignoring this layer`.
+- **Layer 2 — BMAD config chain** (unresolved keys only). Choose the BMAD dir: use `{root}/bmad` if `{root}/bmad/config.toml` exists, else `{root}/_bmad` if `{root}/_bmad/config.toml` exists, else skip this layer. Merge the `[bmm]` table across these four files **in order**, later overriding earlier (deep-merge tables; replace scalars/arrays); skip any missing file, and for a malformed file add warning `<path>: malformed TOML — <reason>; skipping this BMAD config layer` and skip just that file:
+  1. `<bmaddir>/config.toml`
+  2. `<bmaddir>/config.user.toml`
+  3. `<bmaddir>/custom/config.toml`
+  4. `<bmaddir>/custom/config.user.toml`
 
-Continue with empty planning-artifact context — the review is non-fatal on planning-artifact unavailability.
+  From the merged `[bmm]`, read `planning_artifacts`. If it is a non-empty string, resolve each still-unset key to `<planning_artifacts>/<default filename>` with layer `bmad-config`. If `planning_artifacts` is present but not a non-empty string, add warning `<bmaddir>/config.toml chain [bmm].planning_artifacts: expected non-empty string, got <type>; falling back to default`.
+- **Layer 3 — default** (remaining keys): resolve to `{root}/planning-artifacts/<default filename>` with layer `default`.
 
-**If the call succeeds**, extract from `data`:
+Store the result as `{resolve_doc_paths_result}` — an object with `prd`, `architecture`, `epics` (each `{ path, layer }`) plus `warnings`. Extract from `data`:
 
 - `data.prd` → `{prd_info}` (contains `.path` and `.layer`)
 - `data.architecture` → `{arch_info}` (contains `.path` and `.layer`)
@@ -92,8 +101,6 @@ Continue with empty planning-artifact context — the review is non-fatal on pla
 Layer tags MUST be exactly the resolver strings: `bmadmcp-config`, `bmad-config`, or `default`.
 
 ### 6. Confirm and continue
-
-**If the `resolve-doc-paths` call failed** (op error path from section 5), use `N/A (op failed)` for both planning artifact lines in the summary below.
 
 Emit the success summary block and continue to step 4.
 

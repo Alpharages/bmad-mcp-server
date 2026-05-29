@@ -12,6 +12,7 @@ resolve_doc_paths_result: ''
 - `CLICKUP_MCP_MODE=write` is required. If `createTask` is not in the available tool list, stop immediately.
 - Verify authentication by calling `pickSpace` directly — do NOT run shell commands (`printenv`, `env`, etc.) to check for env vars. ClickUp credentials live in the MCP server process, not in the shell.
 - PRD, architecture, and epics are **soft-loaded** — the skill warns when they are absent but does **not abort**. Missing planning artifacts never block bug creation.
+- **Doc-path resolution is client-side.** Resolve PRD / architecture / epics paths yourself against the client project root (your current working directory) using the cascade in instruction 1. Do NOT call `bmad({ operation: 'resolve-doc-paths' })` — the MCP server may be remote and cannot see this project's files. All file reads (`.bmadmcp/config.toml`, the BMAD config chain, the planning docs themselves) are performed by you against the local filesystem.
 
 ## Permission Gate
 
@@ -45,21 +46,26 @@ Run these two checks in order. If either fails, emit the corresponding error blo
 
 ## INSTRUCTIONS
 
-1. **Call `bmad({ operation: 'resolve-doc-paths' })`.** No `projectRoot` argument — the operation defaults to the server's configured project root. Store the full response data object as `{resolve_doc_paths_result}`. Extract:
-   - `data.prd` → `{prd_info}` (contains `.path` and `.layer`)
-   - `data.architecture` → `{arch_info}` (contains `.path` and `.layer`)
-   - `data.epics` → `{epics_info}` (contains `.path` and `.layer`)
-   - `data.warnings` → `{warnings}`
+1. **Resolve doc paths yourself (client-side cascade).** Run the cascade below against the **client project root** — your current working directory, the project you are operating in, NOT the MCP server's filesystem. Resolve the three keys `prd`, `architecture`, and `epics` **independently and per-key** (first match wins for each key — preserve the full chain; do NOT collapse it to a single `.bmadmcp/config.toml [docs]` read). Treat relative paths as relative to the project root (join them); absolute paths are used as-is. Collect any malformed/wrong-type config warnings into `{warnings}`.
 
-   If the call returns an error or `data` is absent/null, emit the following error block and stop the skill run immediately:
+   Default filenames per key: `prd` → `PRD.md`, `architecture` → `architecture.md`, `epics` → `epics/` (a directory — keep the trailing slash). Layer tags MUST be exactly the resolver strings: `bmadmcp-config`, `bmad-config`, or `default`.
 
-   ```
-   ❌ resolve-doc-paths operation failed: <error message>
+   - **Layer 1 — `{root}/.bmadmcp/config.toml` `[docs]` table.** Read `{root}/.bmadmcp/config.toml`.
+     - Absent → skip this layer.
+     - Present but not valid TOML → add warning `<path>: malformed TOML — <reason>; falling back to BMAD / default for all doc paths`, then skip this layer.
+     - Parses with a `[docs]` table:
+       - **Per-key path settings** (`prd_path`, `architecture_path`, `epics_path`): for each key, if the setting is present but is **not** a non-empty string, add warning `<path> [docs].<setting>: expected non-empty string, got <type>; ignoring this layer for key '<key>'` (emit this even if `planning_dir` later fills the key). If it is a non-empty string, resolve that key to its path with layer `bmadmcp-config`.
+       - **`planning_dir`** (base dir for any key still unresolved): if it is a non-empty string, resolve each still-unset key to `<planning_dir>/<default filename>` with layer `bmadmcp-config`. If `planning_dir` is present but not a non-empty string, add warning `<path> [docs].planning_dir: expected non-empty string, got <type>; ignoring this layer`.
+   - **Layer 2 — BMAD config chain** (unresolved keys only). Choose the BMAD dir: use `{root}/bmad` if `{root}/bmad/config.toml` exists, else `{root}/_bmad` if `{root}/_bmad/config.toml` exists, else skip this layer. Merge the `[bmm]` table across these four files **in order**, later overriding earlier (deep-merge tables; replace scalars/arrays); skip any missing file, and for a malformed file add warning `<path>: malformed TOML — <reason>; skipping this BMAD config layer` and skip just that file:
+     1. `<bmaddir>/config.toml`
+     2. `<bmaddir>/config.user.toml`
+     3. `<bmaddir>/custom/config.toml`
+     4. `<bmaddir>/custom/config.user.toml`
 
-   The `clickup-create-bug` skill could not resolve document paths.
+     From the merged `[bmm]`, read `planning_artifacts`. If it is a non-empty string, resolve each still-unset key to `<planning_artifacts>/<default filename>` with layer `bmad-config`. If `planning_artifacts` is present but not a non-empty string, add warning `<bmaddir>/config.toml chain [bmm].planning_artifacts: expected non-empty string, got <type>; falling back to default`.
+   - **Layer 3 — default** (remaining keys): resolve to `{root}/planning-artifacts/<default filename>` with layer `default`.
 
-   **What to do:** Restart the MCP server and re-invoke the skill. If the error persists, verify that `resolve-doc-paths` appears in `npm run cli:list-tools`.
-   ```
+   Store the result as `{resolve_doc_paths_result}` — an object with `prd`, `architecture`, `epics` (each `{ path, layer }`) plus `warnings`. Extract `data.prd` → `{prd_info}`, `data.architecture` → `{arch_info}`, `data.epics` → `{epics_info}`, `data.warnings` → `{warnings}`.
 
 2. **Emit cascade warnings.** If `{warnings}` is non-empty, emit each warning to the user as a `⚠️`-prefixed line before proceeding.
 

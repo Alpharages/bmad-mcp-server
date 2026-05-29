@@ -22,7 +22,7 @@ See: [./steps/step-02-task-fetch.md](./steps/step-02-task-fetch.md)
 
 ## Code Reader
 
-Reads git log to locate commits related to this task, reads the diff of changed files, and calls `bmad({ operation: 'resolve-doc-paths' })` to determine PRD and architecture paths via the 3-layer cascade (`.bmadmcp/config.toml [docs]` → BMAD `_bmad/config.toml` chain → `planning-artifacts/` default). Missing planning artifacts are non-fatal — the review continues with task-description context only.
+Reads git log to locate commits related to this task, reads the diff of changed files, and resolves PRD and architecture paths **client-side** (the AI runs the 3-layer cascade against the client project root — `.bmadmcp/config.toml [docs]` → BMAD `_bmad/config.toml` chain → `planning-artifacts/` default — rather than calling a server tool, since the MCP server may be remote and cannot see the project's files). Missing planning artifacts are non-fatal — the review continues with task-description context only.
 
 See: [./steps/step-03-code-reader.md](./steps/step-03-code-reader.md)
 
