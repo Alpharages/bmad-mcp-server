@@ -6,7 +6,7 @@
 
 ## Prerequisites
 
-Before proceeding, the skill calls `bmad({ operation: 'resolve-doc-paths' })` to determine PRD, architecture, and epics paths via the 3-layer cascade (`.bmadmcp/config.toml [docs]` → BMAD `_bmad/config.toml` chain → `planning-artifacts/` default), then attempts to load each file. Missing planning docs are **warnings, not errors** — the skill continues with whatever context is available. When a doc is absent, the skill falls back to code context (README, source directory structure, recent git history, project manifest) and emits a `⚠️` warning per missing file. The composed story description is prefixed with a banner listing which docs were absent and which fallback sources were used.
+Before proceeding, the skill resolves PRD, architecture, and epics paths **client-side** (the AI runs the 3-layer cascade against the client project root — `.bmadmcp/config.toml [docs]` → BMAD `_bmad/config.toml` chain → `planning-artifacts/` default — rather than calling a server tool, since the MCP server may be remote and cannot see the project's files), then attempts to load each file. Missing planning docs are **warnings, not errors** — the skill continues with whatever context is available. When a doc is absent, the skill falls back to code context (README, source directory structure, recent git history, project manifest) and emits a `⚠️` warning per missing file. The composed story description is prefixed with a banner listing which docs were absent and which fallback sources were used.
 
 Before checking project files, step 1 verifies that `CLICKUP_MCP_MODE=write` (so `createTask` is registered) and that the `CLICKUP_API_KEY` token authenticates against the ClickUp API; the skill aborts with an actionable error if either check fails.
 

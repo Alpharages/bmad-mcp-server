@@ -29,7 +29,7 @@ See: [./steps/step-02-task-fetch.md](./steps/step-02-task-fetch.md)
 
 ## Context Builder
 
-Calls `bmad({ operation: 'resolve-doc-paths' })` to determine PRD and architecture paths via the 3-layer cascade (`.bmadmcp/config.toml [docs]` → BMAD `_bmad/config.toml` chain → `planning-artifacts/` default), then verifies the required files exist at the resolved paths. Also reads `planning-artifacts/tech-spec.md` and `project-context.md` (optional, best-effort, hardcoded paths — `tech_spec_path` cascade is deferred to a later story). The skill aborts if either required file is missing, surfacing the cascade layer and instructions for all three override layers.
+Resolves PRD and architecture paths **client-side** (the AI runs the 3-layer cascade against the client project root — `.bmadmcp/config.toml [docs]` → BMAD `_bmad/config.toml` chain → `planning-artifacts/` default — rather than calling a server tool, since the MCP server may be remote and cannot see the project's files), then verifies the required files exist at the resolved paths. Also reads `planning-artifacts/tech-spec.md` and `project-context.md` (optional, best-effort, hardcoded paths — `tech_spec_path` cascade is deferred to a later story). The skill aborts if either required file is missing, surfacing the cascade layer and instructions for all three override layers.
 
 See: [./steps/step-03-planning-artifact-reader.md](./steps/step-03-planning-artifact-reader.md)
 
