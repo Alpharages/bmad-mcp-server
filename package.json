@@ -93,16 +93,19 @@
     "agile",
     "ai-agents"
   ],
-  "author": "",
+  "author": "Alpharages",
+  "contributors": [
+    "mkellerman (https://github.com/mkellerman)"
+  ],
   "license": "ISC",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mkellerman/bmad-mcp-server"
+    "url": "git+https://github.com/Alpharages/bmad-mcp-server.git"
   },
   "bugs": {
-    "url": "https://github.com/mkellerman/bmad-mcp-server/issues"
+    "url": "https://github.com/Alpharages/bmad-mcp-server/issues"
   },
-  "homepage": "https://github.com/mkellerman/bmad-mcp-server#readme",
+  "homepage": "https://github.com/Alpharages/bmad-mcp-server#readme",
   "lint-staged": {
     "*.{ts,js,mjs}": [
       "eslint --fix",
