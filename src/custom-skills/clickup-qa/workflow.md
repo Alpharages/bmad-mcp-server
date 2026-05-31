@@ -38,7 +38,7 @@ See: [./steps/step-04-ai-qa-pass.md](./steps/step-04-ai-qa-pass.md)
 
 ## Human-Style Visual QA Pass
 
-Acts as a manual black-box tester: detects a connected browser MCP (prefers chrome-devtools, falls back to Playwright), resolves the base URL (user-supplied → local dev server → URL in the Human QA Notes), then drives the app screen-by-screen through the Human QA Notes steps, capturing screenshots and verifying expected visible outcomes. Skips gracefully (advisory, non-blocking) if no browser MCP is connected or no URL can be resolved.
+Acts as a manual black-box tester: detects a connected browser MCP (prefers chrome-devtools, falls back to Playwright), resolves the base URL (user-supplied → already-running local dev server → URL in the Human QA Notes) and **auto-starts the project's dev server when nothing is running** (tearing it down afterward), then drives the app screen-by-screen through the Human QA Notes steps, capturing screenshots and verifying expected visible outcomes. Skips gracefully (advisory, non-blocking) only if no browser MCP is connected, or if the app cannot be started and the user supplies no URL.
 
 See: [./steps/step-05-human-qa-pass.md](./steps/step-05-human-qa-pass.md)
 
