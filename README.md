@@ -609,7 +609,7 @@ Custom skills are **ClickUp-integrated workflows** built on top of the standard 
 
 > **Important:** If your project uses ClickUp as the source of truth, use the custom skills below — not `bmad-sprint-planning` or other file-system workflows. Invoking `bmad-sprint-planning` on a ClickUp project will write a local `sprint-status.yaml` instead of touching ClickUp.
 
-All custom skills require `CLICKUP_MCP_MODE=write`. `clickup-create-story`, `clickup-dev-implement`, and `clickup-code-review` also require planning artifacts (PRD, architecture, epics) — paths are resolved via the [doc-path cascade](#doc-path-cascade-docs-table) and default to `planning-artifacts/`. `clickup-create-bug` loads those files as optional context only and continues with a warning if any are missing. No `.bmad-pilot-marker` or other per-project sentinel files are needed — credentials live in the MCP server process.
+All custom skills require `CLICKUP_MCP_MODE=write`. `clickup-create-story`, `clickup-dev-implement`, and `clickup-code-review` also require planning artifacts (PRD, architecture, epics) — paths are resolved via the [doc-path cascade](#doc-path-cascade-docs-table) and default to `planning-artifacts/`. `clickup-create-bug` and `clickup-qa` load those files as optional context only and continue with a warning if any are missing. No `.bmad-pilot-marker` or other per-project sentinel files are needed — credentials live in the MCP server process.
 
 ---
 
@@ -665,6 +665,22 @@ Reviews a story implementation given a ClickUp task ID. Fetches the task require
 > — or — review task `<task-id>`
 
 **Steps:** PAT preflight → task fetch → git diff + planning artifact reader → `bmad-code-review` (adversarial review, no file writes) → review comment → status transition
+
+---
+
+### `clickup-qa`
+
+QA-mode skill: given a ClickUp task ID (typically "ready for qa"), fetches the task, reads its `## QA / Testing Notes` (code-access) and `## Human QA Notes` (black-box) sections, then runs end-to-end QA in two passes — a code-access pass (runs the existing test suite and traces every acceptance criterion and edge case through the code, **never modifying source or tests**) and a human-style visual pass (drives a connected browser MCP screen-by-screen against a local dev server or a URL you supply). Posts a single structured QA report comment and transitions status to "qa passed" or back to "in progress" based on the verdict. It verifies only — it never fixes the bugs it finds (implementation belongs to `clickup-dev-implement`).
+
+**Trigger:**
+
+> qa `<task-id>`
+> — or — run qa on `<task-id>` · test task `<task-id>` · qa task `<task-id>`
+> Optionally append a base URL for the visual pass: qa `<task-id>` http://localhost:3000
+
+**Steps:** task-id parser → task fetch → QA-notes extractor → code-access pass (test suite + AC tracing, read-only) → human-style visual pass (browser MCP) → QA report comment → status transition → Lore lesson save
+
+**Optional:** a connected browser MCP (prefers chrome-devtools, falls back to Playwright) for the visual pass, and a Lore MCP for lesson capture — both skipped gracefully (non-blocking) if absent. Planning artifacts (PRD, architecture) are read best-effort for AC cross-reference only; missing artifacts are non-fatal.
 
 ---
 
