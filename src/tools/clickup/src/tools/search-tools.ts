@@ -6,6 +6,21 @@ import {generateTaskMetadata} from "./task-tools";
 
 const MAX_SEARCH_RESULTS = 50;
 
+/** Fetch one task straight from the API by ID. Returns null if it does not exist or the call fails. */
+async function fetchTaskById(id: string): Promise<any | null> {
+  try {
+    const response = await fetch(`https://api.clickup.com/api/v2/task/${id}`, {
+      headers: {Authorization: CONFIG.apiKey}
+    });
+    if (!response.ok) return null;
+    const task = await response.json();
+    return task && typeof task.id === 'string' ? task : null;
+  } catch (error) {
+    console.error(`Error directly fetching task ${id}:`, error);
+    return null;
+  }
+}
+
 export function registerSearchTools(server: McpServer, userData: any) {
   // Dynamically construct the searchTasks description
   const searchTasksDescriptionBase = [
@@ -59,6 +74,17 @@ export function registerSearchTools(server: McpServer, userData: any) {
     async ({terms, list_ids, space_ids, only_todo, status, assigned_to_me}) => {
       // Get current user ID if filtering by assigned_to_me
       const assignees = assigned_to_me ? [userData.user.id as string] : [];
+
+      // Every term is a task ID — fetch them directly. Building the search index for this means
+      // paging the whole workspace when no list_ids/space_ids narrow it, which is both pointless
+      // (we already know the exact IDs) and slow enough to look like a hang to a caller.
+      if (terms && terms.length > 0 && terms.every(isTaskId)) {
+        const tasks = (await Promise.all(terms.map(fetchTaskById))).filter(Boolean);
+        if (tasks.length > 0) {
+          return { content: await Promise.all(tasks.map((task: any) => generateTaskMetadata(task))) };
+        }
+        // Fall through: the IDs matched nothing, so treat them as ordinary search terms.
+      }
 
       const searchIndex = await getTaskSearchIndex(space_ids, list_ids, assignees);
       if (!searchIndex) {
@@ -129,29 +155,14 @@ export function registerSearchTools(server: McpServer, userData: any) {
 
       if (taskIdsToFetchDirectly.length > 0) {
         console.error(`Attempting direct fetch for task IDs: ${taskIdsToFetchDirectly.join(', ')}`);
-        const directFetchPromises = taskIdsToFetchDirectly.map(async (id) => {
-          try {
-            const response = await fetch(
-              `https://api.clickup.com/api/v2/task/${id}`,
-              {headers: {Authorization: CONFIG.apiKey}}
-            );
-            if (response.ok) {
-              const task = await response.json();
-              if (task && typeof task.id === 'string') {
-                const existing = uniqueResults.get(task.id);
-                if (!existing || 0 < existing.score) {
-                  uniqueResults.set(task.id, {item: task, score: 0});
-                }
-              }
-              return task;
-            }
-            return null;
-          } catch (error) {
-            console.error(`Error directly fetching task ${id}:`, error);
-            return null;
+        const directFetches = await Promise.all(taskIdsToFetchDirectly.map(fetchTaskById));
+        for (const task of directFetches) {
+          if (!task) continue;
+          const existing = uniqueResults.get(task.id);
+          if (!existing || 0 < existing.score) {
+            uniqueResults.set(task.id, {item: task, score: 0});
           }
-        });
-        await Promise.all(directFetchPromises);
+        }
       }
 
       let resultTasks = Array.from(uniqueResults.values())

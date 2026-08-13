@@ -1,16 +1,28 @@
 import {CONFIG} from "./config";
 import Fuse from 'fuse.js';
+import { z } from "zod";
 
 const GLOBAL_REFRESH_INTERVAL = 60000; // 60 seconds - that is the rate limit time frame
 
 /**
- * Checks if a string looks like a valid ClickUp task ID
- * Valid task IDs are 6-9 characters long and contain only alphanumeric characters
+ * Checks if a string looks like a valid ClickUp task ID.
+ *
+ * ClickUp does not cap task IDs at 9 characters — newer workspaces mint 10+ (e.g. "z929e7adh2",
+ * which the v2 API serves fine). The old {6,9} bound rejected those outright, and agents "fixed"
+ * the rejection by truncating the ID to fit, which silently addresses a *different* task.
+ * The upper bound here only exists to keep prose out of ID slots.
  */
 export function isTaskId(str: string): boolean {
-  // Task IDs are 6-9 characters long and contain only alphanumeric characters
-  return /^[a-z0-9]{6,9}$/i.test(str);
+  return /^[a-z0-9]{6,32}$/i.test(str);
 }
+
+/**
+ * The single task-ID parameter schema. Every tool that takes a task ID uses this rather than
+ * re-declaring bounds, so a bad bound can only ever be wrong in one place.
+ */
+export const taskIdSchema = z
+  .string()
+  .refine(isTaskId, { message: "Task ID must be alphanumeric, without a '#'/'CU-'/URL prefix" });
 
 // Cache for current user info to avoid repeated API calls and race conditions
 let cachedUserPromise: Promise<any> | null = null;
