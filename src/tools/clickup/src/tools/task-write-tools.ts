@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { CONFIG } from "../shared/config";
-import { getCurrentUser } from "../shared/utils";
+import { getCurrentUser, taskIdSchema } from "../shared/utils";
 import { convertMarkdownToClickUpBlocks } from "../clickup-text";
 
 // Shared schemas for task parameters
@@ -35,7 +35,7 @@ export function registerTaskToolsWrite(server: McpServer, userData: any) {
       return descriptionBase.join("\n");
     })(),
     {
-      task_id: z.string().min(6).max(9).describe("The 6-9 character task ID to comment on"),
+      task_id: taskIdSchema.describe("The task ID to comment on, exactly as given"),
       comment: z.string().min(1).describe("The comment text to add to the task"),
     },
     {
@@ -122,7 +122,7 @@ export function registerTaskToolsWrite(server: McpServer, userData: any) {
       return descriptionBase.join("\n");
     })(),
     {
-      task_id: z.string().min(6).max(9).describe("The 6-9 character task ID to update"),
+      task_id: taskIdSchema.describe("The task ID to update, exactly as given"),
       name: taskNameSchema.optional(),
       append_description: z.string().optional().describe("Optional markdown content to APPEND to existing task description (preserves existing content for safety)"),
       replace_description: z.string().optional().describe("Optional markdown content to REPLACE the entire task description (destructive — use only when the existing description is stale or the user explicitly asks to delete the old content)"),

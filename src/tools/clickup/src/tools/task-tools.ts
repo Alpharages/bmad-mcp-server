@@ -3,7 +3,7 @@ import { z } from "zod";
 import { convertMarkdownToToolCallResult, convertClickUpTextItemsToToolCallResult } from "../clickup-text";
 import { ContentBlock, DatedContentEvent, ImageMetadataBlock } from "../shared/types";
 import { CONFIG } from "../shared/config";
-import { isTaskId, getSpaceDetails, getAllTeamMembers } from "../shared/utils";
+import { taskIdSchema, getSpaceDetails, getAllTeamMembers } from "../shared/utils";
 import { downloadImages } from "../shared/image-processing";
 
 // Read-specific utility functions
@@ -17,16 +17,9 @@ export function registerTaskToolsRead(server: McpServer, userData: any) {
       "The response provides complete context including task details, comments, and status history."
     ].join("\n"),
     {
-      id: z
-        .string()
-        .min(6)
-        .max(9)
-        .refine(val => isTaskId(val), {
-          message: "Task ID must be 6-9 alphanumeric characters only"
-        })
-        .describe(
-          `The 6-9 character ID of the task to get without a prefix like "#", "CU-" or "https://app.clickup.com/t/"`
-        ),
+      id: taskIdSchema.describe(
+        `The ID of the task to get, without a prefix like "#", "CU-" or "https://app.clickup.com/t/". Pass it exactly as given — never trim or pad it to a length.`
+      ),
     },
     {
       readOnlyHint: true
