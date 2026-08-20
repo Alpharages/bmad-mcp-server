@@ -4,7 +4,7 @@ list_statuses: ''
 transition_target: ''
 ---
 
-# Step 5: Status Transition Helper
+# Step 6: Status Transition Helper
 
 ## RULES
 

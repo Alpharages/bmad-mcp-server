@@ -1,10 +1,35 @@
-# Project-local Dev agent override.
-# Routes the CS (story-creation) and DS (implementation) triggers to
-# custom ClickUp skills.
-# Merge rule (BMAD): [[agent.menu]] entries keyed by `code` replace
-# matching upstream entries and new codes append.
+# Project-local Dev agent (Amelia) override — BMAD 6.11.
+#
+# Routes the ClickUp story-creation (CS), implementation (DS), bug (CB),
+# ClickUp code-review (CUR) and execution/visual QA (CUQ) triggers to the
+# canonical `bmad-clickup-*` custom skills.
+#
+# Merge rule (BMAD): [[agent.menu]] entries keyed by `code` replace matching
+# upstream entries and new codes append.
+#
+# OFFICIAL CODES ARE NOT TOUCHED. Amelia's upstream menu is BD, QA, CR, SP, ER
+# and every one of them keeps its documented meaning:
+#   BD  -> bmad-build                    (implementation)
+#   QA  -> bmad-qa-generate-e2e-tests    (test generation)
+#   CR  -> bmad-code-review              (code review)
+#   SP  -> bmad-sprint-planning
+#   ER  -> bmad-retrospective
+# None of those codes appears below, so none of them is overridden. The custom
+# ClickUp entries use distinct codes and append to the menu.
+#
+# In particular, note the deliberate pairing:
+#   QA  = official BMAD test generation        (bmad-qa-generate-e2e-tests)
+#   CUQ = ClickUp execution + visual QA        (bmad-clickup-qa)
+#   CR  = official BMAD code review            (bmad-code-review)
+#   CUR = ClickUp code review, report-only     (bmad-clickup-code-review)
+# The ClickUp variants wrap the official ones with ClickUp ticket context,
+# reporting and status transitions; they do not replace them.
+#
 # See: src/custom-skills/bmad-clickup-create-story/
 # See: src/custom-skills/bmad-clickup-dev-implement/
+# See: src/custom-skills/bmad-clickup-create-bug/
+# See: src/custom-skills/bmad-clickup-code-review/
+# See: src/custom-skills/bmad-clickup-qa/
 #
 # Trigger dispatch in Claude Code CLI mode (ds-trigger-not-dispatched-via-toml,
 # story 5-7): TOML triggers are dispatched in Cursor / VS Code. In Claude Code
@@ -20,13 +45,23 @@ skill = "bmad-clickup-create-story"
 
 [[agent.menu]]
 code = "DS"
-description = "Implement a ClickUp task end-to-end — fetch task + parent-epic context, read planning artifacts, implement code, post progress comments, transition status"
+description = "Implement a ClickUp task end-to-end — fetch task + parent-epic context, read planning artifacts, implement via bmad-build, post progress comments, transition status"
 skill = "bmad-clickup-dev-implement"
 
 [[agent.menu]]
 code = "CB"
 description = "Create a ClickUp bug ticket from a free-form bug report"
 skill = "bmad-clickup-create-bug"
+
+[[agent.menu]]
+code = "CUR"
+description = "Review a ClickUp task's implementation against its requirements — report-only, posts one review comment and transitions status (distinct from official CR, which reviews without ClickUp context)"
+skill = "bmad-clickup-code-review"
+
+[[agent.menu]]
+code = "CUQ"
+description = "Run execution + visual QA on a ClickUp task — runs the existing suite and drives a browser, posts one QA report and transitions status (distinct from official QA, which generates E2E tests)"
+skill = "bmad-clickup-qa"
 
 # Per-skill configuration (pinned space / list / folder IDs) lives in
 # `.bmadmcp/config.toml` at the project root, not here. That file is

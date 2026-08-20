@@ -1,0 +1,76 @@
+name: Upstream Compatibility (live)
+
+# Checks the BMAD 6.11 contracts the custom `bmad-clickup-*` workflows depend
+# on against the REAL Alpharages/BMAD-METHOD upstream, rather than the pinned
+# fixture the unit suite uses.
+#
+# Kept out of `ci.yml` on purpose: it needs network access to clone upstream,
+# and it fails when *upstream* changes rather than when this repository does.
+# A red run here is a signal to re-capture `tests/fixtures/bmad-6.11/` and
+# update the affected custom workflow instructions — not a broken PR.
+
+on:
+  schedule:
+    # Daily at 06:17 UTC. Off the hour so it does not pile onto the rush.
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      # Re-check whenever the contract, the fixture, or a delegating workflow moves.
+      - 'tests/helpers/bmad-611-contract.ts'
+      - 'tests/fixtures/bmad-6.11/**'
+      - 'tests/integration/upstream-live-compat.test.ts'
+      - 'src/custom-skills/**'
+      - 'src/core/resource-loader.ts'
+
+permissions:
+  contents: read
+
+env:
+  NODE_ENV: test
+
+jobs:
+  live-upstream-contract:
+    name: Live upstream contract
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - name: Install dependencies
+        env:
+          HUSKY: 0
+        run: npm ci
+
+      - name: Build package
+        run: npm run build
+
+      - name: Check contracts against live upstream
+        env:
+          CI: true
+          # Opt in. When set, an unreachable upstream is a hard failure rather
+          # than a skip — a compatibility job that passes because it could not
+          # reach the thing it checks is worse than no job at all.
+          BMAD_LIVE_UPSTREAM: '1'
+          # Always fetch fresh; a stale cache would hide upstream drift.
+          BMAD_GIT_AUTO_UPDATE: 'true'
+        run: npx vitest run tests/integration/upstream-live-compat.test.ts
+
+      - name: Explain a failure
+        if: failure()
+        run: |
+          echo "::warning::The live BMAD upstream no longer satisfies a contract this repo depends on."
+          echo "The failing assertion names the contract and the custom instruction it breaks."
+          echo "To resolve:"
+          echo "  1. Re-capture tests/fixtures/bmad-6.11/ from the new upstream."
+          echo "  2. Update tests/fixtures/bmad-6.11/PINNED.md provenance."
+          echo "  3. Update tests/helpers/bmad-611-contract.ts and the affected"
+          echo "     src/custom-skills/bmad-clickup-*/ instructions in the same change."

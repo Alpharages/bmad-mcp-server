@@ -12,7 +12,7 @@ comment_id: ''
 ## RULES
 
 1. **Write-mode soft gate.** If `addComment` is not in the current tool list, emit the mode-unavailable warning, render the full report to the user instead, set `{comment_id}` = `''`, and continue (the verdict is still computed for step 7).
-2. **One comment per session.** `addComment` is called exactly once. Append-only — never edit or delete existing comments.
+2. **One comment per session.** `addComment` is called exactly once, on every verdict including `inconclusive`. Append-only — never edit or delete existing comments. Do NOT retry a failed `addComment` call: a retry risks a duplicate report when the first call succeeded server-side.
 3. **Honest coverage.** The report MUST state what actually ran and what was skipped/blocked and why. A skipped pass is never silently presented as a pass.
 
 ## INSTRUCTIONS
