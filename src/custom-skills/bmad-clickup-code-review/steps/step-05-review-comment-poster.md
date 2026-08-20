@@ -7,8 +7,9 @@ comment_id: ''
 ## RULES
 
 1. **Write-mode soft gate.** If `addComment` is not in the current tool list, emit the mode-unavailable warning and continue — skipping the comment does not block the skill.
-2. **Single comment.** Post exactly one review comment per session. Do not post incremental comments.
-3. **Non-blocking failures.** If `addComment` returns an error, emit the post-failed warning and continue.
+2. **Exactly one comment.** Post exactly one review comment per session, on every verdict including `inconclusive`. Do not post incremental comments, and never post a second comment for the same run — not to correct, amend, or supplement the first.
+3. **Non-blocking failures.** If `addComment` returns an error, emit the post-failed warning and continue. Do NOT retry the call: a retry risks a duplicate comment when the first call succeeded server-side.
+4. **Report-only.** This step posts a ClickUp comment and nothing else. It MUST NOT modify repository files or BMAD artifacts.
 
 ## INSTRUCTIONS
 
@@ -25,7 +26,7 @@ comment_id: ''
 ```markdown
 ## 🔍 Code Review — {task_name}
 
-**Verdict:** {APPROVED ✅ | CHANGES REQUESTED ❌}
+**Verdict:** {APPROVED ✅ | CHANGES REQUESTED ❌ | INCONCLUSIVE ⚠️}
 **Reviewed by:** AI Code Reviewer (bmad-clickup-code-review skill)
 **Branch:** {branch_name}
 **Changed files:** {changed_files}
@@ -40,14 +41,38 @@ comment_id: ''
 
 ### Findings
 
-{review_findings}
+{render each entry of {review_findings} as:
+
+- **[{action}] [{severity}] {title}** — {detail} `{location}`
+  grouped by action in the order decision_needed, patch, defer;
+  omit an empty group; render "None." when the whole set is empty}
 
 ---
 
-_Review performed by `bmad-clickup-code-review` via BMAD MCP Server._
+### Verification Gaps
+
+{verification_gaps, one per line; render "None — the change's claims are covered by its evidence." when empty}
+
+---
+
+_Review performed by `bmad-clickup-code-review` via BMAD MCP Server. Report-only: no files were modified._
 ```
 
-> Use `✅ APPROVED` or `❌ CHANGES REQUESTED` based on `{review_verdict}`. All other fields substituted verbatim.
+Verdict line rendering, driven by `{review_verdict}`:
+
+- `approved` → `✅ APPROVED`
+- `changes_requested` → `❌ CHANGES REQUESTED`
+- `inconclusive` → `⚠️ INCONCLUSIVE`
+
+For `inconclusive`, insert this block immediately below the Verdict line, before the `---`:
+
+```markdown
+> ⚠️ **This review did not reach a conclusion.** {review_inconclusive_reason}
+> The task status was deliberately left unchanged. Re-run the review once the
+> missing evidence is available.
+```
+
+All other fields are substituted verbatim.
 
 ---
 

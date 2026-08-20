@@ -87,27 +87,23 @@ describe('no-epic paths — steps 02, 04, 05', () => {
     const instructions04 = getSection(step04, 'INSTRUCTIONS');
     const rules04 = getSection(step04, 'RULES');
 
-    it('step-04 branch 3b exists for no-epic path', () => {
-      expect(step04).toContain('Branch 3b');
+    it('step-04 keeps the no-epic path distinct from the epic path', () => {
+      expect(instructions04).toContain("No-epic path");
+      expect(instructions04).toContain("`{epic_id}` is `''`");
     });
 
-    it('step-04 branch 3b skips getTaskById', () => {
+    it('step-04 no-epic path skips getTaskById', () => {
       expect(instructions04).toContain('skip `getTaskById`');
     });
 
-    it('step-04 branch 3b prohibits Epic or Parent epic field in output', () => {
+    it('step-04 no-epic path prohibits Epic or Parent epic field in output', () => {
       expect(instructions04).toContain('Parent epic');
-      expect(instructions04).toContain('Do NOT include');
+      expect(instructions04).toContain('include no "Epic:" or "Parent epic:"');
     });
 
     it('step-04 RULES documents no-epic override', () => {
       expect(rules04).toContain('No-epic override');
-    });
-
-    it('step-04 dispatches branch on epic_id sentinel', () => {
-      expect(instructions04).toContain(
-        "If `{epic_id}` is `''` → use branch 3b",
-      );
+      expect(rules04).toContain('MUST NOT contain an "Epic:" or "Parent epic:"');
     });
   });
 

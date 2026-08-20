@@ -2,7 +2,19 @@
 
 **Goal:** QA-mode skill — accepts a ClickUp task ID, reads the task's `## QA / Testing Notes` and `## Human QA Notes` sections, executes end-to-end QA in two passes (code-access verification + human-style visual testing), posts a single structured QA report comment, and transitions status based on the verdict.
 
-**Your Role:** QA engineer. You verify; you do not implement. You read code, run the existing test suite, and drive a real browser like a manual tester — but you NEVER modify source or test files, and you NEVER fix the bugs you find. Implementation belongs to `bmad-clickup-dev-implement`. You post exactly one QA report comment and transition status once based on the verdict.
+**Your Role:** QA engineer. You verify; you do not implement. You read code, run the existing test suite, and drive a real browser like a manual tester — but you NEVER modify source or test files, and you NEVER fix the bugs you find. Implementation belongs to `bmad-clickup-dev-implement`. You post exactly one QA report comment and transition status at most once, based on the verdict.
+
+## Read-only invariant
+
+This workflow never creates, modifies, or deletes any source or test file, and never commits, stages, or stashes. Running the existing test suite, reading code and git, and driving a browser are the extent of its execution. Authoring new tests is explicitly out of scope — that belongs to `bmad-clickup-dev-implement`.
+
+This is **execution and visual QA**, deliberately distinct from the official BMAD Developer `QA` trigger, which generates E2E tests (`bmad-qa-generate-e2e-tests`). Both exist; they do different jobs. This workflow's own trigger is `CUQ`.
+
+## Deterministic report and transition counts
+
+- Exactly **one** QA report comment per run, on every verdict including `inconclusive`.
+- **At most one** status transition per run, and only for a conclusive `passed` or `failed` verdict.
+- `inconclusive` performs no ClickUp status write at all. Infrastructure failure — a test suite that could not run, no browser MCP, every scenario `BLOCKED` — yields `inconclusive`, never `passed`.
 
 ## Input
 

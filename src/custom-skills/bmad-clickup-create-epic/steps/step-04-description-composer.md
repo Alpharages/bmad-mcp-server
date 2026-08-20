@@ -59,7 +59,7 @@ epic_description: ''
 
    ## Business Context
 
-   _Synthesized from planning-artifacts/PRD.md_
+   _Synthesized from {prd_info.path}_
 
    - [bullet 1 — problem, goal, or relevant functional requirement]
    - [bullet 2 …]
@@ -69,7 +69,7 @@ epic_description: ''
 
    ## Technical Context
 
-   _Synthesized from planning-artifacts/architecture.md_
+   _Synthesized from {arch_info.path}_
 
    - [bullet 1 — stack, pattern, or constraint relevant to this epic]
    - [bullet 2 …]
@@ -83,12 +83,12 @@ epic_description: ''
 
    ---
 
-   _Created by bmad-mcp-server `bmad-clickup-create-epic` skill from planning-artifacts/epics-and-stories.md._
+   _Created by bmad-mcp-server `bmad-clickup-create-epic` skill from {epic_source_file}._
    ```
 
    If `{scope_notes}` is empty, omit the entire "Scope Notes" section including its heading and divider.
 
-   After composing the description, check whether `planning-artifacts/tech-spec.md` exists. If it does, append to the footer: "See also: `planning-artifacts/tech-spec.md`."
+   After composing the description, check whether a `tech-spec.md` exists alongside the resolved PRD (same directory as `{prd_info.path}`). If it does, append to the footer: "See also: `<that path>`."
 
 5. Present the composed description to the user:
 

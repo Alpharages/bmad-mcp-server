@@ -16,7 +16,7 @@ suggested_fix: ''
 
 ## RULES
 
-- **No delegation.** MUST NOT invoke `bmad-create-story`, `bmad-create-epic`, or any other BMAD workflow. The bug description is parsed directly from the user's raw report.
+- **No delegation.** MUST NOT invoke `bmad-spec`, `bmad-build`, or any other BMAD workflow, and MUST NOT invoke any deprecated v6 shim. The bug description is parsed directly from the user's raw report, so bug filing never depends on planning artifacts being present.
 - **No fabrication.** The description MUST NOT invent repro steps, expected behaviour, technical constraints, or any other detail not present in the user's report or the soft-loaded planning artifacts. Sections that cannot be populated from available inputs MUST use "Not specified."
 - **Code investigation is NOT fabrication.** Searching the codebase, reading relevant files, tracing stack traces, and analyzing the suspected area to extract exact file paths, function names, and line numbers is REQUIRED context enrichment — not invention. The dev agent MUST receive precise location data.
 - **Optional enrichment.** If `{prd_content}` or `{architecture_content}` (set by step-01) is non-empty, the step MAY add a `## Tech Context` section with ≤3 bullets from architecture and ≤2 bullets from the PRD relevant to the suspected area. If neither artifact yields relevant content, the section MUST be omitted entirely — no empty heading.

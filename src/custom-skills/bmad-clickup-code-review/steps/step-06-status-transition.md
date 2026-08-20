@@ -11,10 +11,14 @@ transition_target: ''
 1. **Write-mode soft gate.** If `updateTask` is not in the current tool list, emit the mode-unavailable warning and continue — status transitions are supplemental.
 2. **Validate before transitioning.** Always call `getListInfo` first. Never call `updateTask` with a status not in `{list_statuses}`.
 3. **Non-blocking failures.** If `updateTask` returns an error, emit the transition-failed warning and continue.
-4. **Single transition per session.** Invoked exactly once — after step 5 completes.
+4. **At most one transition per session.** Invoked exactly once — after step 5 completes. `updateTask` is called at most once. Never retry it and never call it a second time for any reason.
 5. **Verdict-driven target.** The match set used depends on `{review_verdict}`.
+6. **Inconclusive never transitions.** When `{review_verdict}` = `inconclusive`, this step performs no ClickUp write at all. An inconclusive review has established nothing about the code, so moving the task either way would be a false signal.
+7. **Report-only.** This step may call `getListInfo` and at most one `updateTask`. It MUST NOT modify repository files or BMAD artifacts.
 
 ## INSTRUCTIONS
+
+0. **Inconclusive short-circuit.** If `{review_verdict}` = `inconclusive`, emit the inconclusive-skip block, leave `{transition_target}` = `''`, and stop this step. Do NOT call `getListInfo` and do NOT call `updateTask`.
 
 1. **Check write mode.** Verify whether `updateTask` is available. If absent, emit the mode-unavailable warning, leave `{transition_target}` = `''`, and stop this step.
 
@@ -45,6 +49,16 @@ transition_target: ''
 7. **Transition.** Call `updateTask` with `task_id` = `{task_id}` and `status` = `{transition_target}`. If successful, emit the success block. If it fails, emit the transition-failed warning.
 
 ---
+
+### Inconclusive-skip block
+
+> ⚠️ **Status transition skipped — review was inconclusive**
+>
+> `{review_inconclusive_reason}`
+>
+> **Impact:** Task `{task_id}` ({task_name}) deliberately remains in `{task_status}`. An inconclusive review is not evidence that the change is good or bad, so it must not move the task in either direction.
+>
+> **What to do:** Resolve the missing evidence named above and re-run `bmad-clickup-code-review` on this task.
 
 ### Warning block — write mode unavailable
 

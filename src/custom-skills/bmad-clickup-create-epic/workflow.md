@@ -1,12 +1,14 @@
 # Create ClickUp Epic Workflow
 
-**Goal:** Create a root-level ClickUp task (epic) in the Backlog list of the active space, with a description composed from PRD, architecture, and the local `planning-artifacts/epics-and-stories.md` content. Does not write any local files.
+**Goal:** Publish an already-planned epic to ClickUp — create a root-level ClickUp task (epic) in the Backlog list of the active space, with a description composed from the PRD, the architecture doc, and the selected epic's own content. Does not write any local files and does not plan the epic: `bmad-create-epics-and-stories`, `bmad-prd`, or a human author it; this workflow publishes it.
 
-**Your Role:** You are ClickUp-authoritative. You do not write to `planning-artifacts/` or create any local YAML. ClickUp is the single source of truth.
+**Your Role:** You are ClickUp-authoritative. You do not write to the planning-artifacts directory or create any local YAML. ClickUp is the single source of truth.
 
 ## Prerequisites
 
-Before proceeding, the skill verifies that `planning-artifacts/PRD.md`, `planning-artifacts/architecture.md`, and `planning-artifacts/epics-and-stories.md` exist in the target project's working directory. All three files must be present. The skill aborts with an error if any are missing.
+Before proceeding, the skill resolves the PRD, architecture, and epics paths **client-side** through the 3-layer doc-path cascade (`.bmadmcp/config.toml [docs]` → BMAD `_bmad/config.toml` chain → `planning-artifacts/` default), then verifies all three exist at their resolved paths. An explicitly configured `epics_path` wins over everything else. All three inputs are required for epic creation; the skill aborts with an error naming each resolved path and its cascade layer if any is missing.
+
+The epics input may be a **directory** of per-epic BMAD 6.11 files (the resolver default, `epics/`) or a **single combined artifact** — both are supported. When the configured directory does not exist, the skill also checks for a sibling `epics-and-stories.md` or `epics.md` before failing.
 
 Before checking project files, step 1 verifies that `CLICKUP_MCP_MODE=write` (so `createTask` is registered) and that the `CLICKUP_API_KEY` token authenticates against the ClickUp API; the skill aborts with an actionable error if either check fails.
 
@@ -20,9 +22,9 @@ See: [./steps/step-02-backlog-list-picker.md](./steps/step-02-backlog-list-picke
 
 `{space_id}`, `{space_name}`, and `{backlog_list_id}` are available to downstream steps after this step completes.
 
-## Local Epic Picker
+## Epic Picker
 
-Reads `planning-artifacts/epics-and-stories.md`, parses the list of epics, and presents them to the user so they can select which epic to create in ClickUp.
+Parses the epics loaded in step 1 — recognising `## Epic N:`, `# Epic N —`, and `# EPIC-N:` heading forms across both the directory and single-file layouts — and presents them as a pick-list so the user selects which epic to publish to ClickUp. The pick-list is always shown, even for a single parsed epic, so the user confirms before any write. When two entries collide on number or title (e.g. a per-epic file plus a combined artifact), every candidate is listed with its source file and the user must choose; the skill never resolves ambiguity silently.
 
 See: [./steps/step-03-local-epic-picker.md](./steps/step-03-local-epic-picker.md)
 

@@ -12,13 +12,22 @@ transition_target: ''
 
 1. **Write-mode soft gate.** If `updateTask` is not in the current tool list, emit the mode-unavailable warning and continue — status transitions are supplemental.
 2. **Validate before transitioning.** Always call `getListInfo` first. Never call `updateTask` with a status not in `{list_statuses}`.
-3. **Non-blocking failures.** If `updateTask` returns an error, emit the transition-failed warning and continue.
-4. **Single transition per session.** Invoked exactly once — after step 6 completes.
-5. **Inconclusive never transitions.** If `{qa_verdict}` is `inconclusive`, skip this step entirely (leave the task where it is) — QA did not actually verify anything.
+3. **Non-blocking failures.** If `updateTask` returns an error, emit the transition-failed warning and continue. Do NOT retry the call — a retry risks a duplicate write when the first call succeeded server-side.
+4. **At most one transition per session.** Invoked exactly once — after step 6 completes. `updateTask` is called at most once, and only for a conclusive `passed` or `failed` verdict.
+5. **Read-only on the repo.** This step touches ClickUp only. It MUST NOT create, modify, or delete any source or test file.
+6. **Inconclusive never transitions.** If `{qa_verdict}` is `inconclusive`, skip this step entirely (leave the task where it is) — QA did not actually verify anything.
 
 ## INSTRUCTIONS
 
-1. **Inconclusive guard.** If `{qa_verdict}` is `inconclusive`, emit `ℹ️ Verdict inconclusive — leaving status unchanged.`, set `{transition_target}` = `''`, and proceed to step 8.
+1. **Inconclusive guard.** If `{qa_verdict}` is `inconclusive`, emit the block below, set `{transition_target}` = `''`, and proceed to step 8. Do NOT call `getListInfo` and do NOT call `updateTask` — an inconclusive QA run verified nothing, so moving the task in either direction would be a false signal.
+
+   > ⚠️ **Status transition skipped — QA was inconclusive**
+   >
+   > `{qa_inconclusive_reason}`
+   >
+   > **Impact:** Task `{task_id}` ({task_name}) deliberately remains in `{task_status}`.
+   >
+   > **What to do:** Resolve the missing evidence named above and re-run `bmad-clickup-qa` on this task.
 
 2. **Check write mode.** Verify whether `updateTask` is available. If absent, emit the mode-unavailable warning, leave `{transition_target}` = `''`, and proceed to step 8.
 

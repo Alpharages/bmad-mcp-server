@@ -2,19 +2,55 @@
 epic_description: ''
 story_title: ''
 story_entry: ''
+story_source: ''
+spec_folder: ''
 task_description: ''
 ---
 
-# Step 4: Description Composer (via bmad-create-story)
+# Step 4: Description Composer (BMAD 6.11 planning + spec)
 
 ## RULES
 
-- **Delegate to bmad-create-story.** Do NOT compose an ad-hoc description here. Invoke the `bmad-create-story` workflow via the `bmad` tool (`execute` operation, workflow name `bmad-create-story`). The exhaustive artifact analysis, BDD criteria generation, architecture guardrail extraction, previous-story intelligence, and web research all live there and stay in sync with upstream automatically.
-- **Content-composition mode only.** Instruct `bmad-create-story` to produce story content but NOT write to any local file. The composed content is captured here and posted as the ClickUp task description in step 5.
-- **Skip file-system side-effects.** Skip steps 5 (write story file) and 6 (update sprint-status.yaml) of `bmad-create-story`. ClickUp is the record.
-- **No fabrication.** `bmad-create-story` must not invent requirements with no basis in any available context. When planning docs are present, trace requirements to them. When they are absent, derive intent from available code context (`{fallback_code_context}`: README, source structure, git history, manifest) and the epic ClickUp task — do not guess at business requirements that cannot be inferred from any of these sources.
+- **Never call `bmad-create-story`.** It is a BMAD v6 compatibility shim, not a BMAD 6.11 planning path. It is not supported by this skill.
+- **Prefer a story that is already planned.** BMAD 6.11 plans stories in the epics artifact (`bmad-create-epics-and-stories`) and in a spec folder's `stories.yaml` / `stories/<id>-*.md` (`bmad-spec` Story Breakdown). When the selected story already exists there, READ it — do not re-plan it.
+- **Distil ad hoc intent through `bmad-spec`, headlessly.** When the user supplies story intent that is not already planned, invoke `bmad-spec` via the `bmad` tool (`execute` operation, workflow name `bmad-spec`) in headless mode to produce the specification context. The user MUST NOT be asked to run another workflow by hand first — this skill's existing inputs stay sufficient.
+- **Content composition only.** This skill writes to ClickUp, never to `planning-artifacts/stories/` and never to `sprint-status.yaml`. `bmad-spec` owns its own spec folder — that is its normal, required output, not a side-effect to suppress.
+- **Preserve the ClickUp description contract.** Whatever the source, the composed document MUST carry the sections listed under **Description contract** below. That contract is an output promise to the team, not an implementation detail.
+- **No fabrication.** Never invent requirements with no basis in any available context. When planning docs are present, trace requirements to them. When they are absent, derive intent from available code context (`{fallback_code_context}`: README, source structure, git history, manifest) and the epic ClickUp task — do not guess at business requirements that cannot be inferred from any of these sources.
+- **Never invent a task from missing or ambiguous input.** If several planned stories match, present them and let the user choose. If nothing matches and the user gave no usable intent, stop with an actionable message rather than composing a plausible-looking story.
 - **Blocking.** MUST NOT continue to step 5 if `{task_description}` is empty at the end of this step.
-- **No-epic override.** When `{epic_id}` is `''`, instruction 3 MUST use branch 3b (the no-epic override block). The composed description MUST NOT contain an "Epic:" or "Parent epic:" field or reference.
+- **No-epic override.** When `{epic_id}` is `''`, the composed description MUST NOT contain an "Epic:" or "Parent epic:" field or reference.
+
+## Description contract
+
+Every composed `{task_description}`, on every path, MUST contain:
+
+1. **User story** — the `As a … I want … so that …` statement.
+2. **Acceptance criteria** — BDD Given / When / Then, one group per criterion.
+3. **Tasks / subtasks** — an ordered, checkable implementation list.
+4. **Dependencies** — prerequisite stories, tickets, or external blockers; state "None" explicitly when there are none.
+5. **Dev notes** — context-rich implementation guidance:
+   - **Specific file paths** — exact source files, modules, or directories to create or modify (e.g. `src/services/auth.ts`, `tests/unit/auth.test.ts`).
+   - **Implementation approach** — a concise exit solution: what to change, where to add new code vs. update existing code, and the expected code structure or pattern to follow.
+   - **Architecture guardrails** — relevant patterns, conventions, or constraints from the architecture that MUST be followed, cited with file references where possible.
+   - **Previous-story intelligence** — where prior stories in the same epic exist, reference established patterns, file naming conventions, or recently modified files to maintain continuity.
+6. **`## QA / Testing Notes`** — aimed at the **AI QA agent that has code access**:
+   - Test scenarios derived from each acceptance criterion (Given / When / Then).
+   - Edge cases and boundary conditions to verify.
+   - Regression risks — existing features or integrations that could be affected (cite files / modules where relevant).
+   - Any test data, environment, or prerequisite setup QA needs.
+   - Suggested test types (unit / integration / e2e) and the files where new tests should live.
+7. **`## Human QA Notes`** — aimed at the **human QA tester who does NOT have code access**. Human QA tests the deployed ticket on the staging/dev environment *after* the developer deploys. Black-box only:
+   - **Deployment prerequisite** — explicit note that the developer must deploy the change to staging/dev before QA can begin; the dev should comment the build / branch / commit on the ticket once deployed.
+   - **Test environment** — staging or dev URL(s), feature flags to enable, test accounts/roles, seed data, or any environment-specific config the tester needs.
+   - **Setup & preconditions** — the state the tester must place the app/account in before each scenario.
+   - **Test steps (UI / API)** — black-box, click-by-click or request-by-request instructions using only the UI, deep links, or API endpoints. No code references, no file paths.
+   - **Expected visible outcomes** — what the tester should observe per step (UI elements, response payloads, notifications, emails, redirects).
+   - **Edge cases to try** — empty inputs, oversized inputs, invalid data, refresh mid-flow, slow network, back-button, double-submit.
+   - **Cross-cutting checks** — browsers, devices, screen sizes, user roles, locales, permission combinations to spot-check.
+   - **Regression areas (manual)** — adjacent screens or flows to click through to confirm nothing else broke.
+
+Field wording may vary where BMAD 6.11 phrases something differently; the sections and their meaning may not.
 
 ## INSTRUCTIONS
 
@@ -29,107 +65,75 @@ Parse into `{story_title}`. If empty, re-ask. Accept optional follow-up: "Any ad
 - When `{epic_id}` is non-empty: call `getTaskById` with `id: "{epic_id}"`. Extract the epic description text (strip metadata block and all `Comment by …` lines). Store as `{epic_description}`. If fetch fails, set `{epic_description}` = `''` and warn (non-fatal — continue).
 - When `{epic_id}` is `''`: skip `getTaskById`. Set `{epic_description}` = `''`. Emit: `ℹ️ No epic parent — epic context will be empty in the story description.`
 
-### 3. Invoke bmad-create-story in content-composition mode
+### 3. Resolve the story source
 
-> **Branch dispatch:** If `{epic_id}` is non-empty → use branch 3a. If `{epic_id}` is `''` → use branch 3b.
+Work down this list and stop at the first source that yields exactly one story. Record which one succeeded in `{story_source}`.
 
-#### Branch 3a — Epic path (`{epic_id}` is non-empty)
+**3a. Planned story in a BMAD 6.11 spec folder** (`story_source` = `spec-story`)
 
-Execute the `bmad-create-story` workflow via the `bmad` tool with the following pre-supplied context and overrides:
+Look for spec folders under the project's spec output location (by default `{output_folder}/specs/spec-*/`; honour `[docs]` overrides from the doc-path cascade already resolved in step 1). For each folder that has a `stories.yaml`, read it and match `{story_title}` against each entry's `title` and `description`.
 
-**Pre-supplied context (skip upstream discovery steps):**
+- Exactly one match → set `{spec_folder}`, set `{story_entry}` to that YAML entry. If `{spec_folder}/stories/<id>-*.md` exists for that entry's `id`, read it as the authored story spec (more than one file matching the id → treat as ambiguous). Also read the folder's `SPEC.md` and every path in its `companions:` frontmatter as supporting context.
+- More than one match, across one or several spec folders → **ambiguous**: list every candidate as `<spec-folder> › <id> — <title>` and ask the user to pick one. Never choose for them.
+- No match → continue to 3b.
 
-```
-Story title: {story_title}
-Epic: {epic_name} ({epic_id})
-Epic description: {epic_description}
-PRD content: {if prd_available=true: 'already loaded in conversation context (from step 1)' | 'NOT AVAILABLE — derive intent from fallback code context and epic description below'}
-Architecture content: {if arch_available=true: 'already loaded in conversation context (from step 1)' | 'NOT AVAILABLE — derive architectural patterns from source structure and git history below'}
-Epics-and-stories content: {epics_content — already loaded in step 1, or empty}
-Fallback code context: {fallback_code_context — present only when one or more planning docs were absent; empty string otherwise}
-Scope notes: {scope_notes or empty}
-```
+**3b. Planned story in the epics artifact** (`story_source` = `epic-story`)
 
-**Override instructions for bmad-create-story:**
+Read the epics artifact at the `epics_path` resolved by step 1's doc-path cascade (a file, or every `*.md` under it when the path is a directory). Match `{story_title}` against the story headings within the selected epic — or across all epics when `{epic_id}` is `''`.
 
-- **Step 1 (Determine target story):** Skip discovery from sprint-status. Story is pre-supplied: `story_title` = `{story_title}`, epic context = above. Set `story_key` from the title.
-- **Step 2 (Load and analyze core artifacts):** Run in full — use whatever is available in context. When a planning doc is present, use it as the primary source for that artifact. When it is absent, derive intent from `{fallback_code_context}` (README, source tree, git log, manifest) and the epic ClickUp task description. Do not re-read files already in context.
-- **Step 3 (Architecture analysis):** Run in full.
-- **Step 4 (Web research):** Run in full.
-- **Step 5 (Create comprehensive story file):** Run the COMPOSITION only — produce the full story document content. Do NOT write to any local file. Return the composed content.
-  - **CRITICAL — Context-rich implementation guidance:** The composed document MUST be dev-agent-ready. It MUST include:
-    - **Specific file paths** — exact source files, modules, or directories that need to be created or modified (e.g., `src/services/auth.ts`, `tests/unit/auth.test.ts`).
-    - **Implementation approach** — a concise exit solution: what to change, where to add new code vs. update existing code, and the expected code structure or pattern to follow.
-    - **Architecture guardrails** — relevant patterns, conventions, or constraints from the architecture that MUST be followed, cited with file references where possible.
-    - **Previous-story intelligence** — if prior stories in the same epic exist, reference established patterns, file naming conventions, or recently modified files to maintain continuity.
-  - **CRITICAL — QA section (AI QA agent):** The composed document MUST include a dedicated `## QA / Testing Notes` section aimed at the **AI QA agent that has code access**. It MUST include:
-    - Test scenarios derived from each acceptance criterion (Given / When / Then format).
-    - Edge cases and boundary conditions to verify.
-    - Regression risks — existing features or integrations that could be affected (cite files / modules where relevant).
-    - Any test data, environment, or prerequisite setup QA needs.
-    - Suggested test types (unit / integration / e2e) and the files where new tests should live.
-  - **CRITICAL — Human QA section:** The composed document MUST also include a dedicated `## Human QA Notes` section aimed at the **human QA tester who does NOT have code access**. Human QA tests the deployed ticket on the staging/dev environment *after* the developer deploys. The section MUST include:
-    - **Deployment prerequisite** — explicit note that the developer must deploy the change to staging/dev before QA can begin; the dev should comment the build / branch / commit on the ticket once deployed.
-    - **Test environment** — staging or dev URL(s), feature flags to enable, test accounts/roles, seed data, or any environment-specific config the tester needs.
-    - **Setup & preconditions** — the state the tester must place the app/account in before each scenario (logged-in user, populated data, etc.).
-    - **Test steps (UI / API)** — black-box, click-by-click or request-by-request instructions using only the UI, deep links, or API endpoints (e.g., Postman). No code references, no file paths.
-    - **Expected visible outcomes** — what the tester should observe per step (UI elements, response payloads, notifications, emails, redirects, etc.).
-    - **Edge cases to try** — user-facing boundary scenarios (empty inputs, oversized inputs, invalid data, refresh mid-flow, slow network, back-button, double-submit).
-    - **Cross-cutting checks** — browsers, devices, screen sizes, user roles, locales, and permission combinations to spot-check.
-    - **Regression areas (manual)** — adjacent screens or flows the tester should click through to confirm nothing else broke.
-- **Step 6 (Update sprint status):** Skip entirely. ClickUp task creation (step 5 of this skill) is the equivalent.
+- Exactly one match → set `{story_entry}` to that story's full section text.
+- More than one match → **ambiguous**: list every candidate as `<epic> › <story heading>` and ask the user to pick one.
+- No match → continue to 3c.
 
-#### Branch 3b — No-epic path (`{epic_id}` is `''`)
+**3c. Ad hoc intent, distilled through `bmad-spec`** (`story_source` = `adhoc-spec`)
 
-Execute `bmad-create-story` with the following no-epic pre-supplied context and override instructions:
-
-**Pre-supplied context:**
+The user supplied intent (`{story_title}` plus any `{scope_notes}`) that is not planned anywhere yet. Do NOT ask them to go run a planning workflow. Invoke `bmad-spec` via the `bmad` tool (`execute` operation, workflow name `bmad-spec`) headlessly:
 
 ```
-Story title: {story_title}
-Epic: (none — standalone task)
-Epic description: (none)
-PRD content: {if prd_available=true: 'already loaded in conversation context (from step 1)' | 'NOT AVAILABLE — derive intent from fallback code context below'}
-Architecture content: {if arch_available=true: 'already loaded in conversation context (from step 1)' | 'NOT AVAILABLE — derive architectural patterns from source structure and git history below'}
-Epics-and-stories content: {epics_content — available for general technical context only; do NOT look for an epic-specific section}
-Fallback code context: {fallback_code_context — present only when one or more planning docs were absent; empty string otherwise}
-Scope notes: {scope_notes or empty}
+Mode: headless (programmatic caller — bmad-clickup-create-story; return the artifact paths)
+Slug: {kebab-case of story_title}
+Intent:
+  Story title: {story_title}
+  Scope notes: {scope_notes or (none)}
+  Epic: {epic_name} ({epic_id})          ← omit both lines entirely when {epic_id} is ''
+  Epic description: {epic_description}
+Sources already loaded in conversation context (do not re-read):
+  PRD: {if prd_available=true: '<resolved prd path>' | 'NOT AVAILABLE'}
+  Architecture: {if arch_available=true: '<resolved architecture path>' | 'NOT AVAILABLE'}
+  Epics: {epics_content — already loaded in step 1, or empty}
+  Fallback code context: {fallback_code_context — present only when one or more planning docs were absent; empty otherwise}
 ```
 
-**Override instructions for bmad-create-story:**
+Read the headless JSON response:
 
-- **Step 1 (Determine target story):** Skip discovery from sprint-status. Story is pre-supplied: `story_title` = `{story_title}`. No epic parent — set `epic_num` to none; set `story_key` = kebab-case of `{story_title}`.
-- **Step 2 (Load and analyze core artifacts):** Run in full — but do NOT extract epic-specific content from `{epics_content}` (there is no epic parent for this story). When a planning doc is present, use it as the primary source. When it is absent, derive intent from `{fallback_code_context}` (README, source tree, git log, manifest). Epics content is available for general technical reference only (e.g., cross-cutting constraints, shared terminology).
-- **Step 3 (Architecture analysis):** Run in full.
-- **Step 4 (Web research):** Run in full.
-- **Step 5 (Create comprehensive story file):** Run COMPOSITION only — produce the full story document content. **Do NOT include an "Epic:" or "Parent epic:" field anywhere in the document.** Do NOT write to any local file. Return the composed content.
-  - **CRITICAL — Context-rich implementation guidance:** The composed document MUST be dev-agent-ready. It MUST include:
-    - **Specific file paths** — exact source files, modules, or directories that need to be created or modified (e.g., `src/services/auth.ts`, `tests/unit/auth.test.ts`).
-    - **Implementation approach** — a concise exit solution: what to change, where to add new code vs. update existing code, and the expected code structure or pattern to follow.
-    - **Architecture guardrails** — relevant patterns, conventions, or constraints from the architecture that MUST be followed, cited with file references where possible.
-    - **Previous-story intelligence** — if prior stories in the same epic exist, reference established patterns, file naming conventions, or recently modified files to maintain continuity.
-  - **CRITICAL — QA section (AI QA agent):** The composed document MUST include a dedicated `## QA / Testing Notes` section aimed at the **AI QA agent that has code access**. It MUST include:
-    - Test scenarios derived from each acceptance criterion (Given / When / Then format).
-    - Edge cases and boundary conditions to verify.
-    - Regression risks — existing features or integrations that could be affected (cite files / modules where relevant).
-    - Any test data, environment, or prerequisite setup QA needs.
-    - Suggested test types (unit / integration / e2e) and the files where new tests should live.
-  - **CRITICAL — Human QA section:** The composed document MUST also include a dedicated `## Human QA Notes` section aimed at the **human QA tester who does NOT have code access**. Human QA tests the deployed ticket on the staging/dev environment *after* the developer deploys. The section MUST include:
-    - **Deployment prerequisite** — explicit note that the developer must deploy the change to staging/dev before QA can begin; the dev should comment the build / branch / commit on the ticket once deployed.
-    - **Test environment** — staging or dev URL(s), feature flags to enable, test accounts/roles, seed data, or any environment-specific config the tester needs.
-    - **Setup & preconditions** — the state the tester must place the app/account in before each scenario (logged-in user, populated data, etc.).
-    - **Test steps (UI / API)** — black-box, click-by-click or request-by-request instructions using only the UI, deep links, or API endpoints (e.g., Postman). No code references, no file paths.
-    - **Expected visible outcomes** — what the tester should observe per step (UI elements, response payloads, notifications, emails, redirects, etc.).
-    - **Edge cases to try** — user-facing boundary scenarios (empty inputs, oversized inputs, invalid data, refresh mid-flow, slow network, back-button, double-submit).
-    - **Cross-cutting checks** — browsers, devices, screen sizes, user roles, locales, and permission combinations to spot-check.
-    - **Regression areas (manual)** — adjacent screens or flows the tester should click through to confirm nothing else broke.
-- **Step 6 (Update sprint status):** Skip entirely. ClickUp task creation (step 5 of this skill) is the equivalent.
+- `status: "complete"` → read every path in `files` (the `SPEC.md` kernel, its companions, and `.memlog.md`). Set `{story_entry}` to the distilled kernel plus companions, and `{spec_folder}` to the folder containing `SPEC.md`.
+- `status: "blocked"` → do NOT compose anything. Surface the `error_code` and `reason` verbatim and stop:
+  - `insufficient_intent` → `❌ Not enough detail to create this story. bmad-spec reported: <reason>. Add scope notes describing what should change and why, then re-run.`
+  - `missing_slug` → re-invoke once with an explicit slug derived from `{story_title}`; if it blocks again, surface and stop.
+- `bmad-spec` cannot be executed at all → surface the failure and stop. Do NOT fall back to `bmad-create-story` and do NOT compose an unsourced story.
 
-> **Convention:** `{epic_id}` = `''` is the sentinel for "no parent". It is intentionally passed to `bmad-create-story` as an empty epic block so the workflow's full artifact analysis (PRD, architecture) still runs but the resulting description contains no epic association.
+**3d. Nothing usable**
 
-### 4. Capture the composed content
+If 3a–3c all fail to produce a story, stop with:
 
-After `bmad-create-story` completes its composition, capture the full story document it produced as `{task_description}`. This is the content that will become the ClickUp task description.
+```
+❌ No story to create.
+   Searched: spec folders (stories.yaml), epics artifact, and bmad-spec distillation of your intent.
+   Give a more specific title or add scope notes describing the change, then re-run.
+```
+
+Do not compose a plausible-looking story from the title alone.
+
+### 4. Compose the ClickUp description
+
+Compose `{task_description}` from `{story_entry}` (plus `SPEC.md`/companions when `{spec_folder}` is set), the epic context from instruction 2, and the planning context loaded in step 1, so that it satisfies every item of the **Description contract** above.
+
+Composition rules:
+
+- **Preserve, do not paraphrase away.** Title, description, acceptance criteria, implementation tasks, dependencies, dev notes and QA notes that the planned story or spec already carries transfer into the ClickUp document intact. Re-format them into the contract's section shape; do not drop or dilute them.
+- **Fill only genuine gaps.** Where the source is silent on a contract section, derive it from the loaded planning docs, the epic description, and the architecture. An `open_questions[]` entry from `bmad-spec` is a gap to surface, not a gap to invent an answer for — carry it into the document under **Dependencies** or **Dev notes** as an open question.
+- **Epic path** (`{epic_id}` non-empty): include the epic association and use the epic description as primary scope context.
+- **No-epic path** (`{epic_id}` is `''`): include no "Epic:" or "Parent epic:" field anywhere. Epics content, when loaded, is general technical reference only — do not extract an epic-specific section.
 
 **Missing-docs banner.** If `{prd_available}` = `false` OR `{arch_available}` = `false`, prepend the following notice block to `{task_description}` before the first heading so reviewers know which sources were used:
 
@@ -140,37 +144,19 @@ After `bmad-create-story` completes its composition, capture the full story docu
 > Add the missing docs and regenerate for a richer description.
 ```
 
-**Context-rich guardrail:** Scan `{task_description}` to ensure it contains specific file-path references (e.g., `src/...`, `lib/...`, `tests/...`) and an implementation approach. If the content is vague (no concrete file paths or exit solution), append a `## Implementation Notes` section before the footer with:
-  - **Files to touch** — inferred from the architecture and acceptance criteria.
-  - **Exit solution** — step-by-step implementation plan: what to create, what to update, and how to wire it.
+**Contract guardrail.** Before presenting, check `{task_description}` against the **Description contract** and repair anything missing:
 
-**QA section guardrail (AI QA agent):** Scan `{task_description}` for a heading that matches `## QA / Testing Notes` (case-insensitive, allowing minor variations such as `## QA Notes`, `## Testing Notes`, or `## Test Cases`).
-- If a matching heading is found → no action needed; proceed.
-- If the heading is **missing** → generate the `## QA / Testing Notes` section from the story content and append it before the footer line (or at the end of the document if no footer is present). The generated section MUST include:
-  1. **Test Scenarios** — one per acceptance criterion, in BDD Given/When/Then format.
-  2. **Edge Cases & Boundaries** — boundary conditions, invalid inputs, and negative paths.
-  3. **Regression Risks** — adjacent features or integrations that could break (cite files / modules where relevant).
-  4. **Test Data / Setup** — any special data, accounts, or environment config QA needs.
-  5. **Suggested Test Coverage** — recommended unit / integration / e2e tests and the files where they should live.
+- No concrete file-path references (`src/…`, `lib/…`, `tests/…`) or no exit solution → append a `## Implementation Notes` section before the footer with **Files to touch** (inferred from the architecture and acceptance criteria) and **Exit solution** (step-by-step: what to create, what to update, how to wire it).
+- No heading matching `## QA / Testing Notes` (case-insensitive; accept `## QA Notes`, `## Testing Notes`, `## Test Cases`) → generate it from the story content per contract item 6 and append it before the footer line.
+- No heading matching `## Human QA Notes` (case-insensitive; accept `## Manual QA Notes`, `## Human Testing Notes`) → generate it from the story content per contract item 7 and append it before the footer line. Lead with the deployment prerequisite: `> Developer must deploy this change to staging/dev before QA can begin. Comment the build / branch / commit ID on this ticket once the deploy is live.` Where nothing project-specific is known for the test environment, write "Same as staging defaults".
+- No **Dependencies** section → append one, stating "None" when the sources identify no prerequisites.
 
-**Human QA section guardrail:** Scan `{task_description}` for a heading that matches `## Human QA Notes` (case-insensitive, allowing minor variations such as `## Manual QA Notes` or `## Human Testing Notes`).
-- If a matching heading is found → no action needed; proceed.
-- If the heading is **missing** → generate the `## Human QA Notes` section from the story content (no code references — black-box only) and append it before the footer line (or at the end of the document if no footer is present). The generated section MUST include:
-  1. **Deployment Prerequisite** — `> Developer must deploy this change to staging/dev before QA can begin. Comment the build / branch / commit ID on this ticket once the deploy is live.`
-  2. **Test Environment** — staging/dev URL(s), feature flags, test accounts/roles, seed data, or other environment config the tester needs (use "Same as staging defaults" when nothing project-specific is known).
-  3. **Setup & Preconditions** — the state the tester must place the app/account in before each scenario.
-  4. **Test Steps (UI / API)** — black-box, click-by-click or request-by-request instructions; no file paths.
-  5. **Expected Visible Outcomes** — what the tester should observe per step (UI elements, response payloads, notifications, redirects).
-  6. **Edge Cases to Try** — empty/invalid/oversized inputs, refresh mid-flow, slow network, back-button, double-submit, etc.
-  7. **Cross-cutting Checks** — browsers, devices, user roles, locales, permission combinations to spot-check.
-  8. **Regression Areas (manual)** — adjacent screens or flows to click through to confirm nothing else broke.
-
-If `{scope_notes}` is non-empty and not already included by `bmad-create-story`, append a `## Scope Notes` section before the footer line.
+If `{scope_notes}` is non-empty and not already reflected in the document, append a `## Scope Notes` section before the footer line.
 
 ### 5. Present for review
 
 ```
-📝 **Proposed task description for "{story_title}":**
+📝 **Proposed task description for "{story_title}"** (source: {story_source}):
 
 ---
 {task_description}
@@ -180,7 +166,7 @@ Does this description look correct? [Y/n/edit]
 ```
 
 - `Y` or Enter → proceed.
-- `n` → ask "What would you like to change?", re-invoke `bmad-create-story` step 5 with the feedback using the same branch override context (3a or 3b) as the initial invocation in instruction 3, re-present. Repeat until confirmed.
+- `n` → ask "What would you like to change?", then re-run instruction 4 with the feedback against the same `{story_source}` and `{story_entry}`. When `{story_source}` = `adhoc-spec`, feed the change back through `bmad-spec` for the same slug so the spec folder and the ClickUp description stay in agreement. Re-present. Repeat until confirmed.
 - `edit` → ask the user to paste the full revised description terminated by `---END---`. Parse as the new `{task_description}`.
 
 ### 6. Confirm

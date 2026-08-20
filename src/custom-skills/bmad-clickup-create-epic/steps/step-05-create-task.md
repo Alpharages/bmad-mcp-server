@@ -155,4 +155,4 @@ created_task_url: ''
 
 ## NEXT
 
-Step 5 is the terminal step of the `bmad-clickup-create-epic` skill. There are no further steps. End the workflow after step 8.
+Step 5 is the terminal step of the `bmad-clickup-create-epic` skill. There are no further steps. End the workflow after step 5.

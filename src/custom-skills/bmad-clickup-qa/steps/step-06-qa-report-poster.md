@@ -1,5 +1,6 @@
 ---
 qa_verdict: ''
+qa_inconclusive_reason: ''
 qa_summary: ''
 comment_id: ''
 ---
@@ -18,14 +19,19 @@ comment_id: ''
 
 ### 1. Aggregate the overall verdict
 
-| `{ai_qa_verdict}`              | `{human_qa_verdict}`           | `{qa_verdict}` |
-| ------------------------------ | ------------------------------ | -------------- |
-| any `fail`                     | —                              | `failed`       |
-| —                              | any `fail`                     | `failed`       |
-| both `skipped`                 | both `skipped`                 | `inconclusive` |
-| at least one `pass`, no `fail` | (other is `pass` or `skipped`) | `passed`       |
+Evaluate in row order and stop at the first match.
 
-In words: **failed** if either pass found a failure; **passed** if at least one pass ran clean and neither failed; **inconclusive** only if nothing actually ran. Store as `{qa_verdict}`.
+| #   | `{ai_qa_verdict}`                              | `{human_qa_verdict}`              | `{qa_verdict}` |
+| --- | ---------------------------------------------- | --------------------------------- | -------------- |
+| 1   | `fail`                                         | —                                 | `failed`       |
+| 2   | —                                              | `fail`                            | `failed`       |
+| 3   | `pass`                                         | `pass`, `skipped`, `inconclusive` | `passed`       |
+| 4   | `skipped`, `inconclusive`                      | `pass`                            | `passed`       |
+| 5   | otherwise (no pass and no fail on either side) |                                   | `inconclusive` |
+
+In words: **failed** if either pass found a failure; **passed** if at least one pass actually verified something clean and neither failed; **inconclusive** whenever nothing was verified — because a pass was skipped, because the browser or test infrastructure could not run, or because every scenario came back `BLOCKED`. Store as `{qa_verdict}`.
+
+**Infrastructure failure is never a pass.** Row 5 is the catch-all precisely so a run that verified nothing cannot fall through to `passed`. When `{qa_verdict}` = `inconclusive`, set `{qa_inconclusive_reason}` to a one-line statement of what was unavailable (e.g. `test suite could not run: missing dependencies; no browser MCP connected`), drawn from `{test_suite_result}`, `{ai_qa_findings}` and `{human_qa_findings}`.
 
 ### 2. Compose the report
 

@@ -32,21 +32,31 @@ Step 3 MUST complete with a non-empty `{sprint_list_id}` before the workflow pro
 
 ## Description Composer
 
-Delegates to the `bmad-create-story` workflow in content-composition mode (skip file writes, return content). `bmad-create-story` performs exhaustive artifact analysis: BDD acceptance criteria, ordered task/subtask checklist, architecture guardrails, previous-story intelligence from git, and web research for latest tech. When `{epic_id}` is non-empty (branch 3a), epic context is pre-supplied from the ClickUp fetch so story discovery is skipped. When `{epic_id}` is `''` (branch 3b — no-epic path), `getTaskById` is skipped, only sentinel placeholders (`Epic: (none — standalone task)`, `Epic description: (none)`) are passed to `bmad-create-story` in place of real epic content, and the composed description contains no "Epic:" or "Parent epic:" field.
+Composes the ClickUp story description from BMAD 6.11 planning and specification output. The deprecated `bmad-create-story` shim is never called.
 
-**Context-rich implementation guidance:** The override instructions explicitly require `bmad-create-story` to produce a dev-agent-ready document that includes:
+**Story source cascade** — the composer stops at the first source that yields exactly one story:
+
+1. **Planned story in a spec folder** — matches `{story_title}` against `stories.yaml` entries produced by `bmad-spec`'s Story Breakdown, then reads the authored `stories/<id>-*.md` spec plus `SPEC.md` and its `companions:`.
+2. **Planned story in the epics artifact** — matches against the story headings in the epics artifact resolved by the doc-path cascade.
+3. **Ad hoc intent via `bmad-spec`** — when the story is not planned anywhere, the composer invokes `bmad-spec` **headlessly** on the user's title and scope notes and reads back the resulting `SPEC.md`, companions and `.memlog.md`. The user is never asked to run a planning workflow by hand first; the skill's existing inputs stay sufficient.
+
+Ambiguity is never resolved silently: when several planned stories match, the candidates are listed and the user chooses. When no source yields a story and `bmad-spec` reports `insufficient_intent`, the workflow stops with an actionable message rather than inventing a task.
+
+When `{epic_id}` is non-empty, epic context is fetched from ClickUp and used as primary scope context. When `{epic_id}` is `''` (no-epic path), `getTaskById` is skipped and the composed description contains no "Epic:" or "Parent epic:" field.
+
+**Description contract** — whatever the source, the composed document carries the same sections it always has: user story, BDD acceptance criteria, ordered tasks/subtasks, dependencies, and dev notes with:
 
 - **Specific file paths** — exact source files, modules, or directories to create or modify.
 - **Implementation approach** — a concise exit solution explaining what to change, where to add vs. update, and the expected code structure.
 - **Architecture guardrails** — relevant patterns and constraints cited with file references.
 - **Previous-story intelligence** — references to established patterns or recently modified files for continuity.
 
-**QA — two audiences, two sections:** The override instructions require both:
+**QA — two audiences, two sections:**
 
 - `## QA / Testing Notes` — aimed at the **AI QA agent that has code access**. BDD test scenarios, code-level edge cases, regression risks citing files/modules, test data/setup, and suggested test coverage (unit / integration / e2e) with target test-file locations.
 - `## Human QA Notes` — aimed at the **human QA tester who does NOT have code access**. Human QA tests the deployed ticket on the staging/dev environment _after_ the developer deploys. Section is black-box only (UI / API steps, expected visible outcomes, environment URL + accounts + flags, cross-browser/device/role checks, manual regression click-through) and explicitly states the deployment prerequisite.
 
-A guardrail step checks the captured content and appends either or both missing sections, plus an `## Implementation Notes` fallback if the document lacks concrete file paths or an exit solution.
+A contract guardrail checks the composed content and repairs anything missing: either or both QA sections, a `## Dependencies` section, and an `## Implementation Notes` fallback if the document lacks concrete file paths or an exit solution.
 
 See: [./steps/step-04-description-composer.md](./steps/step-04-description-composer.md)
 

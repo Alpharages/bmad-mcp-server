@@ -16,7 +16,7 @@ test_suite_result: ''
 
 1. **Hard read-only on the repo.** This pass MUST NOT create, modify, or delete any source file or test file, and MUST NOT commit, stage, or stash. Running the existing test suite and reading code/git is allowed. If you discover a bug, you record it as a finding — you do not fix it, and you do not write a new test to prove it. (Fixing and new tests belong to `bmad-clickup-dev-implement`. Authoring new tests here was explicitly excluded from this skill's scope.)
 2. **Skip cleanly.** If `{run_code_pass}` is `'false'`, set `{ai_qa_verdict}` = `'skipped'`, `{ai_qa_findings}` = `'No code-access QA inputs.'`, `{test_suite_result}` = `'not run'`, emit a one-line skip notice, and proceed to step 5.
-3. **Environment failure is non-fatal.** If the test suite cannot run (deps missing, no runner, build broken before your involvement), mark affected scenarios `BLOCKED` with the reason, capture the error in `{test_suite_result}`, and continue tracing the rest by reading code. A blocked suite does not by itself mean `fail`.
+3. **Environment failure is non-fatal but never a pass.** If the test suite cannot run (deps missing, no runner, build broken before your involvement), mark affected scenarios `BLOCKED` with the reason, capture the error in `{test_suite_result}`, and continue tracing the rest by reading code. A blocked suite does not by itself mean `fail` — and it never counts toward a `pass` either. When infrastructure failure leaves nothing actually verified, the verdict is `inconclusive` (instruction 4).
 4. **Evidence-bound verdicts.** Every PASS/FAIL must cite concrete evidence — a test name + result, or a `file:line` reference showing the code path. No verdict from assumption.
 
 ## INSTRUCTIONS
@@ -46,8 +46,11 @@ Assign each item one of: `PASS` (evidence the behaviour is correct), `FAIL` (evi
 
 ### 4. Compute the pass verdict
 
+Evaluate in this order and stop at the first match:
+
 - `{ai_qa_verdict}` = `'fail'` if any checklist item is `FAIL`, OR if a test that covers a checklist scenario failed in step 1.
-- `{ai_qa_verdict}` = `'pass'` if no `FAIL` items and no covering-test failures (BLOCKED items are allowed but must be surfaced as caveats in the report).
+- `{ai_qa_verdict}` = `'inconclusive'` if the checklist is non-empty but **no item reached `PASS` or `FAIL`** — i.e. every item is `BLOCKED`. Infrastructure failure verified nothing, so it must not be reported as a pass. Record the blocking reason (missing deps, broken build, no access) in `{ai_qa_findings}`.
+- `{ai_qa_verdict}` = `'pass'` if at least one item is `PASS`, no item is `FAIL`, and no covering test failed. Any remaining `BLOCKED` items MUST be surfaced as caveats in the report.
 - Store the full per-item results, with evidence, as `{ai_qa_findings}` (this feeds the report in step 6 — keep it structured: scenario → verdict → evidence).
 
 ### 5. Emit a compact pass summary

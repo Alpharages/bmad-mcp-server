@@ -30,7 +30,7 @@ See: [./steps/step-03-epic-picker.md](./steps/step-03-epic-picker.md)
 
 ## Description Composer
 
-Parses the user's free-form bug report into a context-rich, dev-agent-ready description template that rivals `bmad-create-story` depth:
+Parses the user's free-form bug report into a context-rich, dev-agent-ready description template with the same depth as a planned BMAD 6.11 story:
 
 - **Summary** — one-line coerced title
 - **Steps to reproduce**
@@ -54,7 +54,7 @@ Before composing the description, the skill performs two enrichment passes:
 
 This ensures the dev agent receives an exit solution grounded in both planning artifacts and live code intelligence.
 
-No `bmad-create-story` delegation — the composer extracts these sections directly from the user's report.
+No upstream BMAD delegation — the composer extracts these sections directly from the user's report, so a bug can always be filed even when no planning artifacts exist.
 
 See: [./steps/step-04-description-composer.md](./steps/step-04-description-composer.md)
 

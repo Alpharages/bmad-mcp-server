@@ -204,4 +204,4 @@ created_task_url: ''
 
 ## NEXT
 
-Terminal step — skill execution ends after `createTask` completes or errors.
+Step 5 is the terminal step of the `bmad-clickup-create-bug` skill. There are no further steps. Skill execution ends after `createTask` completes or errors.

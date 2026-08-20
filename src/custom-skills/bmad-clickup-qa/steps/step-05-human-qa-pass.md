@@ -87,8 +87,11 @@ Assign each scenario `PASS` (observed outcome matches expected), `FAIL` (mismatc
 
 ### 5. Compute the visual verdict
 
+Evaluate in this order and stop at the first match:
+
 - `{human_qa_verdict}` = `'fail'` if any scenario is `FAIL`.
-- `{human_qa_verdict}` = `'pass'` if no `FAIL` (BLOCKED scenarios surfaced as caveats).
+- `{human_qa_verdict}` = `'inconclusive'` if the scenario list is non-empty but **no scenario reached `PASS` or `FAIL`** — i.e. every one is `BLOCKED`. A browser session that could not complete a single scenario (app erroring on every route, preconditions unreachable) verified nothing, and must not be reported as a pass.
+- `{human_qa_verdict}` = `'pass'` if at least one scenario is `PASS` and none is `FAIL`. Any remaining `BLOCKED` scenarios MUST be surfaced as caveats.
 - Store per-scenario results with screenshot references and observed-vs-expected notes as `{human_qa_findings}`.
 
 ### 6. Tear down and emit a compact pass summary

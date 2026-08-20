@@ -37,7 +37,7 @@ See: [./steps/step-03-planning-artifact-reader.md](./steps/step-03-planning-arti
 
 ## Implementation Loop
 
-Delegates to the `bmad-dev-story` workflow with the ClickUp task description pre-supplied as the virtual story file. `bmad-dev-story` handles everything: review-continuation detection, red-green-refactor TDD cycle, per-task DoD validation, and completion communication. File-system side-effects (sprint-status.yaml, local story file) are skipped — ClickUp is the record. When `bmad-dev-story` improves upstream, this skill inherits those improvements automatically.
+Delegates to the BMAD 6.11 `bmad-build` workflow — the single implementation entry point every BMAD 6.11 path converges on — with the ClickUp task description, task URL, parent-epic context, resolved planning paths, and any prior review-continuation comments pre-supplied as the explicit build intent. `bmad-build` handles everything: clarify-and-route, its own implementation spec, the implement loop, adversarial review with verification-gap analysis, and presentation. Deprecated v6 story/sprint file writes are suppressed (`story_key` is left unset so `sync-sprint-status` returns without writing) — ClickUp is the record. The deprecated `bmad-dev-story` shim is never called. When `bmad-build` improves upstream, this skill inherits those improvements automatically.
 
 See: [./steps/step-04-implementation-loop.md](./steps/step-04-implementation-loop.md)
 
