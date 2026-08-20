@@ -13,6 +13,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { dirname, join, normalize, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DEPRECATED_UPSTREAM_IDS } from '../helpers/bmad-611-contract.js';
@@ -41,10 +42,28 @@ const REMOVED_WORKFLOW_IDS = [
   'clickup-qa',
 ] as const;
 
-const skillDirs = readdirSync(SKILLS_DIR, { withFileTypes: true })
-  .filter((e) => e.isDirectory())
-  .map((e) => e.name)
-  .sort();
+/**
+ * Skill directories as they actually ship: the tracked top-level directories
+ * under `src/custom-skills/`. Reading the filesystem directly would also pick
+ * up gitignored local artifacts (runtime `logs/`, editor `.claude/`), making
+ * the sweep pass in CI and fail on a developer machine.
+ */
+const skillDirs = Array.from(
+  new Set(
+    execFileSync('git', ['ls-files', '-z', 'src/custom-skills'], {
+      cwd: REPO_ROOT,
+      encoding: 'utf-8',
+    })
+      .split('\0')
+      .filter(Boolean)
+      .map((f) => f.slice('src/custom-skills/'.length).split('/')[0])
+      .filter(
+        (name) =>
+          existsSync(join(SKILLS_DIR, name)) &&
+          statSync(join(SKILLS_DIR, name)).isDirectory(),
+      ),
+  ),
+).sort();
 
 const readSkill = (skill: string, rel: string): string =>
   readFileSync(join(SKILLS_DIR, skill, rel), 'utf-8');

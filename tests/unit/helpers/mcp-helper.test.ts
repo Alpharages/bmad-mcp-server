@@ -18,28 +18,41 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const serverPath = path.join(__dirname, '../../build/index.js');
-const bmadSamplePath = path.join(__dirname, '../../.bmad/6.0.0-alpha.0/bmad');
+const repoRoot = path.join(__dirname, '../../..');
+const serverPath = path.join(repoRoot, 'build/index.js');
 
 let serverAvailable = false;
+let startupError: Error | null = null;
 
 beforeAll(async () => {
   // Quick check if server can start
   try {
     const helper = new MCPHelper({
       serverPath,
-      env: { BMAD_ROOT: bmadSamplePath },
     });
     await helper.connect();
     await helper.disconnect();
     serverAvailable = true;
-  } catch {
+  } catch (error) {
     serverAvailable = false;
-    console.log('⚠️  MCP server not available, skipping tests');
+    startupError = error as Error;
   }
 });
 
 describe('MCPHelper', () => {
+  // The per-test `if (!serverAvailable) return` guards below would turn an
+  // unstartable server into a wall of green no-ops. This assertion makes that
+  // failure mode explicit instead: the suite must never report success because
+  // it could not reach the thing it was exercising.
+  it('starts the built MCP server (no silent skip)', () => {
+    expect(
+      startupError,
+      `Could not start the MCP server at ${serverPath}. ` +
+        'Run `npm run build` before the unit suite.',
+    ).toBeNull();
+    expect(serverAvailable).toBe(true);
+  });
+
   describe('constructor', () => {
     it('should create instance with required config', () => {
       const helper = new MCPHelper({
@@ -78,7 +91,6 @@ describe('MCPHelper', () => {
 
       const helper = new MCPHelper({
         serverPath,
-        env: { BMAD_ROOT: bmadSamplePath },
       });
 
       await helper.connect();
@@ -94,7 +106,6 @@ describe('MCPHelper', () => {
 
       const helper = new MCPHelper({
         serverPath,
-        env: { BMAD_ROOT: bmadSamplePath },
       });
 
       await helper.connect();
@@ -111,7 +122,6 @@ describe('MCPHelper', () => {
 
       const helper = new MCPHelper({
         serverPath,
-        env: { BMAD_ROOT: bmadSamplePath },
       });
 
       await helper.connect();
@@ -128,11 +138,13 @@ describe('MCPHelper', () => {
 
       const helper = new MCPHelper({
         serverPath,
-        env: { BMAD_ROOT: bmadSamplePath },
       });
 
       await helper.connect();
-      const result = await helper.callTool('bmad', { command: '*list-agents' });
+      const result = await helper.callTool('bmad', {
+        operation: 'list',
+        query: 'agents',
+      });
 
       expect(result.content).toBeTruthy();
       expect(result.isError).toBe(false);
@@ -147,11 +159,13 @@ describe('MCPHelper', () => {
 
       const helper = new MCPHelper({
         serverPath,
-        env: { BMAD_ROOT: bmadSamplePath },
       });
 
       await helper.connect();
-      await helper.callTool('bmad', { command: '*list-agents' });
+      await helper.callTool('bmad', {
+        operation: 'list',
+        query: 'agents',
+      });
 
       const interactions = helper.getInteractions();
       const toolInteraction = interactions.find((i) => i.type === 'tool_call');
@@ -178,7 +192,6 @@ describe('MCPHelper', () => {
 
       const helper = new MCPHelper({
         serverPath,
-        env: { BMAD_ROOT: bmadSamplePath },
       });
 
       await helper.connect();
@@ -197,7 +210,6 @@ describe('MCPHelper', () => {
 
       const helper = new MCPHelper({
         serverPath,
-        env: { BMAD_ROOT: bmadSamplePath },
       });
 
       await helper.connect();
@@ -216,11 +228,13 @@ describe('MCPHelper', () => {
 
       const helper = new MCPHelper({
         serverPath,
-        env: { BMAD_ROOT: bmadSamplePath },
       });
 
       await helper.connect();
-      await helper.callTool('bmad', { command: '*list-agents' });
+      await helper.callTool('bmad', {
+        operation: 'list',
+        query: 'agents',
+      });
 
       const interactions = helper.getInteractions();
       expect(interactions.length).toBeGreaterThanOrEqual(2); // connect + tool call
@@ -233,11 +247,13 @@ describe('MCPHelper', () => {
 
       const helper = new MCPHelper({
         serverPath,
-        env: { BMAD_ROOT: bmadSamplePath },
       });
 
       await helper.connect();
-      await helper.callTool('bmad', { command: '*list-agents' });
+      await helper.callTool('bmad', {
+        operation: 'list',
+        query: 'agents',
+      });
 
       const last = helper.getLastInteraction();
       expect(last?.type).toBe('tool_call');
@@ -250,7 +266,6 @@ describe('MCPHelper', () => {
 
       const helper = new MCPHelper({
         serverPath,
-        env: { BMAD_ROOT: bmadSamplePath },
       });
 
       await helper.connect();
@@ -266,11 +281,13 @@ describe('MCPHelper', () => {
 
       const helper = new MCPHelper({
         serverPath,
-        env: { BMAD_ROOT: bmadSamplePath },
       });
 
       await helper.connect();
-      await helper.callTool('bmad', { command: '*list-agents' });
+      await helper.callTool('bmad', {
+        operation: 'list',
+        query: 'agents',
+      });
 
       const totalDuration = helper.getTotalDuration();
       expect(totalDuration).toBeGreaterThanOrEqual(0);
@@ -285,7 +302,6 @@ describe('MCPHelper', () => {
 
       const helper = await createMCPHelper({
         serverPath,
-        env: { BMAD_ROOT: bmadSamplePath },
       });
 
       expect(helper.isConnected()).toBe(true);
@@ -299,7 +315,6 @@ describe('MCPHelper', () => {
       const result = await withMCPHelper(
         {
           serverPath,
-          env: { BMAD_ROOT: bmadSamplePath },
         },
         async (h) => {
           expect(h.isConnected()).toBe(true);
