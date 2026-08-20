@@ -115,12 +115,12 @@ Describe what you want in natural language and the model picks the right tool ca
 
 The server exposes a single `bmad` tool with five operations:
 
-| Operation           | Purpose                                                          |
-| ------------------- | ---------------------------------------------------------------- |
-| `list`              | Enumerate available agents and workflows                         |
-| `read`              | Inspect an agent or workflow definition                          |
-| `execute`           | Run an agent or workflow with context                            |
-| `search`            | Search BMAD content                                              |
+| Operation           | Purpose                                                           |
+| ------------------- | ----------------------------------------------------------------- |
+| `list`              | Enumerate available agents and workflows                          |
+| `read`              | Inspect an agent or workflow definition                           |
+| `execute`           | Run an agent or workflow with context                             |
+| `search`            | Search BMAD content                                               |
 | `resolve-doc-paths` | Resolve PRD / architecture / epics paths via the doc-path cascade |
 
 Direct tool calls (useful for scripts and testing):
@@ -174,10 +174,10 @@ ClickUp tools are **additive** — the `bmad` tool works with or without them. T
 
 Credentials are supplied per transport:
 
-| Transport             | How credentials are supplied                                                   |
-| --------------------- | ------------------------------------------------------------------------------ |
-| **stdio** (local/npx) | `env` block in the MCP client config, injected at process startup              |
-| **HTTP** (shared)     | `X-ClickUp-*` request headers, read per-session and held in memory only        |
+| Transport             | How credentials are supplied                                            |
+| --------------------- | ----------------------------------------------------------------------- |
+| **stdio** (local/npx) | `env` block in the MCP client config, injected at process startup       |
+| **HTTP** (shared)     | `X-ClickUp-*` request headers, read per-session and held in memory only |
 
 A shared HTTP server therefore needs **no ClickUp credentials of its own** — each user brings their own key via headers.
 
@@ -201,19 +201,19 @@ A shared HTTP server therefore needs **no ClickUp credentials of its own** — e
 
 ### Environment variables / headers
 
-| Variable             | Header              | Purpose                                                           |
-| -------------------- | ------------------- | ----------------------------------------------------------------- |
-| `CLICKUP_API_KEY`    | `X-ClickUp-Api-Key` | Personal token from ClickUp → Settings → Apps (starts with `pk_`) |
-| `CLICKUP_TEAM_ID`    | `X-ClickUp-Team-Id` | Workspace/team ID (7–10 digits, visible in any settings URL)      |
-| `CLICKUP_MCP_MODE`   | `X-ClickUp-Mode`    | Tool surface: `read-minimal`, `read`, or `write` (default `write`) |
+| Variable           | Header              | Purpose                                                            |
+| ------------------ | ------------------- | ------------------------------------------------------------------ |
+| `CLICKUP_API_KEY`  | `X-ClickUp-Api-Key` | Personal token from ClickUp → Settings → Apps (starts with `pk_`)  |
+| `CLICKUP_TEAM_ID`  | `X-ClickUp-Team-Id` | Workspace/team ID (7–10 digits, visible in any settings URL)       |
+| `CLICKUP_MCP_MODE` | `X-ClickUp-Mode`    | Tool surface: `read-minimal`, `read`, or `write` (default `write`) |
 
 ### Mode → tool surface
 
-| Mode              | Tools registered                                                                                                                         |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `read-minimal`    | `getTaskById`, `searchTasks`                                                                                                              |
-| `read`            | above + `searchSpaces`, `getListInfo`, `getTimeEntries`, `readDocument`                                                                   |
-| `write` (default) | above + `addComment`, `updateTask`, `createTask`, `updateListInfo`, `createTimeEntry`, `updateDocumentPage`, `createDocumentOrPage`       |
+| Mode              | Tools registered                                                                                                                    |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `read-minimal`    | `getTaskById`, `searchTasks`                                                                                                        |
+| `read`            | above + `searchSpaces`, `getListInfo`, `getTimeEntries`, `readDocument`                                                             |
+| `write` (default) | above + `addComment`, `updateTask`, `createTask`, `updateListInfo`, `createTimeEntry`, `updateDocumentPage`, `createDocumentOrPage` |
 
 The session-scoped space picker (`pickSpace`, `getCurrentSpace`, `clearCurrentSpace`) is available in all modes. The custom skills below require `write` mode.
 
@@ -225,14 +225,14 @@ The session-scoped space picker (`pickSpace`, `getCurrentSpace`, `clearCurrentSp
 
 Custom skills are ClickUp-integrated workflows layered on top of the BMAD agent/workflow engine. Unlike BMAD's built-in file-system workflows, they treat **ClickUp as the source of truth** — their output is ClickUp tasks, comments, and status transitions rather than local files. All require `CLICKUP_MCP_MODE=write`.
 
-| Skill                   | Purpose                                                                                                  |
-| ----------------------- | -------------------------------------------------------------------------------------------------------- |
-| `clickup-create-epic`   | Create a root-level epic in the Backlog list from your local epics file.                                 |
-| `clickup-create-story`  | Create a story (under an epic, or standalone) with BDD criteria composed by `bmad-create-story`.         |
-| `clickup-create-bug`    | Create a structured bug ticket (repro / expected / actual / impact) from a free-form report.             |
-| `clickup-dev-implement` | Implement a story from its task ID via `bmad-dev-story`, open a PR, and move the task to review.         |
-| `clickup-code-review`   | Run an adversarial review of an implementation via `bmad-code-review` and transition the task status.    |
-| `clickup-qa`            | Run end-to-end QA (code-access + visual passes), post a QA report, and transition the task status.       |
+| Skill                        | Purpose                                                                                               |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `bmad-clickup-create-epic`   | Create a root-level epic in the Backlog list from your local epics file.                              |
+| `bmad-clickup-create-story`  | Create a story (under an epic, or standalone) with BDD criteria composed by `bmad-create-story`.      |
+| `bmad-clickup-create-bug`    | Create a structured bug ticket (repro / expected / actual / impact) from a free-form report.          |
+| `bmad-clickup-dev-implement` | Implement a story from its task ID via `bmad-dev-story`, open a PR, and move the task to review.      |
+| `bmad-clickup-code-review`   | Run an adversarial review of an implementation via `bmad-code-review` and transition the task status. |
+| `bmad-clickup-qa`            | Run end-to-end QA (code-access + visual passes), post a QA report, and transition the task status.    |
 
 Skills that read planning artifacts resolve the PRD, architecture, and epics paths through the **doc-path cascade** (per-project `.bmadmcp/config.toml` → BMAD config chain → `planning-artifacts/` default). Project-local pinning of ClickUp space/list IDs lives in `.bmadmcp/config.toml`; see [`.bmadmcp/config.example.toml`](./.bmadmcp/config.example.toml) for the schema, and [`CLAUDE.md`](./CLAUDE.md#doc-path-cascade) for the cascade details.
 
@@ -255,12 +255,12 @@ The server starts on `http://localhost:3000`. ClickUp credentials are per-user (
 
 ### Endpoints
 
-| Endpoint      | Auth | Purpose                                        |
-| ------------- | ---- | ---------------------------------------------- |
-| `GET /health` | No   | Health check                                   |
-| `POST /mcp`   | Yes  | MCP Streamable HTTP transport                  |
-| `GET /mcp`    | Yes  | SSE stream for server-to-client notifications  |
-| `DELETE /mcp` | Yes  | Close MCP session                              |
+| Endpoint      | Auth | Purpose                                       |
+| ------------- | ---- | --------------------------------------------- |
+| `GET /health` | No   | Health check                                  |
+| `POST /mcp`   | Yes  | MCP Streamable HTTP transport                 |
+| `GET /mcp`    | Yes  | SSE stream for server-to-client notifications |
+| `DELETE /mcp` | Yes  | Close MCP session                             |
 
 Authenticate with `Authorization: Bearer <key>` or `X-API-Key: <key>`. If `BMAD_API_KEY` is unset, the server runs in open mode (development only). SSE requires `proxy_buffering off` on your reverse proxy.
 

@@ -118,7 +118,7 @@ tests/
 
 ## Doc-Path Cascade
 
-BMAD custom skills (`clickup-create-story`, `clickup-dev-implement`, `clickup-code-review`) need to read the project's PRD, architecture document, and epics directory on every invocation. Before EPIC-6, these paths were hardcoded to `planning-artifacts/`, which caused a hard prereq failure for projects with non-standard layouts. The doc-path cascade introduced in EPIC-6 resolves each path through a three-layer fallback (highest → lowest priority):
+BMAD custom skills (`bmad-clickup-create-story`, `bmad-clickup-dev-implement`, `bmad-clickup-code-review`) need to read the project's PRD, architecture document, and epics directory on every invocation. Before EPIC-6, these paths were hardcoded to `planning-artifacts/`, which caused a hard prereq failure for projects with non-standard layouts. The doc-path cascade introduced in EPIC-6 resolves each path through a three-layer fallback (highest → lowest priority):
 
 1. **`.bmadmcp/config.toml` `[docs]` table** — per-project escape hatch. Set `prd_path`, `architecture_path`, or `epics_path` to override that specific key.
 2. **BMAD config chain** — reads `_bmad/config.toml` → `_bmad/config.user.toml` → `_bmad/custom/config.toml` → `_bmad/custom/config.user.toml` and uses `[bmm].planning_artifacts` as the base directory.
@@ -144,7 +144,7 @@ architecture_path = "docs/architecture/overview.md"
 epics_path        = "docs/epics/"
 ```
 
-The cascade is invoked via `bmad({ operation: 'resolve-doc-paths' })` and is consumed by all three custom skills (`clickup-create-story`, `clickup-dev-implement`, `clickup-code-review`).
+The cascade is invoked via `bmad({ operation: 'resolve-doc-paths' })` and is consumed by all three custom skills (`bmad-clickup-create-story`, `bmad-clickup-dev-implement`, `bmad-clickup-code-review`).
 
 > **This project's override.** This repo's architecture document lives at `docs/architecture.md` (not `planning-artifacts/architecture.md`), so a project-local `.bmadmcp/config.toml` must set `architecture_path = "docs/architecture.md"`. **After cloning, create this file before running any custom skill** — without it the resolver falls back to `planning-artifacts/architecture.md`, which does not exist in this repo. The gitignored `.bmadmcp/config.toml` is the right place for this; `.bmadmcp/config.example.toml` (tracked) shows the full schema.
 

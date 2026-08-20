@@ -14,7 +14,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 
 describe('upstream compatibility — bmad-create-story', () => {
-  it('upstream workflow must contain the step names referenced by clickup-create-story overrides', async () => {
+  it('upstream workflow must contain the step names referenced by bmad-clickup-create-story overrides', async () => {
     const projectDir = mkdtempSync(join(tmpdir(), 'bmad-upstream-compat-'));
     try {
       const loader = new ResourceLoaderGit(projectDir);
@@ -38,13 +38,14 @@ describe('upstream compatibility — bmad-create-story', () => {
       const content = resource.content;
 
       // These step markers are referenced by name in
-      // src/custom-skills/clickup-create-story/steps/step-04-description-composer.md
+      // src/custom-skills/bmad-clickup-create-story/steps/step-04-description-composer.md
       // (branches 3a and 3b override instructions).
       // If BMAD-METHOD renames or renumbers these steps, the LLM executing
       // bmad-create-story may ignore our overrides.
       const requiredSteps = [
         {
-          pattern: /<step n=["']5["'].+goal=["']Create comprehensive story file["']/i,
+          pattern:
+            /<step n=["']5["'].+goal=["']Create comprehensive story file["']/i,
           name: 'Step 5: Create comprehensive story file',
         },
         {
@@ -59,7 +60,7 @@ describe('upstream compatibility — bmad-create-story', () => {
           content,
           `Upstream bmad-create-story is missing "${step.name}". ` +
             `BMAD-METHOD may have renamed/renumbered this step. ` +
-            `Update src/custom-skills/clickup-create-story/steps/step-04-description-composer.md ` +
+            `Update src/custom-skills/bmad-clickup-create-story/steps/step-04-description-composer.md ` +
             `override instructions to match the new upstream step names.`,
         ).toMatch(step.pattern);
       }

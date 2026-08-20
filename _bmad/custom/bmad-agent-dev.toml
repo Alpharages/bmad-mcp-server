@@ -3,8 +3,8 @@
 # custom ClickUp skills.
 # Merge rule (BMAD): [[agent.menu]] entries keyed by `code` replace
 # matching upstream entries and new codes append.
-# See: src/custom-skills/clickup-create-story/
-# See: src/custom-skills/clickup-dev-implement/
+# See: src/custom-skills/bmad-clickup-create-story/
+# See: src/custom-skills/bmad-clickup-dev-implement/
 #
 # Trigger dispatch in Claude Code CLI mode (ds-trigger-not-dispatched-via-toml,
 # story 5-7): TOML triggers are dispatched in Cursor / VS Code. In Claude Code
@@ -16,17 +16,17 @@
 [[agent.menu]]
 code = "CS"
 description = "Create a ClickUp story as a subtask of a chosen epic in the active sprint list"
-skill = "clickup-create-story"
+skill = "bmad-clickup-create-story"
 
 [[agent.menu]]
 code = "DS"
 description = "Implement a ClickUp task end-to-end — fetch task + parent-epic context, read planning artifacts, implement code, post progress comments, transition status"
-skill = "clickup-dev-implement"
+skill = "bmad-clickup-dev-implement"
 
 [[agent.menu]]
 code = "CB"
 description = "Create a ClickUp bug ticket from a free-form bug report"
-skill = "clickup-create-bug"
+skill = "bmad-clickup-create-bug"
 
 # Per-skill configuration (pinned space / list / folder IDs) lives in
 # `.bmadmcp/config.toml` at the project root, not here. That file is

@@ -10,4 +10,4 @@ test-results/
 src/tools/clickup/
 
 # LLM instruction step files — formatting must be preserved for test assertions
-src/custom-skills/clickup-create-story/steps/
+src/custom-skills/bmad-clickup-create-story/steps/

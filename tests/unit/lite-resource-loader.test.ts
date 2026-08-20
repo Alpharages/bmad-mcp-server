@@ -306,12 +306,12 @@ describe('ResourceLoader (Lite)', () => {
         projectDir,
         'src',
         'custom-skills',
-        'clickup-create-story',
+        'bmad-clickup-create-story',
       );
       mkdirSync(customSkillDir, { recursive: true });
       writeFileSync(
         join(customSkillDir, 'SKILL.md'),
-        '---\nname: clickup-create-story\n---\n# ClickUp Create Story',
+        '---\nname: bmad-clickup-create-story\n---\n# ClickUp Create Story',
       );
       const upstreamSkillDir = join(
         gitCacheDir,
@@ -348,7 +348,7 @@ describe('ResourceLoader (Lite)', () => {
     }
   });
 
-  it('should load clickup-create-story without confusion when clickup-create-bug also exists', async () => {
+  it('should load bmad-clickup-create-story without confusion when bmad-clickup-create-bug also exists', async () => {
     // arrange — two sibling skills in src/custom-skills/ (EPIC-7 layout)
     const projectDir = mkdtempSync(join(tmpdir(), 'bmad-regression-7-8-'));
     try {
@@ -356,39 +356,40 @@ describe('ResourceLoader (Lite)', () => {
         projectDir,
         'src',
         'custom-skills',
-        'clickup-create-story',
+        'bmad-clickup-create-story',
       );
       const createBugDir = join(
         projectDir,
         'src',
         'custom-skills',
-        'clickup-create-bug',
+        'bmad-clickup-create-bug',
       );
       mkdirSync(createStoryDir, { recursive: true });
       mkdirSync(createBugDir, { recursive: true });
       writeFileSync(
         join(createStoryDir, 'SKILL.md'),
-        '---\nname: clickup-create-story\n---\n# ClickUp Create Story — sentinel',
+        '---\nname: bmad-clickup-create-story\n---\n# ClickUp Create Story — sentinel',
       );
       writeFileSync(
         join(createBugDir, 'SKILL.md'),
-        '---\nname: clickup-create-bug\n---\n# ClickUp Create Bug — sentinel',
+        '---\nname: bmad-clickup-create-bug\n---\n# ClickUp Create Bug — sentinel',
       );
       const disambigLoader = new ResourceLoaderGit(projectDir);
       // act + assert — create-story resolves to the correct skill
       const storyResource = await disambigLoader.loadWorkflow(
-        'clickup-create-story',
+        'bmad-clickup-create-story',
       );
-      expect(storyResource.name).toBe('clickup-create-story');
+      expect(storyResource.name).toBe('bmad-clickup-create-story');
       expect(storyResource.content).toContain(
         'ClickUp Create Story — sentinel',
       );
       expect(storyResource.content).not.toContain('ClickUp Create Bug');
       expect(storyResource.source).toBe('project');
       // act + assert — create-bug resolves to the correct skill
-      const bugResource =
-        await disambigLoader.loadWorkflow('clickup-create-bug');
-      expect(bugResource.name).toBe('clickup-create-bug');
+      const bugResource = await disambigLoader.loadWorkflow(
+        'bmad-clickup-create-bug',
+      );
+      expect(bugResource.name).toBe('bmad-clickup-create-bug');
       expect(bugResource.content).toContain('ClickUp Create Bug — sentinel');
       expect(bugResource.content).not.toContain('ClickUp Create Story');
       expect(bugResource.source).toBe('project');

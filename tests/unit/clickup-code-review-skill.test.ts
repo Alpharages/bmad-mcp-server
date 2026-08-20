@@ -10,12 +10,12 @@ const step07Path = join(
   projectRoot,
   'src',
   'custom-skills',
-  'clickup-code-review',
+  'bmad-clickup-code-review',
   'steps',
   'step-07-lore-lesson-save.md',
 );
 
-describe('clickup-code-review step-07-lore-lesson-save', () => {
+describe('bmad-clickup-code-review step-07-lore-lesson-save', () => {
   const content = readFileSync(step07Path, 'utf-8');
 
   it('resolves the project slug from lore.yaml before selecting an MCP tool', () => {

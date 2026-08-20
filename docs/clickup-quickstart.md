@@ -3,7 +3,7 @@
 This guide is the single entry point for a **team-lead-in-session** — someone
 invoking the Dev agent against a ClickUp-routed pilot epic in their own project.
 Reading it from top to bottom gets you to a successful first invocation of either
-`clickup-create-story` (story-creation mode) or `clickup-dev-implement`
+`bmad-clickup-create-story` (story-creation mode) or `bmad-clickup-dev-implement`
 (implementation mode). The prerequisites and invocation paths documented here
 reflect the post-EPIC-5 / post-story-5-7 skill state; readers who land here after
 a future skill revision should treat this document as a point-in-time snapshot and
@@ -70,7 +70,7 @@ The `gh` CLI must be installed and authenticated against an account with push
 access to the pilot repo's GitHub org. On laptops with multiple `gh` accounts,
 the wrong account is silently active until a `gh pr create` call fails.
 
-**Before invoking `clickup-dev-implement`:**
+**Before invoking `bmad-clickup-dev-implement`:**
 
 ```bash
 gh auth status          # verify the active account
@@ -100,9 +100,9 @@ the operator's responsibility — the preflight cannot substitute for it.
 > [`multi-repo-cwd-handling-undocumented`](../planning-artifacts/friction-log.md#multi-repo-cwd-handling-undocumented)
 
 Both skills run a **cwd assertion** at step 1 (instruction 0 /
-[step-01-prereq-check.md](../src/custom-skills/clickup-create-story/steps/step-01-prereq-check.md);
+[step-01-prereq-check.md](../src/custom-skills/bmad-clickup-create-story/steps/step-01-prereq-check.md);
 instruction 0a /
-[step-01-task-id-parser.md](../src/custom-skills/clickup-dev-implement/steps/step-01-task-id-parser.md)).
+[step-01-task-id-parser.md](../src/custom-skills/bmad-clickup-dev-implement/steps/step-01-task-id-parser.md)).
 The assertion looks for a `.bmad-pilot-marker` sentinel file at the current
 working directory root. If the file is absent, the skill emits a `❌` error block
 and stops.
@@ -136,9 +136,9 @@ root for tooling reasons), load the pilot repo's PRD and architecture via
 absolute-path `Read` calls and record the deviation in the Dev Agent Record
 §Agent Model Used. Stories 5-4 and 5-5 used this path under disclosed deviation —
 see
-[step-01-prereq-check.md](../src/custom-skills/clickup-create-story/steps/step-01-prereq-check.md)
+[step-01-prereq-check.md](../src/custom-skills/bmad-clickup-create-story/steps/step-01-prereq-check.md)
 and
-[step-01-task-id-parser.md](../src/custom-skills/clickup-dev-implement/steps/step-01-task-id-parser.md)
+[step-01-task-id-parser.md](../src/custom-skills/bmad-clickup-dev-implement/steps/step-01-task-id-parser.md)
 for the documented escape-hatch wording.
 
 ### Optional: pinned-ID config knobs
@@ -240,23 +240,23 @@ instead of the pilot's PRD, producing stories grounded in the wrong project. See
 and
 [`multi-repo-cwd-handling-undocumented`](../planning-artifacts/friction-log.md#multi-repo-cwd-handling-undocumented).
 
-## Invoke clickup-create-story
+## Invoke bmad-clickup-create-story
 
-The `clickup-create-story` skill creates a ClickUp task in the active sprint list —
+The `bmad-clickup-create-story` skill creates a ClickUp task in the active sprint list —
 as a subtask of a chosen epic (the default), or as a standalone top-level task when
 no epic parent is needed (ops tasks, research spikes, ad-hoc work) — with a
 description composed from the pilot repo's `planning-artifacts/PRD.md` +
 `planning-artifacts/architecture.md` + the epic's ClickUp body (or PRD +
 architecture only on the no-epic path). See
-[`src/custom-skills/clickup-create-story/SKILL.md`](../src/custom-skills/clickup-create-story/SKILL.md)
+[`src/custom-skills/bmad-clickup-create-story/SKILL.md`](../src/custom-skills/bmad-clickup-create-story/SKILL.md)
 and
-[`workflow.md`](../src/custom-skills/clickup-create-story/workflow.md)
+[`workflow.md`](../src/custom-skills/bmad-clickup-create-story/workflow.md)
 for the full skill contract.
 
 ### Invocation path A — `CS` trigger via Cursor / VS Code
 
 In an IDE-integrated invocation (Cursor, VS Code Copilot, Cline), type `CS` in
-the Dev agent's input to dispatch the `clickup-create-story` skill. The trigger is
+the Dev agent's input to dispatch the `bmad-clickup-create-story` skill. The trigger is
 defined in [`_bmad/custom/bmad-agent-dev.toml`](../_bmad/custom/bmad-agent-dev.toml)
 under the `[[agent.menu]]` entry with `code = "CS"`:
 
@@ -264,27 +264,27 @@ under the `[[agent.menu]]` entry with `code = "CS"`:
 [[agent.menu]]
 code = "CS"
 description = "Create a ClickUp story as a subtask of a chosen epic in the active sprint list"
-skill = "clickup-create-story"
+skill = "bmad-clickup-create-story"
 ```
 
 ### Invocation path B — manual walk via Claude Code CLI
 
 > Addresses the documented-not-fixed behaviour:
 > [`ds-trigger-not-dispatched-via-toml`](../planning-artifacts/friction-log.md#ds-trigger-not-dispatched-via-toml)
-> (the entry name reflects the DS/`clickup-dev-implement` trigger, but the same
-> TOML-dispatch gap applies to the CS/`clickup-create-story` trigger in Claude Code
+> (the entry name reflects the DS/`bmad-clickup-dev-implement` trigger, but the same
+> TOML-dispatch gap applies to the CS/`bmad-clickup-create-story` trigger in Claude Code
 > CLI mode — see the comment block in
 > [`_bmad/custom/bmad-agent-dev.toml`](../_bmad/custom/bmad-agent-dev.toml))
 
 In Claude Code CLI mode, the `CS` trigger is not dispatched via the TOML routing
 table. The agent invokes the skill steps directly, walking
-`src/custom-skills/clickup-create-story/steps/step-01` through `step-05`. Both
+`src/custom-skills/bmad-clickup-create-story/steps/step-01` through `step-05`. Both
 invocation paths produce the same artifacts (ClickUp task created, description
 posted, URL returned).
 
 **Conversational invocation pattern:**
 
-> Invoke the `clickup-create-story` skill against pilot epic `<epic-id>`.
+> Invoke the `bmad-clickup-create-story` skill against pilot epic `<epic-id>`.
 
 The agent then walks the five steps in order. See
 [`_bmad/custom/bmad-agent-dev.toml`](../_bmad/custom/bmad-agent-dev.toml)
@@ -329,20 +329,20 @@ for the historical precedent.
 surface as candidate epics in future runs (see
 [`epic-picker-no-root-level-filter`](../planning-artifacts/friction-log.md#epic-picker-no-root-level-filter)).
 
-## Invoke clickup-dev-implement
+## Invoke bmad-clickup-dev-implement
 
-The `clickup-dev-implement` skill accepts a ClickUp task ID, fetches the task
+The `bmad-clickup-dev-implement` skill accepts a ClickUp task ID, fetches the task
 description and parent-epic context, reads the pilot repo's planning artifacts,
 implements code via IDE file tools, posts progress comments to ClickUp, and
 transitions the task status to a review state. See
-[`src/custom-skills/clickup-dev-implement/SKILL.md`](../src/custom-skills/clickup-dev-implement/SKILL.md)
+[`src/custom-skills/bmad-clickup-dev-implement/SKILL.md`](../src/custom-skills/bmad-clickup-dev-implement/SKILL.md)
 and
-[`workflow.md`](../src/custom-skills/clickup-dev-implement/workflow.md)
+[`workflow.md`](../src/custom-skills/bmad-clickup-dev-implement/workflow.md)
 for the full skill contract.
 
 ### Invocation path A — `DS` trigger via Cursor / VS Code
 
-Type `DS` in the Dev agent's input to dispatch the `clickup-dev-implement` skill
+Type `DS` in the Dev agent's input to dispatch the `bmad-clickup-dev-implement` skill
 in IDE-integrated invocations. Defined in
 [`_bmad/custom/bmad-agent-dev.toml`](../_bmad/custom/bmad-agent-dev.toml):
 
@@ -350,12 +350,12 @@ in IDE-integrated invocations. Defined in
 [[agent.menu]]
 code = "DS"
 description = "Implement a ClickUp task end-to-end — fetch task + parent-epic context, read planning artifacts, implement code, post progress comments, transition status"
-skill = "clickup-dev-implement"
+skill = "bmad-clickup-dev-implement"
 ```
 
 ### Invocation path B — manual walk via Claude Code CLI
 
-Same documented-not-fixed framing as `clickup-create-story` path B. The agent
+Same documented-not-fixed framing as `bmad-clickup-create-story` path B. The agent
 walks seven steps directly:
 
 1. `step-01-task-id-parser` — cwd assertion, PAT-prefix preflight, task-ID parsing
@@ -368,7 +368,7 @@ walks seven steps directly:
 
 **Conversational invocation pattern:**
 
-> Invoke the `clickup-dev-implement` skill against task `<task-id>`.
+> Invoke the `bmad-clickup-dev-implement` skill against task `<task-id>`.
 
 ### Post-5-7 contract changes
 
@@ -418,19 +418,19 @@ without it. See
 - Task status transitioned to a review state (or a `⚠️` warning if no synonym
   matched — see broadened match set above).
 
-## Invoke clickup-create-bug
+## Invoke bmad-clickup-create-bug
 
-The `clickup-create-bug` skill creates a ClickUp task from a free-form bug report,
+The `bmad-clickup-create-bug` skill creates a ClickUp task from a free-form bug report,
 with a structured description and an optional parent epic. See
-[`src/custom-skills/clickup-create-bug/SKILL.md`](../src/custom-skills/clickup-create-bug/SKILL.md)
+[`src/custom-skills/bmad-clickup-create-bug/SKILL.md`](../src/custom-skills/bmad-clickup-create-bug/SKILL.md)
 and
-[`workflow.md`](../src/custom-skills/clickup-create-bug/workflow.md)
+[`workflow.md`](../src/custom-skills/bmad-clickup-create-bug/workflow.md)
 for the full skill contract.
 
 ### Invocation path A — `CB` trigger via Cursor / VS Code
 
 In an IDE-integrated invocation (Cursor, VS Code Copilot, Cline), type `CB` in
-the Dev agent's input to dispatch the `clickup-create-bug` skill. The trigger is
+the Dev agent's input to dispatch the `bmad-clickup-create-bug` skill. The trigger is
 defined in [`_bmad/custom/bmad-agent-dev.toml`](../_bmad/custom/bmad-agent-dev.toml)
 under the `[[agent.menu]]` entry with `code = "CB"`:
 
@@ -438,13 +438,13 @@ under the `[[agent.menu]]` entry with `code = "CB"`:
 [[agent.menu]]
 code = "CB"
 description = "Create a ClickUp bug ticket from a free-form bug report"
-skill = "clickup-create-bug"
+skill = "bmad-clickup-create-bug"
 ```
 
 ### Invocation path B — manual walk via Claude Code CLI
 
-Same documented-not-fixed framing as `clickup-create-story` and
-`clickup-dev-implement` path B. The agent walks five steps directly:
+Same documented-not-fixed framing as `bmad-clickup-create-story` and
+`bmad-clickup-dev-implement` path B. The agent walks five steps directly:
 
 1. `step-01-prereq-check` — permission gate (write mode + token); soft-loads PRD /
    architecture / epics via `resolve-doc-paths` cascade
@@ -461,7 +461,7 @@ Same documented-not-fixed framing as `clickup-create-story` and
 
 **Conversational invocation patterns:**
 
-> Invoke the `clickup-create-bug` skill and report a bug.
+> Invoke the `bmad-clickup-create-bug` skill and report a bug.
 
 Or with inline report:
 
@@ -542,7 +542,7 @@ per EPIC-7 requirements.
 > [`gh-auth-wrong-account`](../planning-artifacts/friction-log.md#gh-auth-wrong-account),
 > [`gh-auth-prerequisite-undocumented`](../planning-artifacts/friction-log.md#gh-auth-prerequisite-undocumented)
 
-**Symptom:** `gh pr create` fails mid-`clickup-dev-implement` invocation with an
+**Symptom:** `gh pr create` fails mid-`bmad-clickup-dev-implement` invocation with an
 org-access error (e.g. `GraphQL: Resource not accessible by integration`).
 
 **Pre-empt:** Run `gh auth status` before invoking the skill and confirm the
@@ -623,7 +623,7 @@ pinned_sprint_folder_id = "<your-sprint-folder-id>"
 > [`lore-origin-pat-preflight-gap`](../planning-artifacts/friction-log.md#lore-origin-pat-preflight-gap)
 
 **Symptom:** The step-01 PAT-prefix preflight emits a `❌` error block when you
-invoke `clickup-dev-implement`.
+invoke `bmad-clickup-dev-implement`.
 
 **Pre-empt:** Before invoking, run:
 
@@ -663,7 +663,7 @@ the ticket was created correctly despite them.
 | Date       | Status        | Change                                                                                                                                                                                 |
 | ---------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 2026-04-28 | ready-for-dev | Initial quickstart created via story 5-8. Covers post-5-7 skill contract: cwd-assertion, both invocation paths, broadened review-status match set, Template B PR field, PAT-prefix preflight, pinned-ID config knobs. Lands `gh-auth-prerequisite-undocumented` and `multi-repo-cwd-handling-undocumented` friction-log entries. |
-| 2026-05-01 | ready-for-dev | Added `Invoke clickup-create-bug` section (CB trigger, five-step walkthrough, soft-load warning wording). Added Planning-artifacts-missing pitfall entry. Added `[clickup_create_bug]` config keys to pinned-ID reference. |
-| 2026-05-01 | ready-for-dev | Story 8-8: documented the no-epic option in `Invoke clickup-create-story` — updated What-the-skill-does paragraph, step-02 line, added no-epic path note and success bullet, and added `allow_no_epic` config key to `[clickup_create_story]` pinned-ID reference. |
+| 2026-05-01 | ready-for-dev | Added `Invoke bmad-clickup-create-bug` section (CB trigger, five-step walkthrough, soft-load warning wording). Added Planning-artifacts-missing pitfall entry. Added `[clickup_create_bug]` config keys to pinned-ID reference. |
+| 2026-05-01 | ready-for-dev | Story 8-8: documented the no-epic option in `Invoke bmad-clickup-create-story` — updated What-the-skill-does paragraph, step-02 line, added no-epic path note and success bullet, and added `allow_no_epic` config key to `[clickup_create_story]` pinned-ID reference. |
 
 <!-- prettier-ignore-end -->

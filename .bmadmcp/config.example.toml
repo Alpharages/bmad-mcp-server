@@ -5,8 +5,8 @@
 # `config.example.toml` (this file) is committed as the schema reference.
 #
 # Path: `{project-root}/.bmadmcp/config.toml`
-# Read by: clickup-create-epic, clickup-create-story, clickup-create-bug,
-#          clickup-dev-implement, clickup-code-review custom skills.
+# Read by: bmad-clickup-create-epic, bmad-clickup-create-story, bmad-clickup-create-bug,
+#          bmad-clickup-dev-implement, bmad-clickup-code-review custom skills.
 #
 # All keys are optional. Unset keys preserve the original picker behaviour
 # (interactive space + list + folder selection on every invocation).
@@ -25,14 +25,14 @@
 # pinned_backlog_list_id = ""    # ClickUp list ID for the Backlog list
 
 # ---------------------------------------------------------------------------
-# clickup-create-epic — per-skill overrides (take precedence over [clickup])
+# bmad-clickup-create-epic — per-skill overrides (take precedence over [clickup])
 # ---------------------------------------------------------------------------
 
 [clickup_create_epic]
 # (uncomment and set keys here to override [clickup] values for this skill only)
 
 # ---------------------------------------------------------------------------
-# clickup-create-story — per-skill overrides (take precedence over [clickup])
+# bmad-clickup-create-story — per-skill overrides (take precedence over [clickup])
 # ---------------------------------------------------------------------------
 
 [clickup_create_story]
@@ -40,7 +40,7 @@
 # allow_no_epic           = true   # Set false to hide the "no epic" option and always require an epic parent
 
 # ---------------------------------------------------------------------------
-# clickup-create-bug — per-skill config
+# bmad-clickup-create-bug — per-skill config
 # ---------------------------------------------------------------------------
 
 [clickup_create_bug]
@@ -53,7 +53,7 @@
 # ---------------------------------------------------------------------------
 # Doc-path cascade
 # ---------------------------------------------------------------------------
-# `clickup-create-story`, `clickup-dev-implement`, and `clickup-code-review`
+# `bmad-clickup-create-story`, `bmad-clickup-dev-implement`, and `bmad-clickup-code-review`
 # call `resolve-doc-paths` at startup to locate the PRD, architecture document,
 # and epics directory. By default they look under `planning-artifacts/`. If your
 # project stores these files elsewhere, uncomment the keys below and set the
