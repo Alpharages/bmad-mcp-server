@@ -10,6 +10,8 @@
 
 import { describe, it, expect, beforeAll } from 'vitest';
 import { ResourceLoaderGit } from '../../src/core/resource-loader.js';
+import { BMADEngine } from '../../src/core/bmad-engine.js';
+import { handleBMADTool } from '../../src/tools/bmad-unified.js';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
@@ -102,4 +104,59 @@ describe('canonical workflow discovery', () => {
       );
     },
   );
+});
+
+describe('unknown-workflow errors reach the client as readable text', () => {
+  /**
+   * `read` / `list` / `search` return their payload as JSON. On failure
+   * `result.data` is undefined, and `JSON.stringify(undefined)` returns
+   * `undefined` rather than a string — which fails the MCP SDK's content
+   * schema and turns "workflow not found" into an opaque -32602 protocol
+   * error. The handler must fall back to the operation's own text.
+   */
+  const engine = new BMADEngine(REPO_ROOT);
+
+  it('read of a removed workflow ID yields text, not undefined', async () => {
+    const result = await handleBMADTool(
+      {
+        operation: 'read',
+        type: 'workflow',
+        workflow: 'clickup-code-review',
+      } as never,
+      engine,
+    );
+
+    const [content] = result.content;
+    expect(typeof content.text).toBe('string');
+    expect(content.text.length).toBeGreaterThan(0);
+    expect(content.text).toMatch(/not found/i);
+    expect(content.text).toContain('clickup-code-review');
+  });
+
+  it('read of a canonical workflow ID still yields its JSON payload', async () => {
+    const result = await handleBMADTool(
+      {
+        operation: 'read',
+        type: 'workflow',
+        workflow: 'bmad-clickup-code-review',
+      } as never,
+      engine,
+    );
+
+    const [content] = result.content;
+    expect(typeof content.text).toBe('string');
+    const parsed = JSON.parse(content.text) as { name?: string };
+    expect(parsed.name).toBe('bmad-clickup-code-review');
+  });
+
+  it('read of an unknown agent yields text, not undefined', async () => {
+    const result = await handleBMADTool(
+      { operation: 'read', type: 'agent', agent: 'no-such-agent' } as never,
+      engine,
+    );
+
+    const [content] = result.content;
+    expect(typeof content.text).toBe('string');
+    expect(content.text.length).toBeGreaterThan(0);
+  });
 });

@@ -10,6 +10,103 @@ a future skill revision should treat this document as a point-in-time snapshot a
 cross-check against the skill source files under
 [`src/custom-skills/`](../src/custom-skills/).
 
+## BMAD 6.11 compatibility
+
+The custom skills target **BMAD Method 6.11 only**. BMAD 6.8 workflow IDs,
+artifact formats, and compatibility shims are not supported.
+
+**Canonical skill IDs.** All six skills carry the required `bmad-` prefix. The
+old `clickup-*` IDs were removed in a clean cutover — no aliases, no
+redirects. Calling one now returns the normal unknown-workflow error:
+
+| Removed ID              | Canonical BMAD 6.11 ID       |
+| ----------------------- | ---------------------------- |
+| `clickup-create-epic`   | `bmad-clickup-create-epic`   |
+| `clickup-create-story`  | `bmad-clickup-create-story`  |
+| `clickup-create-bug`    | `bmad-clickup-create-bug`    |
+| `clickup-dev-implement` | `bmad-clickup-dev-implement` |
+| `clickup-code-review`   | `bmad-clickup-code-review`   |
+| `clickup-qa`            | `bmad-clickup-qa`            |
+
+**Your triggers did not change.** `CS`, `DS` and `CB` still do exactly what
+they always did — they now dispatch the canonical IDs above. Three routes were
+added for capabilities that previously had no menu entry:
+
+| Trigger | Agent  | Skill                        | Status                    |
+| ------- | ------ | ---------------------------- | ------------------------- |
+| `CS`    | Amelia | `bmad-clickup-create-story`  | Unchanged                 |
+| `DS`    | Amelia | `bmad-clickup-dev-implement` | Unchanged                 |
+| `CB`    | Amelia | `bmad-clickup-create-bug`    | Unchanged                 |
+| `CUE`   | John   | `bmad-clickup-create-epic`   | New — epic publishing     |
+| `CUR`   | Amelia | `bmad-clickup-code-review`   | New — ClickUp code review |
+| `CUQ`   | Amelia | `bmad-clickup-qa`            | New — execution/visual QA |
+
+**Official BMAD triggers are untouched.** Amelia's `BD`, `QA`, `CR`, `SP`, `ER`
+and John's `PRD`, `CE`, `IR`, `CC` keep their documented meanings. Two pairs
+are easy to confuse, so note the split:
+
+- **`QA` vs `CUQ`.** Official `QA` (`bmad-qa-generate-e2e-tests`) _writes_ new
+  E2E tests. Custom `CUQ` _runs_ the suite that already exists and drives a
+  browser against a deployed ticket, then posts a QA report — it never authors
+  a test.
+- **`CR` vs `CUR`.** Official `CR` (`bmad-code-review`) reviews without ClickUp
+  context. Custom `CUR` reviews a ClickUp ticket against its own acceptance
+  criteria, posts one comment, and transitions status.
+
+Similarly, John's official `CE` _plans_ epics and stories; `CUE` _publishes_
+one that is already planned.
+
+**Implementation goes through `bmad-build`.** `DS` hands the ClickUp task to
+BMAD 6.11's `bmad-build` — the single entry point every implementation path
+converges on — instead of the removed `bmad-dev-story` shim. `bmad-build`
+creates its own implementation spec as part of running; that is normal and
+required. Deprecated v6 story-file and `sprint-status.yaml` writes are
+suppressed: ClickUp remains the delivery and status system of record. Nothing
+about how you invoke `DS` changes.
+
+**Story composition uses BMAD 6.11 planning.** `CS` reads a story already
+planned by `bmad-spec`'s Story Breakdown (`stories.yaml`) or in the epics
+artifact. For ad hoc intent it invokes `bmad-spec` **headlessly** and composes
+from the resulting spec. You are never asked to run a planning workflow by
+hand first. When several planned stories match your title, you are asked to
+pick one; when there is genuinely not enough intent to work from, the skill
+stops rather than inventing a task.
+
+**Code review is read-only.** `CUR` runs only the review and triage stages of
+`bmad-code-review`, never the stage that applies patches and writes findings to
+disk. It cannot change your code, your tests, or any BMAD artifact. Its only
+writes are one ClickUp comment and at most one status transition.
+
+**`inconclusive` outcomes.** Review and QA can both return `inconclusive` —
+when the diff or spec is unavailable, when the reviewer itself failed, or when
+QA had no test runner, no browser, and every scenario came back blocked. An
+inconclusive run posts its reason and **leaves the task status untouched**.
+Missing evidence never produces an approval or a pass. Resolve what the comment
+names, then re-run.
+
+## Installation shapes
+
+There are two ways these skills reach your editor. They are not exclusive, and
+the skill behaviour is identical either way.
+
+**MCP-only (default).** Your client launches `bmad-mcp-server` and reaches the
+skills through the `bmad` tool — `bmad({ operation: "read", type: "workflow",
+workflow: "bmad-clickup-create-story" })`. Nothing is installed into your
+project. One read returns the complete skill package (SKILL.md plus every
+workflow, step, template and `customize.toml` file inlined), so the agent never
+has to fetch a step file separately. This is what the rest of this guide
+assumes.
+
+**Native skill install.** The skills are installed into your IDE's skill
+directory (`.claude/skills/` or the equivalent) through the supported BMAD
+custom-module installation path, and the committed team overrides in
+`_bmad/custom/` are installed alongside them. Named-agent dispatch then works
+without this repository's source layout being visible at all. Use this when you
+want the trigger codes available in an editor that does not speak MCP.
+
+Either way, `src/custom-skills/` stays the single maintained source tree — no
+generated duplicate of it is committed.
+
 ## Prerequisites
 
 Satisfy every item below before invoking either skill.
@@ -665,5 +762,6 @@ the ticket was created correctly despite them.
 | 2026-04-28 | ready-for-dev | Initial quickstart created via story 5-8. Covers post-5-7 skill contract: cwd-assertion, both invocation paths, broadened review-status match set, Template B PR field, PAT-prefix preflight, pinned-ID config knobs. Lands `gh-auth-prerequisite-undocumented` and `multi-repo-cwd-handling-undocumented` friction-log entries. |
 | 2026-05-01 | ready-for-dev | Added `Invoke bmad-clickup-create-bug` section (CB trigger, five-step walkthrough, soft-load warning wording). Added Planning-artifacts-missing pitfall entry. Added `[clickup_create_bug]` config keys to pinned-ID reference. |
 | 2026-05-01 | ready-for-dev | Story 8-8: documented the no-epic option in `Invoke bmad-clickup-create-story` — updated What-the-skill-does paragraph, step-02 line, added no-epic path note and success bullet, and added `allow_no_epic` config key to `[clickup_create_story]` pinned-ID reference. |
+| 2026-08-20 | ready-for-dev | BMAD 6.11 migration: added `BMAD 6.11 compatibility` and `Installation shapes` sections. Documents the canonical `bmad-clickup-*` IDs and the removal of the old ones, the preserved `CS`/`DS`/`CB` triggers plus the new `CUE`/`CUR`/`CUQ` routes, the official-vs-custom `QA`/`CUQ` and `CR`/`CUR` split, `bmad-build` implementation delegation, headless `bmad-spec` story composition, the read-only review contract, and `inconclusive` outcomes for review and QA. |
 
 <!-- prettier-ignore-end -->

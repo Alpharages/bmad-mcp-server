@@ -101,18 +101,69 @@ tests/
 
 ## Environment Variables
 
-| Variable               | Purpose                                                   | Default                  |
-| ---------------------- | --------------------------------------------------------- | ------------------------ |
-| `BMAD_ROOT`            | Override BMAD installation root                           | Auto-discovered          |
-| `BMAD_DEBUG`           | Enable verbose debug logging (`1` or `true`)              | `false`                  |
-| `NODE_ENV`             | Environment (`test`, `development`, `production`)         | `development`            |
-| `BMAD_GIT_AUTO_UPDATE` | Auto-update Git cache                                     | `true` (CI sets `false`) |
-| `BMAD_REQUIRE_CLICKUP` | `1` or `true` → hard-fail at boot if ClickUp vars missing | `unset` (soft-disable)   |
-| `CLICKUP_API_KEY`      | Per-user ClickUp personal token                           | `unset`                  |
-| `CLICKUP_TEAM_ID`      | Workspace ID (7–10 digits)                                | `unset`                  |
-| `CLICKUP_MCP_MODE`     | Tool surface: `read-minimal`, `read`, `write`             | `write`                  |
-| `PORT`                 | HTTP port for `src/http-server.ts`                        | `3000`                   |
-| `BMAD_API_KEY`         | API key for HTTP-transport authentication                 | `unset`                  |
+| Variable               | Purpose                                                                     | Default                  |
+| ---------------------- | --------------------------------------------------------------------------- | ------------------------ |
+| `BMAD_ROOT`            | Override BMAD installation root                                             | Auto-discovered          |
+| `BMAD_DEBUG`           | Enable verbose debug logging (`1` or `true`)                                | `false`                  |
+| `NODE_ENV`             | Environment (`test`, `development`, `production`)                           | `development`            |
+| `BMAD_GIT_AUTO_UPDATE` | Auto-update Git cache                                                       | `true` (CI sets `false`) |
+| `BMAD_LIVE_UPSTREAM`   | `1` or `true` → run the live upstream contract check instead of skipping it | `unset`                  |
+| `BMAD_REQUIRE_CLICKUP` | `1` or `true` → hard-fail at boot if ClickUp vars missing                   | `unset` (soft-disable)   |
+| `CLICKUP_API_KEY`      | Per-user ClickUp personal token                                             | `unset`                  |
+| `CLICKUP_TEAM_ID`      | Workspace ID (7–10 digits)                                                  | `unset`                  |
+| `CLICKUP_MCP_MODE`     | Tool surface: `read-minimal`, `read`, `write`                               | `write`                  |
+| `PORT`                 | HTTP port for `src/http-server.ts`                                          | `3000`                   |
+| `BMAD_API_KEY`         | API key for HTTP-transport authentication                                   | `unset`                  |
+
+---
+
+## BMAD 6.11 Compatibility
+
+The custom ClickUp workflows target **BMAD Method 6.11 only**. BMAD 6.8
+workflow IDs, artifact formats, and compatibility shims are not supported.
+
+**Canonical IDs.** All six skills carry the `bmad-` prefix the BMAD 6.11
+validator requires. The old `clickup-*` IDs were removed in a clean cutover —
+no aliases, no redirects, no duplicate directories — and now fail with the
+normal unknown-workflow error:
+
+`bmad-clickup-create-epic`, `bmad-clickup-create-story`,
+`bmad-clickup-create-bug`, `bmad-clickup-dev-implement`,
+`bmad-clickup-code-review`, `bmad-clickup-qa`.
+
+**Upstream delegation.** `bmad-clickup-dev-implement` implements through
+`bmad-build`; `bmad-clickup-create-story` composes from BMAD 6.11 planning
+output or a headless `bmad-spec` run; `bmad-clickup-code-review` delegates to
+`bmad-code-review`. The v6 shims `bmad-create-story` and `bmad-dev-story` are
+never invoked — `tests/unit/workflow-structure.test.ts` fails if one reappears
+in an invocation position.
+
+**Agent triggers.** `CS` / `DS` / `CB` are unchanged. `CUE` (John), `CUR` and
+`CUQ` (Amelia) are new routes. Official codes — Amelia's `BD`, `QA`, `CR`,
+`SP`, `ER` and John's `PRD`, `CE`, `IR`, `CC` — are never overridden. Note that
+official `QA` _generates_ E2E tests while custom `CUQ` _runs_ the existing
+suite plus visual QA, and official `CE` _plans_ epics while custom `CUE`
+_publishes_ one. Routing lives in `_bmad/custom/bmad-agent-dev.toml` and
+`_bmad/custom/bmad-agent-pm.toml`.
+
+**Safety contracts.** `bmad-clickup-code-review` is report-only: it runs only
+the gather / review / triage stages of `bmad-code-review`, never the
+present-and-act stage that applies patches and writes findings to disk.
+Review and QA both return `inconclusive` when evidence is unavailable, and an
+inconclusive outcome performs no ClickUp status write — missing evidence never
+reads as an approval or a pass.
+
+**Skill loading.** One MCP workflow read returns the complete text skill
+package: `SKILL.md` first, then every other supported text file beneath the
+skill directory (`.md`, `.toml`, `.yaml`, `.yml`, `.json`, `.txt`) inlined in
+sorted relative-path order behind a `=== ./<path> ===` marker.
+
+**Compatibility testing.** The upstream contracts this repo depends on are
+declared once in `tests/helpers/bmad-611-contract.ts`, asserted offline against
+the pinned fixture in `tests/fixtures/bmad-6.11/` (BMAD-METHOD 6.11.0,
+`86beb06`), and asserted against live upstream by the scheduled
+`.github/workflows/upstream-compat.yml` job (`BMAD_LIVE_UPSTREAM=1`). Neither
+check ever silently skips.
 
 ---
 
@@ -144,7 +195,7 @@ architecture_path = "docs/architecture/overview.md"
 epics_path        = "docs/epics/"
 ```
 
-The cascade is invoked via `bmad({ operation: 'resolve-doc-paths' })` and is consumed by all three custom skills (`bmad-clickup-create-story`, `bmad-clickup-dev-implement`, `bmad-clickup-code-review`).
+The cascade is invoked via `bmad({ operation: 'resolve-doc-paths' })`. It is consumed by `bmad-clickup-create-story`, `bmad-clickup-dev-implement`, `bmad-clickup-code-review`, and — since the BMAD 6.11 migration — `bmad-clickup-create-epic`, which previously hardcoded `planning-artifacts/`.
 
 > **This project's override.** This repo's architecture document lives at `docs/architecture.md` (not `planning-artifacts/architecture.md`), so a project-local `.bmadmcp/config.toml` must set `architecture_path = "docs/architecture.md"`. **After cloning, create this file before running any custom skill** — without it the resolver falls back to `planning-artifacts/architecture.md`, which does not exist in this repo. The gitignored `.bmadmcp/config.toml` is the right place for this; `.bmadmcp/config.example.toml` (tracked) shows the full schema.
 

@@ -225,14 +225,43 @@ The session-scoped space picker (`pickSpace`, `getCurrentSpace`, `clearCurrentSp
 
 Custom skills are ClickUp-integrated workflows layered on top of the BMAD agent/workflow engine. Unlike BMAD's built-in file-system workflows, they treat **ClickUp as the source of truth** — their output is ClickUp tasks, comments, and status transitions rather than local files. All require `CLICKUP_MCP_MODE=write`.
 
-| Skill                        | Purpose                                                                                               |
-| ---------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `bmad-clickup-create-epic`   | Create a root-level epic in the Backlog list from your local epics file.                              |
-| `bmad-clickup-create-story`  | Create a story (under an epic, or standalone) with BDD criteria composed by `bmad-create-story`.      |
-| `bmad-clickup-create-bug`    | Create a structured bug ticket (repro / expected / actual / impact) from a free-form report.          |
-| `bmad-clickup-dev-implement` | Implement a story from its task ID via `bmad-dev-story`, open a PR, and move the task to review.      |
-| `bmad-clickup-code-review`   | Run an adversarial review of an implementation via `bmad-code-review` and transition the task status. |
-| `bmad-clickup-qa`            | Run end-to-end QA (code-access + visual passes), post a QA report, and transition the task status.    |
+**Supported upstream: BMAD Method 6.11 only.** These skills delegate to BMAD 6.11 workflows and do not support BMAD 6.8 workflow IDs, artifact formats, or shims.
+
+| Skill                        | Agent trigger  | Purpose                                                                                                                       |
+| ---------------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `bmad-clickup-create-epic`   | `CUE` (John)   | Publish an already-planned epic as a root-level task in the Backlog list.                                                     |
+| `bmad-clickup-create-story`  | `CS` (Amelia)  | Create a story (under an epic, or standalone) from BMAD 6.11 planning output, or from ad hoc intent via headless `bmad-spec`. |
+| `bmad-clickup-create-bug`    | `CB` (Amelia)  | Create a structured bug ticket (repro / expected / actual / impact) from a free-form report.                                  |
+| `bmad-clickup-dev-implement` | `DS` (Amelia)  | Implement a task from its ID via `bmad-build`, open a PR, and move the task to review.                                        |
+| `bmad-clickup-code-review`   | `CUR` (Amelia) | Review an implementation via `bmad-code-review` — report-only — and transition the task status.                               |
+| `bmad-clickup-qa`            | `CUQ` (Amelia) | Run end-to-end QA (code-access + visual passes), post a QA report, and transition the task status.                            |
+
+### Agent triggers
+
+The `CS`, `DS` and `CB` triggers are unchanged — they do exactly what they always did, now against the canonical `bmad-clickup-*` skill IDs. `CUE`, `CUR` and `CUQ` are new routes for capabilities that previously had no menu entry.
+
+**Official BMAD trigger codes keep their documented meanings.** The custom routes use distinct codes and never override one:
+
+| Code  | Owner  | Skill                           | Note                                                     |
+| ----- | ------ | ------------------------------- | -------------------------------------------------------- |
+| `BD`  | Amelia | `bmad-build`                    | Official — implementation                                |
+| `QA`  | Amelia | `bmad-qa-generate-e2e-tests`    | Official — **generates tests**                           |
+| `CUQ` | Amelia | `bmad-clickup-qa`               | Custom — **runs** existing tests + visual QA on a ticket |
+| `CR`  | Amelia | `bmad-code-review`              | Official — review without ClickUp context                |
+| `CUR` | Amelia | `bmad-clickup-code-review`      | Custom — review a ClickUp ticket, report-only            |
+| `CE`  | John   | `bmad-create-epics-and-stories` | Official — **plans** epics and stories                   |
+| `CUE` | John   | `bmad-clickup-create-epic`      | Custom — **publishes** a planned epic to ClickUp         |
+
+`QA` and `CUQ` are deliberately different jobs: `QA` writes new E2E tests; `CUQ` runs the suite that exists and drives a browser against a deployed ticket, never authoring tests. Likewise `CE` plans epics while `CUE` publishes one that is already planned.
+
+Routing lives in `_bmad/custom/bmad-agent-dev.toml` and `_bmad/custom/bmad-agent-pm.toml`.
+
+### Delegation and safety contracts
+
+- **Implementation delegates to `bmad-build`.** `bmad-clickup-dev-implement` hands the ClickUp task over as an explicit build intent and lets `bmad-build` own its implementation spec. Deprecated v6 story and `sprint-status.yaml` writes are suppressed — ClickUp is the record. The `bmad-dev-story` shim is never called.
+- **Story composition uses BMAD 6.11 planning.** `bmad-clickup-create-story` reads a story already planned in a `bmad-spec` spec folder or the epics artifact; for ad hoc intent it invokes `bmad-spec` headlessly. You are never asked to run a planning workflow by hand first. The `bmad-create-story` shim is never called.
+- **Code review is read-only.** `bmad-clickup-code-review` runs only the gather / review / triage stages of `bmad-code-review`, never the stage that applies patches and writes findings to disk. It cannot edit source, tests, or BMAD artifacts. Its only writes are one ClickUp comment and at most one status transition.
+- **`inconclusive` is a real verdict.** When the diff, spec, or reviewer evidence is unavailable — or the reviewer itself failed — review returns `inconclusive`, posts the reason, and leaves the task status untouched. Missing evidence never produces an approval. QA behaves the same way: infrastructure failure (no test runner, no browser, every scenario blocked) is `inconclusive`, never a pass.
 
 Skills that read planning artifacts resolve the PRD, architecture, and epics paths through the **doc-path cascade** (per-project `.bmadmcp/config.toml` → BMAD config chain → `planning-artifacts/` default). Project-local pinning of ClickUp space/list IDs lives in `.bmadmcp/config.toml`; see [`.bmadmcp/config.example.toml`](./.bmadmcp/config.example.toml) for the schema, and [`CLAUDE.md`](./CLAUDE.md#doc-path-cascade) for the cascade details.
 
@@ -277,15 +306,16 @@ Claude Desktop is stdio-only; bridge with [`mcp-remote`](https://www.npmjs.com/p
 
 ## Configuration
 
-| Variable               | Default       | Purpose                                                |
-| ---------------------- | ------------- | ------------------------------------------------------ |
-| `BMAD_ROOT`            | auto          | Override BMAD installation root                        |
-| `BMAD_DEBUG`           | `false`       | Verbose logging via `src/utils/logger.ts`              |
-| `BMAD_GIT_AUTO_UPDATE` | `true`        | Auto-refresh Git-cached BMAD content (CI sets `false`) |
-| `BMAD_REQUIRE_CLICKUP` | unset         | `1`/`true` → hard-fail at boot if ClickUp vars missing |
-| `BMAD_API_KEY`         | unset         | API key for the HTTP transport                         |
-| `PORT`                 | `3000`        | HTTP port                                              |
-| `NODE_ENV`             | `development` | `test` / `development` / `production`                  |
+| Variable               | Default       | Purpose                                                     |
+| ---------------------- | ------------- | ----------------------------------------------------------- |
+| `BMAD_ROOT`            | auto          | Override BMAD installation root                             |
+| `BMAD_DEBUG`           | `false`       | Verbose logging via `src/utils/logger.ts`                   |
+| `BMAD_GIT_AUTO_UPDATE` | `true`        | Auto-refresh Git-cached BMAD content (CI sets `false`)      |
+| `BMAD_LIVE_UPSTREAM`   | _unset_       | `1` runs the live BMAD upstream contract check (tests only) |
+| `BMAD_REQUIRE_CLICKUP` | unset         | `1`/`true` → hard-fail at boot if ClickUp vars missing      |
+| `BMAD_API_KEY`         | unset         | API key for the HTTP transport                              |
+| `PORT`                 | `3000`        | HTTP port                                                   |
+| `NODE_ENV`             | `development` | `test` / `development` / `production`                       |
 
 ClickUp variables are listed in [ClickUp integration](#clickup-integration). The canonical list lives in [`.env.example`](./.env.example).
 

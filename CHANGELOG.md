@@ -1,5 +1,78 @@
 # [Unreleased]
 
+### BREAKING CHANGES
+
+#### BMAD Method 6.11 migration — clean cutover
+
+The custom ClickUp workflows now target **BMAD Method 6.11 only**. BMAD 6.8
+workflow IDs, artifact formats, and compatibility shims are no longer
+supported. **Customer-facing workflow capabilities are unchanged** — the same
+inputs produce the same ClickUp tasks, comments, reports, and status
+transitions. What moved is the skill IDs and the BMAD internals behind them.
+
+**Workflow IDs renamed.** BMAD 6.11 requires the `bmad-` prefix. The old IDs
+were removed outright — no aliases, no redirects — and now return the normal
+unknown-workflow error:
+
+| Removed                 | Use instead                  |
+| ----------------------- | ---------------------------- |
+| `clickup-create-epic`   | `bmad-clickup-create-epic`   |
+| `clickup-create-story`  | `bmad-clickup-create-story`  |
+| `clickup-create-bug`    | `bmad-clickup-create-bug`    |
+| `clickup-dev-implement` | `bmad-clickup-dev-implement` |
+| `clickup-code-review`   | `bmad-clickup-code-review`   |
+| `clickup-qa`            | `bmad-clickup-qa`            |
+
+Anything that calls a workflow by ID — MCP `read` / `execute` calls, scripts,
+saved prompts — must be updated. Agent trigger codes are **not** affected:
+`CS`, `DS` and `CB` work exactly as before.
+
+**Deprecated upstream shims removed.** `bmad-create-story` and `bmad-dev-story`
+are BMAD v6 shims and are no longer invoked. Implementation now enters through
+`bmad-build`; story composition reads BMAD 6.11 planning output or distils ad
+hoc intent through a headless `bmad-spec` run. Neither substitution changes how
+the workflows are invoked, and neither adds a manual step.
+
+**Code review is explicitly read-only.** `bmad-clickup-code-review` runs only
+the gather / review / triage stages of `bmad-code-review`, never the
+present-and-act stage that applies patches and writes findings to disk.
+
+**New `inconclusive` outcome.** Review and QA now return `inconclusive` when
+the evidence they need is unavailable — no diff, no spec, a failed reviewer, no
+test runner, no browser, or every scenario blocked. An inconclusive run posts
+its reason and leaves the ClickUp status untouched. Previously, a review whose
+expected output section was absent could report `approved`, and a QA run in
+which nothing could be verified could report a pass; both are now impossible.
+
+### Features
+
+- Named-agent routes added for the three custom workflows that had none: `CUE`
+  (John — publish a planned epic to ClickUp), `CUR` (Amelia — ClickUp code
+  review), `CUQ` (Amelia — ClickUp execution/visual QA). Official BMAD trigger
+  codes keep their documented meanings; note that official `QA` generates E2E
+  tests while `CUQ` runs the existing suite, and official `CE` plans epics while
+  `CUE` publishes one.
+- A single MCP workflow read now returns the complete text skill package —
+  `SKILL.md` plus every `.md`, `.toml`, `.yaml`, `.yml`, `.json` and `.txt` file
+  beneath the skill directory, inlined in sorted order behind
+  `=== ./<path> ===` markers. Previously only `workflow.md` and `steps/*.md`
+  were inlined, so `customize.toml`, templates, checklists, reviewer prompts and
+  root-level step files were unreachable through MCP.
+- `bmad-clickup-create-epic` resolves PRD, architecture, and epics through the
+  doc-path cascade instead of hardcoded `planning-artifacts/` paths, and accepts
+  both BMAD 6.11 epic layouts (a directory of per-epic files, or one combined
+  artifact).
+
+### Fixes
+
+- The dev-implement status-transition step was headed "Step 5" while living at
+  `step-06`; the epic and story create-task steps named steps 8 and 9 as
+  terminal in five-step workflows.
+- The QA report poster did not forbid retrying a failed `addComment`, which
+  could duplicate the report when the first call succeeded server-side.
+- The dependency audit's hand-maintained Node builtin allowlist is replaced with
+  `isBuiltin` from `node:module`, fixing a failure on `node:async_hooks`.
+
 ### Features
 
 - ClickUp MCP tools integrated alongside the unified `bmad` tool (EPIC-1). Vendored from `hauptsacheNet/clickup-mcp` — see `VENDOR.md` for upstream SHA and upgrade procedure.
