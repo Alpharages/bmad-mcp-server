@@ -97,12 +97,30 @@ workflow, step, template and `customize.toml` file inlined), so the agent never
 has to fetch a step file separately. This is what the rest of this guide
 assumes.
 
-**Native skill install.** The skills are installed into your IDE's skill
-directory (`.claude/skills/` or the equivalent) through the supported BMAD
-custom-module installation path, and the committed team overrides in
-`_bmad/custom/` are installed alongside them. Named-agent dispatch then works
-without this repository's source layout being visible at all. Use this when you
-want the trigger codes available in an editor that does not speak MCP.
+**Native skill install.** The skills are copied into your IDE's skill directory
+and the committed team overrides in `_bmad/custom/` are installed alongside
+them, so named-agent dispatch works without this repository's source layout
+being visible at all. Use this when you want the trigger codes available in an
+editor that does not speak MCP.
+
+From a clone of this repository:
+
+```bash
+npm run install-skills -- /path/to/your/project
+```
+
+| Option         | Effect                                                   |
+| -------------- | -------------------------------------------------------- |
+| `--ide <name>` | `claude` (default), `cursor`, `windsurf`, `opencode`     |
+| `--dir <path>` | Explicit skill directory, relative to the target project |
+| `--dry-run`    | Print what would be written, write nothing               |
+| `--force`      | Overwrite an existing installation                       |
+
+It writes the six skill packages to `<project>/.claude/skills/` (or the `--ide`
+equivalent) and both agent override files to `<project>/_bmad/custom/`. Re-run
+with `--force` after pulling to update. The installer refuses to target this
+repository, because a committed copy of the skills would fork the source
+tree.
 
 Either way, `src/custom-skills/` stays the single maintained source tree — no
 generated duplicate of it is committed.

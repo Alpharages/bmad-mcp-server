@@ -265,7 +265,20 @@ Routing lives in `_bmad/custom/bmad-agent-dev.toml` and `_bmad/custom/bmad-agent
 
 Skills that read planning artifacts resolve the PRD, architecture, and epics paths through the **doc-path cascade** (per-project `.bmadmcp/config.toml` → BMAD config chain → `planning-artifacts/` default). Project-local pinning of ClickUp space/list IDs lives in `.bmadmcp/config.toml`; see [`.bmadmcp/config.example.toml`](./.bmadmcp/config.example.toml) for the schema, and [`CLAUDE.md`](./CLAUDE.md#doc-path-cascade) for the cascade details.
 
-Skill source lives in `src/custom-skills/` — see [`src/custom-skills/README.md`](./src/custom-skills/README.md).
+### MCP-only vs native install
+
+By default the skills are reached **through MCP** — your client launches the server and calls the `bmad` tool; nothing is installed into your project, and one `read` returns the complete skill package.
+
+For editors that do not speak MCP, install them **natively** into a project's skill directory:
+
+```bash
+npm run install-skills -- /path/to/your/project           # → .claude/skills/
+npm run install-skills -- /path/to/your/project --ide cursor
+```
+
+This also installs the `_bmad/custom/` agent overrides, so the trigger codes above work without this repository's layout being visible. Add `--dry-run` to preview and `--force` to update an existing install.
+
+Skill source lives in `src/custom-skills/` — see [`src/custom-skills/README.md`](./src/custom-skills/README.md). It is the only maintained source tree; installed copies are output and are never committed back.
 
 ---
 

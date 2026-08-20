@@ -60,6 +60,7 @@ export default tseslint.config(
   {
     files: ['tests/**/*.ts', 'playwright.config.ts', 'vitest.config.ts'],
     extends: [js.configs.recommended],
+    plugins: { '@typescript-eslint': tseslint.plugin },
     languageOptions: {
       parser: tseslint.parser,
       parserOptions: {
@@ -72,6 +73,14 @@ export default tseslint.config(
     },
     rules: {
       'no-console': 'off',
+      // The base rule is not TS-aware: it reports parameter names inside type
+      // annotations (e.g. `(options: T) => R`) as unused variables. Use the
+      // TypeScript-aware rule, which understands type positions.
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      ],
     },
   },
   {

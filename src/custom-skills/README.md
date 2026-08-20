@@ -61,6 +61,25 @@ Both return `inconclusive` when evidence is unavailable, and an `inconclusive` o
 
 A single MCP workflow read returns the **complete text skill package**: `SKILL.md` first, then every other supported text file beneath the skill directory (`.md`, `.toml`, `.yaml`, `.yml`, `.json`, `.txt`) inlined in sorted relative-path order behind a `=== ./<path> ===` marker. Step files, templates, checklists and `customize.toml` are therefore reachable without a second call — they live inside the npm package or the Git cache, not under any BMAD root the client can see.
 
+## Installing into another project
+
+`scripts/install-skills.mjs` copies these packages into a target project's IDE
+skill directory and installs the `_bmad/custom/` agent overrides alongside
+them, so named-agent dispatch works without this repository's layout being
+visible:
+
+```bash
+npm run install-skills -- /path/to/project            # .claude/skills/
+npm run install-skills -- /path/to/project --ide cursor
+npm run install-skills -- /path/to/project --dry-run
+npm run install-skills -- /path/to/project --force    # update an install
+```
+
+The copies it produces are install output. They are never committed back here,
+and the installer refuses to target this repository for exactly that reason.
+`tests/integration/install-skills.integration.test.ts` runs the whole flow
+against a fresh temp project on every integration run.
+
 ## Wiring
 
 Agent routing is per-agent TOML under `_bmad/custom/`:

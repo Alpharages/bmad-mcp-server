@@ -62,6 +62,13 @@ which nothing could be verified could report a pass; both are now impossible.
   doc-path cascade instead of hardcoded `planning-artifacts/` paths, and accepts
   both BMAD 6.11 epic layouts (a directory of per-epic files, or one combined
   artifact).
+- Native skill installation: `npm run install-skills -- <project>` copies the
+  six canonical skills into a target project's IDE skill directory
+  (`--ide claude|cursor|windsurf|opencode`, or `--dir`) and installs the
+  `_bmad/custom/` agent overrides alongside them, so named-agent dispatch works
+  without this repository's source layout being visible. `src/custom-skills/`
+  stays the only maintained source tree — the installer refuses to target this
+  repository.
 
 ### Fixes
 
