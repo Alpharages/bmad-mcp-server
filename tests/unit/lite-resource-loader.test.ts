@@ -96,7 +96,7 @@ describe('ResourceLoader (Lite)', () => {
     expect(resource.source).toBe('project');
   });
 
-  it('inlines workflow.md and steps/*.md alongside SKILL.md for custom skills', async () => {
+  it('inlines the complete text skill package alongside SKILL.md', async () => {
     const customSkillDir = join(
       testDir,
       'src',
@@ -115,41 +115,165 @@ describe('ResourceLoader (Lite)', () => {
     // Files written out of alphabetical order to verify sorting.
     writeFileSync(
       join(customSkillDir, 'steps', 'step-02-second.md'),
-      '# Step 2 — Second\nSecond step body.',
+      '# Step 2 - Second\nSecond step body.',
     );
     writeFileSync(
       join(customSkillDir, 'steps', 'step-01-first.md'),
-      '# Step 1 — First\nFirst step body.',
-    );
-    // Non-md files in the steps dir must be ignored.
-    writeFileSync(
-      join(customSkillDir, 'steps', 'notes.txt'),
-      'not a step file',
+      '# Step 1 - First\nFirst step body.',
     );
 
     const customLoader = new ResourceLoaderGit(testDir);
     const resource = await customLoader.loadWorkflow('skill-with-steps');
 
     expect(resource.content).toContain('Follow ./workflow.md.');
+    expect(resource.content).toContain('=== ./workflow.md ===');
     expect(resource.content).toContain('# Workflow');
     expect(resource.content).toContain('=== ./steps/step-01-first.md ===');
     expect(resource.content).toContain('First step body.');
     expect(resource.content).toContain('=== ./steps/step-02-second.md ===');
     expect(resource.content).toContain('Second step body.');
-    expect(resource.content).not.toContain('notes.txt');
-    expect(resource.content).not.toContain('not a step file');
     // Step 1 must appear before step 2 regardless of filesystem order.
     expect(resource.content.indexOf('step-01-first.md')).toBeLessThan(
       resource.content.indexOf('step-02-second.md'),
     );
-    // Inlining marker must precede the first step header so the LLM
-    // does not try to re-fetch the step files.
+    // Inlining marker must precede the first inlined section so the LLM
+    // does not try to re-fetch the package files.
     expect(resource.content.indexOf('inlined below')).toBeLessThan(
       resource.content.indexOf('=== ./steps/step-01-first.md ==='),
     );
   });
 
-  it('omits the inlining marker when a custom skill has no steps directory', async () => {
+  it('inlines nested prompts, references, templates and customize.toml', async () => {
+    const skillDir = join(testDir, 'src', 'custom-skills', 'rich-skill');
+    mkdirSync(join(skillDir, 'references'), { recursive: true });
+    mkdirSync(join(skillDir, 'review-prompts'), { recursive: true });
+    mkdirSync(join(skillDir, 'assets'), { recursive: true });
+    writeFileSync(
+      join(skillDir, 'SKILL.md'),
+      '---\nname: rich-skill\n---\nRoot skill body.',
+    );
+    writeFileSync(join(skillDir, 'customize.toml'), 'menu_code = "ZZ"\n');
+    writeFileSync(join(skillDir, 'spec-template.md'), '# Spec Template');
+    writeFileSync(join(skillDir, 'checklist.md'), '# Checklist');
+    // BMAD 6.11 skills may keep step files at the package root.
+    writeFileSync(join(skillDir, 'step-01-clarify.md'), '# Root-level step 1');
+    writeFileSync(
+      join(skillDir, 'references', 'claims-check.md'),
+      '# Claims Check',
+    );
+    writeFileSync(
+      join(skillDir, 'review-prompts', 'edge-case-hunter.md'),
+      '# Edge Case Hunter',
+    );
+    writeFileSync(
+      join(skillDir, 'assets', 'stories-schema.md'),
+      '# Stories Schema',
+    );
+    writeFileSync(join(skillDir, 'module.yaml'), 'name: rich\n');
+    writeFileSync(join(skillDir, 'data.json'), '{"a":1}');
+    writeFileSync(join(skillDir, 'notes.txt'), 'plain text note');
+
+    const customLoader = new ResourceLoaderGit(testDir);
+    const resource = await customLoader.loadWorkflow('rich-skill');
+
+    for (const marker of [
+      '=== ./assets/stories-schema.md ===',
+      '=== ./checklist.md ===',
+      '=== ./customize.toml ===',
+      '=== ./data.json ===',
+      '=== ./module.yaml ===',
+      '=== ./notes.txt ===',
+      '=== ./references/claims-check.md ===',
+      '=== ./review-prompts/edge-case-hunter.md ===',
+      '=== ./spec-template.md ===',
+      '=== ./step-01-clarify.md ===',
+    ]) {
+      expect(resource.content).toContain(marker);
+    }
+    expect(resource.content).toContain('# Edge Case Hunter');
+    expect(resource.content).toContain('menu_code = "ZZ"');
+    expect(resource.content).toContain('plain text note');
+  });
+
+  it('emits package files in deterministic sorted order', async () => {
+    const skillDir = join(testDir, 'src', 'custom-skills', 'ordered-skill');
+    mkdirSync(join(skillDir, 'zeta'), { recursive: true });
+    mkdirSync(join(skillDir, 'alpha'), { recursive: true });
+    writeFileSync(
+      join(skillDir, 'SKILL.md'),
+      '---\nname: ordered-skill\n---\nBody.',
+    );
+    writeFileSync(join(skillDir, 'zeta', 'z.md'), 'Z body');
+    writeFileSync(join(skillDir, 'alpha', 'a.md'), 'A body');
+    writeFileSync(join(skillDir, 'workflow.md'), 'W body');
+
+    const customLoader = new ResourceLoaderGit(testDir);
+    const first = await customLoader.loadWorkflow('ordered-skill');
+    const second = await new ResourceLoaderGit(testDir).loadWorkflow(
+      'ordered-skill',
+    );
+
+    expect(first.content).toBe(second.content);
+    const order = [
+      '=== ./alpha/a.md ===',
+      '=== ./workflow.md ===',
+      '=== ./zeta/z.md ===',
+    ].map((m) => first.content.indexOf(m));
+    expect(order.every((idx) => idx >= 0)).toBe(true);
+    expect(order[0]).toBeLessThan(order[1]);
+    expect(order[1]).toBeLessThan(order[2]);
+  });
+
+  it('includes SKILL.md exactly once and never as an inlined section', async () => {
+    const skillDir = join(testDir, 'src', 'custom-skills', 'once-skill');
+    mkdirSync(join(skillDir, 'nested'), { recursive: true });
+    writeFileSync(
+      join(skillDir, 'SKILL.md'),
+      '---\nname: once-skill\n---\nUNIQUE_ROOT_MARKER',
+    );
+    // A nested SKILL.md-named file is a normal package file, not the root one.
+    writeFileSync(join(skillDir, 'nested', 'SKILL.md'), 'NESTED_MARKER');
+
+    const customLoader = new ResourceLoaderGit(testDir);
+    const resource = await customLoader.loadWorkflow('once-skill');
+
+    expect(resource.content.split('UNIQUE_ROOT_MARKER')).toHaveLength(2);
+    expect(resource.content).not.toContain('=== ./SKILL.md ===');
+    expect(resource.content).toContain('=== ./nested/SKILL.md ===');
+  });
+
+  it('excludes hidden entries, unsupported extensions and binary files', async () => {
+    const skillDir = join(testDir, 'src', 'custom-skills', 'filtered-skill');
+    mkdirSync(join(skillDir, '.hidden'), { recursive: true });
+    writeFileSync(
+      join(skillDir, 'SKILL.md'),
+      '---\nname: filtered-skill\n---\nBody.',
+    );
+    writeFileSync(join(skillDir, '.hidden', 'secret.md'), 'HIDDEN_DIR_BODY');
+    writeFileSync(join(skillDir, '.env.md'), 'HIDDEN_FILE_BODY');
+    writeFileSync(join(skillDir, 'diagram.png'), 'UNSUPPORTED_EXT_BODY');
+    writeFileSync(join(skillDir, 'script.sh'), 'echo UNSUPPORTED_SH_BODY');
+    // A .md file that is actually binary (contains a NUL byte).
+    writeFileSync(
+      join(skillDir, 'binary.md'),
+      Buffer.from([
+        0x42, 0x49, 0x4e, 0x41, 0x52, 0x59, 0x5f, 0x42, 0x4f, 0x44, 0x59, 0x00,
+        0x21,
+      ]),
+    );
+
+    const customLoader = new ResourceLoaderGit(testDir);
+    const resource = await customLoader.loadWorkflow('filtered-skill');
+
+    expect(resource.content).not.toContain('HIDDEN_DIR_BODY');
+    expect(resource.content).not.toContain('HIDDEN_FILE_BODY');
+    expect(resource.content).not.toContain('UNSUPPORTED_EXT_BODY');
+    expect(resource.content).not.toContain('UNSUPPORTED_SH_BODY');
+    expect(resource.content).not.toContain('BINARY_BODY');
+    expect(resource.content).not.toContain('=== ./binary.md ===');
+  });
+
+  it('omits the inlining marker when a skill is a lone SKILL.md', async () => {
     const customSkillDir = join(
       testDir,
       'src',
@@ -161,18 +285,13 @@ describe('ResourceLoader (Lite)', () => {
       join(customSkillDir, 'SKILL.md'),
       '---\nname: skill-without-steps\n---\nNo steps here.',
     );
-    writeFileSync(
-      join(customSkillDir, 'workflow.md'),
-      '# Workflow\nSelf-contained.',
-    );
 
     const customLoader = new ResourceLoaderGit(testDir);
     const resource = await customLoader.loadWorkflow('skill-without-steps');
 
     expect(resource.content).toContain('No steps here.');
-    expect(resource.content).toContain('Self-contained.');
     expect(resource.content).not.toContain('inlined below');
-    expect(resource.content).not.toContain('=== ./steps/');
+    expect(resource.content).not.toContain('=== ./');
   });
 
   it('should resolve upstream skill from git source when project has only src/custom-skills', async () => {

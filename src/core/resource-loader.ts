@@ -33,8 +33,8 @@
  * const agent = await loader.loadAgent('pm');
  * ```
  */
-import { readFileSync, existsSync, readdirSync } from 'node:fs';
-import { join, basename, dirname } from 'node:path';
+import { readFileSync, existsSync, readdirSync, lstatSync } from 'node:fs';
+import { join, basename, dirname, relative, sep } from 'node:path';
 import { homedir } from 'node:os';
 import { load as parseYaml } from 'js-yaml';
 import { XMLParser } from 'fast-xml-parser';
@@ -439,46 +439,137 @@ export class ResourceLoaderGit {
   }
 
   /**
-   * Load the full content for a bmm-skills workflow-skill.
-   * Concatenates SKILL.md, workflow.md, and any sibling steps/*.md files
-   * so the calling LLM gets every file it needs in one read — step files
-   * referenced via relative `./steps/step-NN-*.md` paths in workflow.md
-   * are otherwise unreachable through `bmad read resource` (they live
-   * inside the npm package, not under any BMAD root).
+   * Text file extensions that form part of a BMAD skill package.
+   *
+   * BMAD 6.11 skills are not limited to Markdown: `customize.toml` carries
+   * agent/menu customization, `*.yaml` carries module metadata, and
+   * `assets/*.md` / `references/*.md` / `review-prompts/*.md` carry
+   * templates, schemas, and reviewer prompts that the skill's own
+   * instructions reference by relative path.
+   */
+  private static readonly SKILL_PACKAGE_EXTENSIONS: readonly string[] = [
+    '.md',
+    '.toml',
+    '.yaml',
+    '.yml',
+    '.json',
+    '.txt',
+  ];
+
+  /**
+   * Recursively enumerate the supported text files beneath a skill directory.
+   *
+   * @param skillDir - Absolute path to the directory that owns SKILL.md
+   * @returns Relative POSIX paths (e.g. `steps/step-01-foo.md`), sorted
+   *
+   * @remarks
+   * Excludes `SKILL.md` at the package root (the caller emits it first),
+   * hidden files and directories, symlinks, and files whose bytes contain a
+   * NUL (a cheap and reliable binary check for the text formats above).
+   */
+  private collectSkillPackageFiles(skillDir: string): string[] {
+    const found: string[] = [];
+
+    const walk = (dir: string) => {
+      let entries: Array<{
+        name: string;
+        isDirectory: () => boolean;
+        isFile: () => boolean;
+        isSymbolicLink: () => boolean;
+      }>;
+      try {
+        entries = readdirSync(dir, { withFileTypes: true, encoding: 'utf8' });
+      } catch {
+        return;
+      }
+
+      for (const entry of entries) {
+        // Skip hidden entries (.git, .DS_Store, .claude, …) at every depth.
+        if (entry.name.startsWith('.')) continue;
+        // Never follow symlinks — they can escape the package or loop.
+        if (entry.isSymbolicLink()) continue;
+
+        const fullPath = join(dir, entry.name);
+
+        if (entry.isDirectory()) {
+          walk(fullPath);
+          continue;
+        }
+        if (!entry.isFile()) continue;
+
+        const lower = entry.name.toLowerCase();
+        const supported = ResourceLoaderGit.SKILL_PACKAGE_EXTENSIONS.some(
+          (ext) => lower.endsWith(ext),
+        );
+        if (!supported) continue;
+
+        const rel = relative(skillDir, fullPath).split(sep).join('/');
+        // SKILL.md at the package root is emitted first by the caller.
+        if (rel === 'SKILL.md') continue;
+
+        found.push(rel);
+      }
+    };
+
+    walk(skillDir);
+    return found.sort();
+  }
+
+  /**
+   * Read a skill package file, returning null when it is not usable text.
+   */
+  private readSkillPackageFile(absPath: string): string | null {
+    try {
+      // Guard against a symlinked file reached through a real directory.
+      if (lstatSync(absPath).isSymbolicLink()) return null;
+      const buffer = readFileSync(absPath);
+      if (buffer.includes(0)) return null; // binary
+      return buffer.toString('utf-8');
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Load the complete text package for a bmm-skills workflow-skill.
+   *
+   * Concatenates `SKILL.md` followed by every other supported text file
+   * beneath the skill directory — `workflow.md`, `customize.toml`, step
+   * files (whether they live in `steps/` or at the package root), templates,
+   * checklists, `references/*`, `review-prompts/*`, and `assets/*` — so the
+   * calling LLM gets every file it needs in one read. Relative references
+   * inside those files (e.g. `./steps/step-01-foo.md`, `./spec-template.md`)
+   * are otherwise unreachable through `bmad read resource`: they live inside
+   * the npm package or the Git cache, not under any BMAD root the client
+   * can see.
+   *
+   * Each file is preceded by a stable `=== ./relative/path ===` marker and
+   * files are emitted in sorted relative-path order, so the payload is
+   * deterministic across platforms and filesystems.
    */
   private loadBmmSkillContent(skillPath: string): string {
     const skillDir = dirname(skillPath);
     let content = readFileSync(skillPath, 'utf-8');
 
-    const workflowMd = join(skillDir, 'workflow.md');
-    if (existsSync(workflowMd)) {
-      content += '\n\n---\n\n' + readFileSync(workflowMd, 'utf-8');
+    const relPaths = this.collectSkillPackageFiles(skillDir);
+    const sections: string[] = [];
+
+    for (const rel of relPaths) {
+      const fileContent = this.readSkillPackageFile(join(skillDir, rel));
+      if (fileContent === null) continue;
+      sections.push(`\n\n=== ./${rel} ===\n\n` + fileContent);
     }
 
-    const stepsDir = join(skillDir, 'steps');
-    if (existsSync(stepsDir)) {
-      let stepFiles: string[] = [];
-      try {
-        stepFiles = readdirSync(stepsDir)
-          .filter((f) => f.endsWith('.md'))
-          .sort();
-      } catch {
-        stepFiles = [];
-      }
-      if (stepFiles.length > 0) {
-        content +=
-          '\n\n---\n\n' +
-          '<!-- All step files for this skill are inlined below. ' +
-          'Do not attempt to fetch them separately — the relative ' +
-          '`./steps/step-NN-*.md` references in workflow.md above ' +
-          'point to the sections that follow. -->\n';
-        for (const file of stepFiles) {
-          const stepPath = join(stepsDir, file);
-          content +=
-            `\n\n=== ./steps/${file} ===\n\n` +
-            readFileSync(stepPath, 'utf-8');
-        }
-      }
+    if (sections.length > 0) {
+      content +=
+        '\n\n---\n\n' +
+        '<!-- The complete text skill package is inlined below: every ' +
+        'supported text file beneath this skill directory (workflow, step, ' +
+        'customization, template, checklist, reference, and prompt files). ' +
+        'Do not attempt to fetch them separately — the relative ' +
+        '`./<path>` references in the sections above point to the ' +
+        '`=== ./<path> ===` sections that follow. -->\n' +
+        sections.join('');
     }
 
     return content;
@@ -736,7 +827,10 @@ export class ResourceLoaderGit {
         return {
           name,
           path: skillPath,
-          content: readFileSync(skillPath, 'utf-8'),
+          // Agent skills also ship `customize.toml`, which carries the
+          // named-agent menu. Load the complete package so one MCP read
+          // returns everything needed to embody the agent.
+          content: this.loadBmmSkillContent(skillPath),
           source,
         };
       }

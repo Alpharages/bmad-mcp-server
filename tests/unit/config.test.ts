@@ -38,14 +38,19 @@ describe('getWorkflowExecutionPrompt', () => {
     expect(out).toContain(
       'bmad({ operation: "read", type: "workflow", workflow: "clickup-code-review" })',
     );
-    expect(out).toContain('=== ./steps/<filename> ===');
-    expect(out).toContain('Do NOT attempt to fetch step files separately');
+    expect(out).toContain('complete text skill package');
+    expect(out).toContain('=== ./<relative-path> ===');
+    expect(out).toContain('sorted path order');
+    expect(out).toContain(
+      'Do NOT attempt to fetch any of these files separately',
+    );
   });
 
   it('substitutes the workflow name into the read call (no leakage between invocations)', () => {
     const a = getWorkflowExecutionPrompt({
       workflow: 'clickup-create-story',
-      workflowPath: '{project-root}/bmad/workflows/clickup-create-story/workflow.yaml',
+      workflowPath:
+        '{project-root}/bmad/workflows/clickup-create-story/workflow.yaml',
     });
     const b = getWorkflowExecutionPrompt({
       workflow: 'clickup-dev-implement',
