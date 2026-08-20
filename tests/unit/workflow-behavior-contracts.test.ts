@@ -437,4 +437,18 @@ describe('bmad-clickup-create-bug — independence from planning artifacts', () 
       expect(composer.toLowerCase()).toContain(section.toLowerCase());
     }
   });
+
+  // A live canary caught this: the step told the agent to derive an integer
+  // priority, but `createTask` validates against the label enum and rejects a
+  // number outright, so no bug could be filed at all.
+  it('passes priority as the label enum, never an integer', () => {
+    const create = step('bmad-clickup-create-bug', 'step-05-create-task.md');
+    expect(create).toMatch(/Pass the label, never the number/i);
+    expect(create).toMatch(
+      /priority: "\{bug_priority\}"[\s\S]{0,80}never an integer/i,
+    );
+    // The severity map must name labels, not the 1-4 integers.
+    expect(create).toMatch(/\| Critical\s*\| `urgent`/);
+    expect(create).toMatch(/\| Low\s*\| `low`/);
+  });
 });

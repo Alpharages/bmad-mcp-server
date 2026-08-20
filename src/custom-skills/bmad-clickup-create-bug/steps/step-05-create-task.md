@@ -49,26 +49,32 @@ created_task_url: ''
    > **What to do:** Re-run from step 1 to ensure all prerequisite steps have completed successfully, then return to this step.
 
 2. **Read config overrides.** Read `.bmadmcp/config.toml` (project root) if it exists. Treat any missing file, missing section, or missing key as unset. Extract:
-   - `[clickup_create_bug].default_priority` — integer 1–4, or unset
+   - `[clickup_create_bug].default_priority` — priority label (`urgent`, `high`, `normal`, `low`) or legacy integer 1–4, or unset
    - `[clickup_create_bug].default_tags` — array of strings, or unset/empty
 
 3. **Infer severity from `{bug_description}`.** Scan `{bug_description}` for the `**Severity:**` label inside the `## Impact / Severity` section. Extract the word that follows: `Critical`, `High`, `Medium`, or `Low` (case-insensitive). If the label is absent or the word does not match any of these four values, treat severity as unknown.
 
 4. **Map severity to ClickUp priority.** Apply the table below to derive `{inferred_priority}`:
 
-   | Severity        | ClickUp priority integer |
-   | --------------- | ------------------------ |
-   | Critical        | 1 (urgent)               |
-   | High            | 2 (high)                 |
-   | Medium          | 2 (high)                 |
-   | Low             | 4 (low)                  |
-   | Unknown/default | 2 (high)                 |
+   | Severity        | `createTask` priority label |
+   | --------------- | --------------------------- |
+   | Critical        | `urgent`                    |
+   | High            | `high`                      |
+   | Medium          | `high`                      |
+   | Low             | `low`                       |
+   | Unknown/default | `high`                      |
 
    Medium maps to `high` (not `normal`) per the EPIC-7 requirement that priority defaults to `high` for severity ≥ medium.
 
-5. **Apply config priority override.** If `[clickup_create_bug].default_priority` is set (non-empty, integer 1–4), use it as `{bug_priority}` instead of `{inferred_priority}`. If it is invalid (out of range or non-integer), emit a non-fatal warning and fall back to `{inferred_priority}`:
+   **Pass the label, never the number.** `createTask` validates `priority` against
+   the enum `'urgent' | 'high' | 'normal' | 'low'` and converts it to ClickUp's
+   integer internally. Passing an integer fails the call with
+   `Expected 'urgent' | 'high' | 'normal' | 'low', received number`, so the bug
+   is never filed.
 
-   > ⚠️ `.bmadmcp/config.toml` `[clickup_create_bug].default_priority` is invalid (`{value}`). Expected integer 1–4. Falling back to severity-inferred priority {inferred_priority}.
+5. **Apply config priority override.** If `[clickup_create_bug].default_priority` is set (non-empty), use it as `{bug_priority}` instead of `{inferred_priority}`. Accept either a label (`urgent`, `high`, `normal`, `low`) or a legacy integer, normalising an integer to its label via `1 → urgent`, `2 → high`, `3 → normal`, `4 → low`. `{bug_priority}` MUST be a label by the end of this instruction. If the value is neither a valid label nor an integer 1–4, emit a non-fatal warning and fall back to `{inferred_priority}`:
+
+   > ⚠️ `.bmadmcp/config.toml` `[clickup_create_bug].default_priority` is invalid (`{value}`). Expected one of `urgent`, `high`, `normal`, `low` (or an integer 1–4). Falling back to severity-inferred priority {inferred_priority}.
 
 6. **Assemble tags.** Set `{bug_tags}` to the list `["bug"]`. If `[clickup_create_bug].default_tags` is a non-empty array, append each entry to `{bug_tags}` (duplicates allowed — ClickUp deduplicates). The `bug` tag is always included and always first.
 
@@ -157,7 +163,7 @@ created_task_url: ''
     - `name: "{bug_title}"`
     - `description: "{bug_description}"`
     - `tags: {bug_tags}`
-    - `priority: {bug_priority}`
+    - `priority: "{bug_priority}"` — the label from instruction 4/5, never an integer
     - `parent_task_id: "{epic_id}"` — include ONLY if `{epic_id}` is non-empty; omit the parameter entirely when `{epic_id}` is `''`
     - `waiting_on: {waiting_on_ids}` — include ONLY if `{waiting_on_ids}` is non-empty
     - `blocking: {blocking_ids}` — include ONLY if `{blocking_ids}` is non-empty

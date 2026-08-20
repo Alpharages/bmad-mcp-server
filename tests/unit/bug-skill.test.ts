@@ -154,7 +154,7 @@ describe('bmad-clickup-create-bug skill', () => {
     expect(content).toContain('Default to **High**');
   });
 
-  it('step-05-create-task maps Medium severity to priority 2 — high not normal', () => {
+  it('step-05-create-task maps Medium severity to high — not normal', () => {
     const content = readFileSync(
       join(
         projectRoot,
@@ -168,7 +168,8 @@ describe('bmad-clickup-create-bug skill', () => {
     );
 
     expect(content).toContain('Medium');
-    expect(content).toContain('2 (high)');
+    // The label, not the integer: `createTask` rejects a numeric priority.
+    expect(content).toMatch(/\| Medium\s*\| `high`/);
     expect(content).toContain('Medium maps to `high` (not `normal`)');
   });
 });
