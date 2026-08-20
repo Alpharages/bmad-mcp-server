@@ -6,6 +6,9 @@ resolve_doc_paths_result: ''
 prd_available: 'false'
 arch_available: 'false'
 fallback_code_context: ''
+lore_enabled: ''
+lore_project_slug: ''
+lore_project_context: ''
 ---
 
 # Step 1: Prereq File Check
@@ -126,7 +129,34 @@ Run these two checks in order. If either fails, emit the corresponding error blo
    - `{project-root}/planning-artifacts/ux-design.md` or similar `*ux*.md`
    - `{project-root}/planning-artifacts/tech-spec.md`
 
-6. **Confirm and continue.** Report to the user:
+6. **Query Lore for current project context (optional).**
+
+   Read `lore.yaml` from the project root.
+
+   - Missing, unparseable, or no `project.slug` → set `{lore_enabled}` = `'false'`, `{lore_project_context}` = `''`, and skip the rest of this instruction **silently**. Do NOT emit a warning — Lore is optional and most projects do not have it. Everything else in this step continues exactly as it does today.
+   - Present with `project.slug` → set `{lore_enabled}` = `'true'`, `{lore_project_slug}` = the slug value.
+
+   **Lore-enabled path only.** Call `query_project_context` on the `lore-memory-{lore_project_slug}` MCP server:
+
+   - `query`: `current requirements, constraints, and recent decisions — story planning`
+   - `limit`: `10`
+
+   Best-effort — if the tool is not registered in this session (Lore builds without the Project Evolution surface do not expose it) or the call fails for any reason, set `{lore_project_context}` = `''`, emit the single line `WARNING: Lore configured but project context unavailable — continuing with planning docs only.` and continue. Do NOT halt.
+
+   On success, store the returned items in `{lore_project_context}` and surface them inline:
+
+   ```
+   Current project context (from Lore):
+
+   {for each item:}
+     - <type>: <statement> [<status>] — <why it matched>
+       (evidence: <source>, item_id: <id>)
+   {end}
+   ```
+
+   **Precedence.** Accepted Lore items are the project's *current* truth; planning docs may be stale. Where an accepted item contradicts a planning doc, prefer the Lore item downstream and say so once — `⚠️ <doc statement> superseded by Lore item <id>`. Lore never substitutes for a planning doc: the doc checks in this step still apply unchanged.
+
+7. **Confirm and continue.** Report to the user:
 
    ```
    ✅ Prereq check passed — context loaded:
@@ -145,6 +175,6 @@ Run these two checks in order. If either fails, emit the corresponding error blo
 
 ## NEXT
 
-Proceed to [step-02-epic-picker.md](./step-02-epic-picker.md). The permission-gate verbatim message, `{prd_content}` / `{architecture_content}` / `{epics_content}`, `{prd_available}` / `{arch_available}`, `{fallback_code_context}`, and the full `{resolve_doc_paths_result}` (including resolved paths and their layers) are available to all downstream steps.
+Proceed to [step-02-epic-picker.md](./step-02-epic-picker.md). The permission-gate verbatim message, `{prd_content}` / `{architecture_content}` / `{epics_content}`, `{prd_available}` / `{arch_available}`, `{fallback_code_context}`, `{lore_project_context}`, and the full `{resolve_doc_paths_result}` (including resolved paths and their layers) are available to all downstream steps.
 
 > **Refinement source:** `pwd-deviation-cwd-not-pilot-repo`, `step-01-verbatim-message-not-captured`, `stale-next-wording-in-skill-files` (story 5-7).

@@ -87,7 +87,34 @@ epics_content: ''
    - **Directory** → read every `*.md` file beneath it, in sorted filename order, each preceded by a `=== <filename> ===` marker so step 3 can attribute each epic to its source file.
    - **Single file** → read it directly.
 
-9. **Confirm and continue.** Report the resolved paths and their cascade layers to the user, then proceed to the next step:
+9. **Query Lore for current project context (optional).**
+
+   Read `lore.yaml` from the project root.
+
+   - Missing, unparseable, or no `project.slug` → set `{lore_enabled}` = `'false'`, `{lore_project_context}` = `''`, and skip the rest of this instruction **silently**. Do NOT emit a warning — Lore is optional and most projects do not have it. Everything else in this step continues exactly as it does today.
+   - Present with `project.slug` → set `{lore_enabled}` = `'true'`, `{lore_project_slug}` = the slug value.
+
+   **Lore-enabled path only.** Call `query_project_context` on the `lore-memory-{lore_project_slug}` MCP server:
+
+   - `query`: `current requirements, constraints, and recent decisions — epic planning`
+   - `limit`: `10`
+
+   Best-effort — if the tool is not registered in this session (Lore builds without the Project Evolution surface do not expose it) or the call fails for any reason, set `{lore_project_context}` = `''`, emit the single line `WARNING: Lore configured but project context unavailable — continuing with planning docs only.` and continue. Do NOT halt.
+
+   On success, store the returned items in `{lore_project_context}` and surface them inline:
+
+   ```
+   Current project context (from Lore):
+
+   {for each item:}
+     - <type>: <statement> [<status>] — <why it matched>
+       (evidence: <source>, item_id: <id>)
+   {end}
+   ```
+
+   **Precedence.** Accepted Lore items are the project's *current* truth; planning docs may be stale. Where an accepted item contradicts a planning doc, prefer the Lore item downstream and say so once — `⚠️ <doc statement> superseded by Lore item <id>`. Lore never substitutes for a planning doc: the doc checks in this step still apply unchanged.
+
+10. **Confirm and continue.** Report the resolved paths and their cascade layers to the user, then proceed to the next step:
 
    ```
    ✅ Prereq check passed.
@@ -98,4 +125,4 @@ epics_content: ''
 
 ## NEXT
 
-Proceed to [step-02-backlog-list-picker.md](./step-02-backlog-list-picker.md). The permission-gate verbatim message, `{resolve_doc_paths_result}` (with `{prd_info}`, `{arch_info}`, `{epics_info}`), and the loaded `{prd_content}` / `{architecture_content}` / `{epics_content}` are available to all downstream steps.
+Proceed to [step-02-backlog-list-picker.md](./step-02-backlog-list-picker.md). The permission-gate verbatim message, `{resolve_doc_paths_result}` (with `{prd_info}`, `{arch_info}`, `{epics_info}`), the loaded `{prd_content}` / `{architecture_content}` / `{epics_content}`, and `{lore_project_context}` are available to all downstream steps.

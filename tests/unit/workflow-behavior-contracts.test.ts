@@ -452,3 +452,42 @@ describe('bmad-clickup-create-bug — independence from planning artifacts', () 
     expect(create).toMatch(/\| Low\s*\| `low`/);
   });
 });
+
+describe('Lore project context is optional everywhere it is consulted', () => {
+  const docSteps: [string, string][] = [
+    ['bmad-clickup-create-story', 'step-01-prereq-check.md'],
+    ['bmad-clickup-create-bug', 'step-01-prereq-check.md'],
+    ['bmad-clickup-create-epic', 'step-01-prereq-check.md'],
+    ['bmad-clickup-code-review', 'step-03-code-reader.md'],
+    ['bmad-clickup-dev-implement', 'step-03-planning-artifact-reader.md'],
+  ];
+
+  for (const [skill, file] of docSteps) {
+    describe(`${skill}/${file}`, () => {
+      const text = step(skill, file);
+
+      it('detects Lore from lore.yaml and queries the per-project server', () => {
+        expect(text).toContain('lore.yaml');
+        expect(text).toContain('query_project_context');
+        expect(text).toContain('lore-memory-{lore_project_slug}');
+      });
+
+      // The whole point of the branch: a project without Lore must behave
+      // exactly as it did before, with no warning and no extra prompt.
+      it('skips silently when Lore is not configured', () => {
+        expect(text).toMatch(/silently/i);
+        expect(text).toMatch(/Do NOT emit a warning|Do NOT emit a warning —/i);
+      });
+
+      it('never halts when Lore is configured but unreachable', () => {
+        expect(text).toMatch(/Best-effort/i);
+        expect(text).toMatch(/Do NOT halt/i);
+      });
+
+      // Lore supplies current truth, it does not satisfy a required doc.
+      it('keeps the planning-doc checks authoritative for presence', () => {
+        expect(text).toMatch(/Lore never substitutes for a[\s\S]{0,40}doc/i);
+      });
+    });
+  }
+});

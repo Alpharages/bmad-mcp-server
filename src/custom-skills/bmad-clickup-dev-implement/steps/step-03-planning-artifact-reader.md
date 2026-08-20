@@ -10,6 +10,7 @@ lore_enabled: ''
 lore_project_slug: ''
 lore_query_executed: ''
 lore_consulted_lesson_ids: ''
+lore_project_context: ''
 ---
 
 # Step 3: Planning Artifact Reader & Context Builder
@@ -115,10 +116,10 @@ The ClickUp task description from step 2 is already in conversation context. Ext
 
 9. **Extract dev notes** — locate the `## Dev Notes` section in the task description. Note the Architecture Guardrails, Previous Story Context, and References subsections. These are available in conversation context for the implementation loop — no separate variable needed.
 
-### Query Lore for relevant prior lessons (optional)
+### Query Lore for prior lessons and current project context (optional)
 
 10. **Detect Lore configuration.** Attempt to read `lore.yaml` from the project root via the Read tool.
-    - If the file does not exist OR cannot be parsed as YAML OR lacks `project.slug`: set `{lore_enabled}` = `'false'`, `{lore_project_slug}` = `''`, `{lore_consulted_lesson_ids}` = `''`. Skip the rest of this section silently and proceed to step 11. Do NOT emit a warning — Lore is optional and most projects won't have it.
+    - If the file does not exist OR cannot be parsed as YAML OR lacks `project.slug`: set `{lore_enabled}` = `'false'`, `{lore_project_slug}` = `''`, `{lore_consulted_lesson_ids}` = `''`, `{lore_project_context}` = `''`. Skip the rest of this section silently and proceed to step 12. Do NOT emit a warning — Lore is optional and most projects won't have it.
     - If the file exists and `project.slug` is set: set `{lore_enabled}` = `'true'`, `{lore_project_slug}` = the slug value.
 
     **Lore-enabled path only:**
@@ -151,9 +152,31 @@ The ClickUp task description from step 2 is already in conversation context. Ext
 
     - If the result list is empty, emit nothing and continue. (No noise; the absence of lessons is the common case until the corpus grows.)
 
+11. **Query Lore for current project context.** Lore-enabled path only (`{lore_enabled}` = `'true'`); otherwise `{lore_project_context}` = `''` and skip silently.
+
+    Call `query_project_context` on the same `lore-memory-{lore_project_slug}` MCP server:
+
+    - `query`: `{task_name}` plus the first 500 chars of the task description
+    - `limit`: `10`
+
+    Best-effort — if the tool is not registered in this session (Lore builds without the Project Evolution surface do not expose it) or the call fails for any reason, set `{lore_project_context}` = `''`, emit the single line `WARNING: Lore configured but project context unavailable — continuing with planning docs only.` and continue. Do NOT halt.
+
+    On success, store the returned items in `{lore_project_context}` and surface them inline so they steer the implementation loop:
+
+    ```
+    Current project context (from Lore):
+
+    {for each item:}
+      - <type>: <statement> [<status>] — <why it matched>
+        (evidence: <source>, item_id: <id>)
+    {end}
+    ```
+
+    **Precedence.** Accepted Lore items are the project's *current* truth; the PRD and architecture doc may be stale. Where an accepted item contradicts them, implement the Lore version and say so once — `⚠️ <doc statement> superseded by Lore item <id>`. Lore never substitutes for a required planning doc: rules 2 and 3 above still apply unchanged.
+
 ### Emit success summary
 
-11. Emit the success summary block and continue to step 4.
+12. Emit the success summary block and continue to step 4.
 
     ```
     ✅ **Context loaded**
@@ -170,6 +193,9 @@ The ClickUp task description from step 2 is already in conversation context. Ext
     - Dev notes: {present | absent}
     {if lore_enabled == 'true' AND lore_consulted_lesson_ids is non-empty:}
     - Lore lessons consulted: {count from lore_consulted_lesson_ids}
+    {end}
+    {if lore_enabled == 'true' AND lore_project_context is non-empty:}
+    - Lore project context items: {count from lore_project_context}
     {end}
 
     Proceeding to step 4 (implementation loop).

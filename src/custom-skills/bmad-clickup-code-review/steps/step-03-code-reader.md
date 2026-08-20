@@ -4,6 +4,9 @@ commit_list: ''
 changed_files: ''
 diff_loaded: 'false'
 resolve_doc_paths_result: ''
+lore_enabled: ''
+lore_project_slug: ''
+lore_project_context: ''
 ---
 
 # Step 3: Code Reader
@@ -101,7 +104,34 @@ Store the result as `{resolve_doc_paths_result}` — an object with `prd`, `arch
 
 Layer tags MUST be exactly the resolver strings: `bmadmcp-config`, `bmad-config`, or `default`.
 
-### 6. Confirm and continue
+### 6. Query Lore for current project context (optional)
+
+Read `lore.yaml` from the project root.
+
+- Missing, unparseable, or no `project.slug` → set `{lore_enabled}` = `'false'`, `{lore_project_context}` = `''`, and skip the rest of this instruction **silently**. Do NOT emit a warning — Lore is optional and most projects do not have it. Everything else in this step continues exactly as it does today.
+- Present with `project.slug` → set `{lore_enabled}` = `'true'`, `{lore_project_slug}` = the slug value.
+
+**Lore-enabled path only.** Call `query_project_context` on the `lore-memory-{lore_project_slug}` MCP server:
+
+- `query`: `current requirements and constraints relevant to the changed files: {changed_files}`
+- `limit`: `10`
+
+Best-effort — if the tool is not registered in this session (Lore builds without the Project Evolution surface do not expose it) or the call fails for any reason, set `{lore_project_context}` = `''`, emit the single line `WARNING: Lore configured but project context unavailable — continuing with planning docs only.` and continue. Do NOT halt.
+
+On success, store the returned items in `{lore_project_context}` and surface them inline:
+
+```
+Current project context (from Lore):
+
+{for each item:}
+  - <type>: <statement> [<status>] — <why it matched>
+    (evidence: <source>, item_id: <id>)
+{end}
+```
+
+**Precedence.** Accepted Lore items are the project's *current* truth; planning docs may be stale. Where an accepted item contradicts a planning doc, prefer the Lore item downstream and say so once — `⚠️ <doc statement> superseded by Lore item <id>`. Lore never substitutes for a planning doc: the doc checks in this step still apply unchanged.
+
+### 7. Confirm and continue
 
 Emit the success summary block and continue to step 4.
 
