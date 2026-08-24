@@ -247,6 +247,32 @@ tests/
 - Copy `.env.example` to `.env` and fill in your credentials — `.env` is
   `.gitignore`d and must never be committed.
 
+### BMAD 6.11 compatibility tests
+
+The custom ClickUp workflows delegate to upstream BMAD 6.11 skills, so the
+suite has to know when upstream moves — without making every PR depend on the
+network.
+
+| Layer                                             | What it checks                                                           | When it runs                                       |
+| ------------------------------------------------- | ------------------------------------------------------------------------ | -------------------------------------------------- |
+| `tests/helpers/bmad-611-contract.ts`              | Declares each upstream contract marker once, with what breaks without it | n/a (shared data)                                  |
+| `tests/unit/upstream-compat.test.ts`              | The contract, against the pinned fixture                                 | Always — offline, no cache, never skips            |
+| `tests/integration/upstream-live-compat.test.ts`  | The same contract, against live upstream                                 | Opt-in via `BMAD_LIVE_UPSTREAM=1`; scheduled in CI |
+| `tests/unit/workflow-structure.test.ts`           | Structural rules across every custom skill                               | Always                                             |
+| `tests/unit/workflow-behavior-contracts.test.ts`  | Read-only invariants, verdict matrix, exactly-once ClickUp writes        | Always                                             |
+| `tests/unit/canonical-workflow-discovery.test.ts` | Canonical IDs resolve; removed IDs are rejected                          | Always                                             |
+| `tests/unit/named-agent-routing.test.ts`          | Custom routes exist; official trigger codes are never overridden         | Always                                             |
+
+`tests/fixtures/bmad-6.11/` is a **verbatim** copy of `bmad-build`,
+`bmad-spec` and `bmad-code-review` at a pinned upstream commit; its provenance
+is recorded in `tests/fixtures/bmad-6.11/PINNED.md`, and it is excluded from
+Prettier so it stays byte-for-byte identical to upstream. Do not hand-edit it.
+
+When the scheduled `upstream-compat.yml` job goes red, upstream changed. The
+failing assertion names the contract and the custom instruction it breaks.
+Re-capture the fixture, update `PINNED.md`, and update the contract module and
+the affected `src/custom-skills/bmad-clickup-*/` instructions in one change.
+
 ### Running Tests
 
 ```bash
@@ -263,6 +289,9 @@ npm run test:watch
 
 # Coverage report
 npm run test:coverage
+
+# Live BMAD upstream contract check (opt-in; needs network)
+BMAD_LIVE_UPSTREAM=1 npx vitest run tests/integration/upstream-live-compat.test.ts
 
 # UI mode (interactive)
 npm run test:ui
@@ -472,7 +501,8 @@ Create `.vscode/launch.json`:
 
 ```typescript
 // Enable debug logging
-const BMAD_DEBUG = process.env.BMAD_DEBUG === '1' || process.env.BMAD_DEBUG === 'true';
+const BMAD_DEBUG =
+  process.env.BMAD_DEBUG === '1' || process.env.BMAD_DEBUG === 'true';
 
 if (BMAD_DEBUG) {
   console.error('[DEBUG] Engine initialized');
@@ -636,18 +666,19 @@ npm install bmad-mcp-server@alpha
 
 ## Environment Variables
 
-| Variable | Purpose | Default |
-|---|---|---|
-| `BMAD_ROOT` | Override BMAD installation root | Auto-discovered |
-| `BMAD_DEBUG` | Enable verbose debug logging (`1` or `true`) | `false` |
-| `NODE_ENV` | Environment (`test`, `development`, `production`) | `development` |
-| `BMAD_GIT_AUTO_UPDATE` | Auto-update Git cache | `true` |
-| `BMAD_REQUIRE_CLICKUP` | Hard-fail at boot if ClickUp vars missing | unset |
-| `CLICKUP_API_KEY` | Per-user ClickUp personal token | unset |
-| `CLICKUP_TEAM_ID` | Workspace ID (7–10 digits) | unset |
-| `CLICKUP_MCP_MODE` | Tool surface: `read-minimal`, `read`, `write` | `write` |
-| `PORT` | HTTP port for `src/http-server.ts` | `3000` |
-| `BMAD_API_KEY` | API key for HTTP-transport authentication | unset |
+| Variable               | Purpose                                                                                        | Default         |
+| ---------------------- | ---------------------------------------------------------------------------------------------- | --------------- |
+| `BMAD_ROOT`            | Override BMAD installation root                                                                | Auto-discovered |
+| `BMAD_DEBUG`           | Enable verbose debug logging (`1` or `true`)                                                   | `false`         |
+| `NODE_ENV`             | Environment (`test`, `development`, `production`)                                              | `development`   |
+| `BMAD_GIT_AUTO_UPDATE` | Auto-update Git cache                                                                          | `true`          |
+| `BMAD_LIVE_UPSTREAM`   | `1`/`true` runs the live BMAD 6.11 upstream contract check instead of skipping it (tests only) | _unset_         |
+| `BMAD_REQUIRE_CLICKUP` | Hard-fail at boot if ClickUp vars missing                                                      | unset           |
+| `CLICKUP_API_KEY`      | Per-user ClickUp personal token                                                                | unset           |
+| `CLICKUP_TEAM_ID`      | Workspace ID (7–10 digits)                                                                     | unset           |
+| `CLICKUP_MCP_MODE`     | Tool surface: `read-minimal`, `read`, `write`                                                  | `write`         |
+| `PORT`                 | HTTP port for `src/http-server.ts`                                                             | `3000`          |
+| `BMAD_API_KEY`         | API key for HTTP-transport authentication                                                      | unset           |
 
 **Usage:**
 
@@ -877,12 +908,11 @@ npm publish
 
 ### Code Quality
 
-| Command                | Description                 | When to Use              |
-| ---------------------- | --------------------------- | ------------------------ |
-| `npm run lint`         | Check code style and errors | Before commit            |
-| `npm run lint:fix`     | Auto-fix linting issues     | After seeing lint errors |
-| `npm run format`       | Format code with Prettier   | Before commit            |
-
+| Command            | Description                 | When to Use              |
+| ------------------ | --------------------------- | ------------------------ |
+| `npm run lint`     | Check code style and errors | Before commit            |
+| `npm run lint:fix` | Auto-fix linting issues     | After seeing lint errors |
+| `npm run format`   | Format code with Prettier   | Before commit            |
 
 ### Testing
 
@@ -898,16 +928,16 @@ npm publish
 
 ### BMAD Integration
 
-| Command | Description | When to Use |
-| ------- | ----------- | ----------- |
+| Command       | Description          | When to Use             |
+| ------------- | -------------------- | ----------------------- |
 | `npm run cli` | Interactive BMAD CLI | Exploring BMAD features |
 
 ### Maintenance
 
-| Command               | Description               | When to Use       |
-| --------------------- | ------------------------- | ----------------- |
-| `npm run precommit`   | Run all pre-commit checks | Manual pre-commit |
-| `npm run prepare`     | Post-install hook         | After npm install |
+| Command             | Description               | When to Use       |
+| ------------------- | ------------------------- | ----------------- |
+| `npm run precommit` | Run all pre-commit checks | Manual pre-commit |
+| `npm run prepare`   | Post-install hook         | After npm install |
 
 ---
 
@@ -1092,7 +1122,6 @@ npm audit --audit-level high
 - [README.md](../README.md) - Project overview
 - [API Contracts](api-contracts.md) - MCP tools and internal APIs
 - [Architecture](architecture.md) - System design and components
-
 
 ### External Links
 

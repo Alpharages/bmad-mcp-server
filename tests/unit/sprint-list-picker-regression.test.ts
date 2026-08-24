@@ -10,7 +10,7 @@ const stepsDir = join(
   projectRoot,
   'src',
   'custom-skills',
-  'clickup-create-story',
+  'bmad-clickup-create-story',
   'steps',
 );
 

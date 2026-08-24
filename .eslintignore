@@ -14,3 +14,4 @@ tests/support/fixtures/
 
 # Vendored third-party sources (do not modify)
 src/tools/clickup/
+tests/fixtures/bmad-6.11/src/

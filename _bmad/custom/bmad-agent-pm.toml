@@ -1,0 +1,40 @@
+# Project-local PM agent (John) override — BMAD 6.11.
+#
+# Adds the ClickUp epic-publishing trigger (CUE) to the Product Manager's menu.
+# John owns planning, epics and stories in BMAD 6.11, so the epic-publishing
+# route belongs on his menu rather than the Developer's.
+#
+# Merge rule (BMAD): [[agent.menu]] entries keyed by `code` replace matching
+# upstream entries and new codes append.
+#
+# OFFICIAL CODES ARE NOT TOUCHED. John's upstream menu is PRD, CE, IR, CC and
+# every one of them keeps its documented meaning:
+#   PRD -> bmad-prd
+#   CE  -> bmad-create-epics-and-stories
+#   IR  -> bmad-sprint-planning
+#   CC  -> bmad-correct-course
+# None of those codes appears below, so none of them is overridden. CUE is a
+# new code and appends to the menu.
+#
+# CUE **publishes** an epic that CE (or a human) already planned — it never
+# drafts epic content and never invokes a planning workflow. CE creates the
+# epics-and-stories listing; CUE takes one epic from it and creates the
+# corresponding root-level task in the ClickUp Backlog list.
+#
+# See: src/custom-skills/bmad-clickup-create-epic/
+#
+# Trigger dispatch in Claude Code CLI mode: TOML triggers are dispatched in
+# Cursor / VS Code. In Claude Code CLI mode, the agent invokes the custom
+# skill directly (walking the steps under
+# src/custom-skills/bmad-clickup-create-epic/steps/) rather than via this
+# routing table. Both invocation paths produce the same artifacts; the table
+# below is load-bearing only for IDE-integrated invocations.
+
+[[agent.menu]]
+code = "CUE"
+description = "Publish an already-planned epic to ClickUp — pick an epic from the resolved epics artifact and create it as a root-level task in the Backlog list"
+skill = "bmad-clickup-create-epic"
+
+# Per-skill configuration (pinned space / list / folder IDs) lives in
+# `.bmadmcp/config.toml` at the project root, not here.
+# See: .bmadmcp/config.example.toml in this repo for the schema.

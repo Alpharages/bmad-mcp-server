@@ -14,15 +14,15 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const projectRoot = join(__filename, '..', '..', '..');
 
-describe('clickup-create-bug skill', () => {
-  it('should load clickup-create-bug via ResourceLoaderGit from src/custom-skills/', async () => {
+describe('bmad-clickup-create-bug skill', () => {
+  it('should load bmad-clickup-create-bug via ResourceLoaderGit from src/custom-skills/', async () => {
     const projectDir = mkdtempSync(join(tmpdir(), 'bmad-bug-skill-test-'));
     try {
       const skillDir = join(
         projectDir,
         'src',
         'custom-skills',
-        'clickup-create-bug',
+        'bmad-clickup-create-bug',
       );
       mkdirSync(skillDir, { recursive: true });
       writeFileSync(
@@ -31,9 +31,9 @@ describe('clickup-create-bug skill', () => {
       );
 
       const loader = new ResourceLoaderGit(projectDir);
-      const resource = await loader.loadWorkflow('clickup-create-bug');
+      const resource = await loader.loadWorkflow('bmad-clickup-create-bug');
 
-      expect(resource.name).toBe('clickup-create-bug');
+      expect(resource.name).toBe('bmad-clickup-create-bug');
       expect(resource.content).toContain('ClickUp Create Bug — fixture');
       expect(resource.source).toBe('project');
     } finally {
@@ -47,7 +47,7 @@ describe('clickup-create-bug skill', () => {
         projectRoot,
         'src',
         'custom-skills',
-        'clickup-create-bug',
+        'bmad-clickup-create-bug',
         'steps',
         'step-01-prereq-check.md',
       ),
@@ -69,7 +69,7 @@ describe('clickup-create-bug skill', () => {
         projectRoot,
         'src',
         'custom-skills',
-        'clickup-create-bug',
+        'bmad-clickup-create-bug',
         'steps',
         'step-01-prereq-check.md',
       ),
@@ -88,7 +88,7 @@ describe('clickup-create-bug skill', () => {
         projectRoot,
         'src',
         'custom-skills',
-        'clickup-create-bug',
+        'bmad-clickup-create-bug',
         'steps',
         'step-03-epic-picker.md',
       ),
@@ -107,7 +107,7 @@ describe('clickup-create-bug skill', () => {
         projectRoot,
         'src',
         'custom-skills',
-        'clickup-create-bug',
+        'bmad-clickup-create-bug',
         'steps',
         'step-04-description-composer.md',
       ),
@@ -126,7 +126,7 @@ describe('clickup-create-bug skill', () => {
         projectRoot,
         'src',
         'custom-skills',
-        'clickup-create-bug',
+        'bmad-clickup-create-bug',
         'steps',
         'step-04-description-composer.md',
       ),
@@ -144,7 +144,7 @@ describe('clickup-create-bug skill', () => {
         projectRoot,
         'src',
         'custom-skills',
-        'clickup-create-bug',
+        'bmad-clickup-create-bug',
         'steps',
         'step-04-description-composer.md',
       ),
@@ -154,13 +154,13 @@ describe('clickup-create-bug skill', () => {
     expect(content).toContain('Default to **High**');
   });
 
-  it('step-05-create-task maps Medium severity to priority 2 — high not normal', () => {
+  it('step-05-create-task maps Medium severity to high — not normal', () => {
     const content = readFileSync(
       join(
         projectRoot,
         'src',
         'custom-skills',
-        'clickup-create-bug',
+        'bmad-clickup-create-bug',
         'steps',
         'step-05-create-task.md',
       ),
@@ -168,7 +168,8 @@ describe('clickup-create-bug skill', () => {
     );
 
     expect(content).toContain('Medium');
-    expect(content).toContain('2 (high)');
+    // The label, not the integer: `createTask` rejects a numeric priority.
+    expect(content).toMatch(/\| Medium\s*\| `high`/);
     expect(content).toContain('Medium maps to `high` (not `normal`)');
   });
 });

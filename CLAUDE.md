@@ -101,24 +101,75 @@ tests/
 
 ## Environment Variables
 
-| Variable               | Purpose                                                   | Default                  |
-| ---------------------- | --------------------------------------------------------- | ------------------------ |
-| `BMAD_ROOT`            | Override BMAD installation root                           | Auto-discovered          |
-| `BMAD_DEBUG`           | Enable verbose debug logging (`1` or `true`)              | `false`                  |
-| `NODE_ENV`             | Environment (`test`, `development`, `production`)         | `development`            |
-| `BMAD_GIT_AUTO_UPDATE` | Auto-update Git cache                                     | `true` (CI sets `false`) |
-| `BMAD_REQUIRE_CLICKUP` | `1` or `true` → hard-fail at boot if ClickUp vars missing | `unset` (soft-disable)   |
-| `CLICKUP_API_KEY`      | Per-user ClickUp personal token                           | `unset`                  |
-| `CLICKUP_TEAM_ID`      | Workspace ID (7–10 digits)                                | `unset`                  |
-| `CLICKUP_MCP_MODE`     | Tool surface: `read-minimal`, `read`, `write`             | `write`                  |
-| `PORT`                 | HTTP port for `src/http-server.ts`                        | `3000`                   |
-| `BMAD_API_KEY`         | API key for HTTP-transport authentication                 | `unset`                  |
+| Variable               | Purpose                                                                     | Default                  |
+| ---------------------- | --------------------------------------------------------------------------- | ------------------------ |
+| `BMAD_ROOT`            | Override BMAD installation root                                             | Auto-discovered          |
+| `BMAD_DEBUG`           | Enable verbose debug logging (`1` or `true`)                                | `false`                  |
+| `NODE_ENV`             | Environment (`test`, `development`, `production`)                           | `development`            |
+| `BMAD_GIT_AUTO_UPDATE` | Auto-update Git cache                                                       | `true` (CI sets `false`) |
+| `BMAD_LIVE_UPSTREAM`   | `1` or `true` → run the live upstream contract check instead of skipping it | `unset`                  |
+| `BMAD_REQUIRE_CLICKUP` | `1` or `true` → hard-fail at boot if ClickUp vars missing                   | `unset` (soft-disable)   |
+| `CLICKUP_API_KEY`      | Per-user ClickUp personal token                                             | `unset`                  |
+| `CLICKUP_TEAM_ID`      | Workspace ID (7–10 digits)                                                  | `unset`                  |
+| `CLICKUP_MCP_MODE`     | Tool surface: `read-minimal`, `read`, `write`                               | `write`                  |
+| `PORT`                 | HTTP port for `src/http-server.ts`                                          | `3000`                   |
+| `BMAD_API_KEY`         | API key for HTTP-transport authentication                                   | `unset`                  |
+
+---
+
+## BMAD 6.11 Compatibility
+
+The custom ClickUp workflows target **BMAD Method 6.11 only**. BMAD 6.8
+workflow IDs, artifact formats, and compatibility shims are not supported.
+
+**Canonical IDs.** All six skills carry the `bmad-` prefix the BMAD 6.11
+validator requires. The old `clickup-*` IDs were removed in a clean cutover —
+no aliases, no redirects, no duplicate directories — and now fail with the
+normal unknown-workflow error:
+
+`bmad-clickup-create-epic`, `bmad-clickup-create-story`,
+`bmad-clickup-create-bug`, `bmad-clickup-dev-implement`,
+`bmad-clickup-code-review`, `bmad-clickup-qa`.
+
+**Upstream delegation.** `bmad-clickup-dev-implement` implements through
+`bmad-build`; `bmad-clickup-create-story` composes from BMAD 6.11 planning
+output or a headless `bmad-spec` run; `bmad-clickup-code-review` delegates to
+`bmad-code-review`. The v6 shims `bmad-create-story` and `bmad-dev-story` are
+never invoked — `tests/unit/workflow-structure.test.ts` fails if one reappears
+in an invocation position.
+
+**Agent triggers.** `CS` / `DS` / `CB` are unchanged. `CUE` (John), `CUR` and
+`CUQ` (Amelia) are new routes. Official codes — Amelia's `BD`, `QA`, `CR`,
+`SP`, `ER` and John's `PRD`, `CE`, `IR`, `CC` — are never overridden. Note that
+official `QA` _generates_ E2E tests while custom `CUQ` _runs_ the existing
+suite plus visual QA, and official `CE` _plans_ epics while custom `CUE`
+_publishes_ one. Routing lives in `_bmad/custom/bmad-agent-dev.toml` and
+`_bmad/custom/bmad-agent-pm.toml`.
+
+**Safety contracts.** `bmad-clickup-code-review` is report-only: it runs only
+the gather / review / triage stages of `bmad-code-review`, never the
+present-and-act stage that applies patches and writes findings to disk.
+Review and QA both return `inconclusive` when evidence is unavailable, and an
+inconclusive outcome performs no ClickUp status write — missing evidence never
+reads as an approval or a pass.
+
+**Skill loading.** One MCP workflow read returns the complete text skill
+package: `SKILL.md` first, then every other supported text file beneath the
+skill directory (`.md`, `.toml`, `.yaml`, `.yml`, `.json`, `.txt`) inlined in
+sorted relative-path order behind a `=== ./<path> ===` marker.
+
+**Compatibility testing.** The upstream contracts this repo depends on are
+declared once in `tests/helpers/bmad-611-contract.ts`, asserted offline against
+the pinned fixture in `tests/fixtures/bmad-6.11/` (BMAD-METHOD 6.11.0,
+`86beb06`), and asserted against live upstream by the scheduled
+`.github/workflows/upstream-compat.yml` job (`BMAD_LIVE_UPSTREAM=1`). Neither
+check ever silently skips.
 
 ---
 
 ## Doc-Path Cascade
 
-BMAD custom skills (`clickup-create-story`, `clickup-dev-implement`, `clickup-code-review`) need to read the project's PRD, architecture document, and epics directory on every invocation. Before EPIC-6, these paths were hardcoded to `planning-artifacts/`, which caused a hard prereq failure for projects with non-standard layouts. The doc-path cascade introduced in EPIC-6 resolves each path through a three-layer fallback (highest → lowest priority):
+BMAD custom skills (`bmad-clickup-create-story`, `bmad-clickup-dev-implement`, `bmad-clickup-code-review`) need to read the project's PRD, architecture document, and epics directory on every invocation. Before EPIC-6, these paths were hardcoded to `planning-artifacts/`, which caused a hard prereq failure for projects with non-standard layouts. The doc-path cascade introduced in EPIC-6 resolves each path through a three-layer fallback (highest → lowest priority):
 
 1. **`.bmadmcp/config.toml` `[docs]` table** — per-project escape hatch. Set `prd_path`, `architecture_path`, or `epics_path` to override that specific key.
 2. **BMAD config chain** — reads `_bmad/config.toml` → `_bmad/config.user.toml` → `_bmad/custom/config.toml` → `_bmad/custom/config.user.toml` and uses `[bmm].planning_artifacts` as the base directory.
@@ -144,7 +195,7 @@ architecture_path = "docs/architecture/overview.md"
 epics_path        = "docs/epics/"
 ```
 
-The cascade is invoked via `bmad({ operation: 'resolve-doc-paths' })` and is consumed by all three custom skills (`clickup-create-story`, `clickup-dev-implement`, `clickup-code-review`).
+The cascade is invoked via `bmad({ operation: 'resolve-doc-paths' })`. It is consumed by `bmad-clickup-create-story`, `bmad-clickup-dev-implement`, `bmad-clickup-code-review`, and — since the BMAD 6.11 migration — `bmad-clickup-create-epic`, which previously hardcoded `planning-artifacts/`.
 
 > **This project's override.** This repo's architecture document lives at `docs/architecture.md` (not `planning-artifacts/architecture.md`), so a project-local `.bmadmcp/config.toml` must set `architecture_path = "docs/architecture.md"`. **After cloning, create this file before running any custom skill** — without it the resolver falls back to `planning-artifacts/architecture.md`, which does not exist in this repo. The gitignored `.bmadmcp/config.toml` is the right place for this; `.bmadmcp/config.example.toml` (tracked) shows the full schema.
 
@@ -183,82 +234,45 @@ Releases are fully automated via semantic-release. Do not manually bump versions
 - Git source caching lives in `~/.bmad/cache/git/`; delete this directory to force a fresh clone.
 
 <!-- gitnexus:start -->
-
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **bmad-mcp-server** (1142 symbols, 2699 relationships, 79 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **bmad-mcp-server** (5380 symbols, 8827 relationships, 225 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
-> If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
+> Index stale? Run `node .gitnexus/run.cjs analyze` from the project root — it auto-selects an available runner. No `.gitnexus/run.cjs` yet? `npx gitnexus analyze` (npm 11 crash → `npm i -g gitnexus`; #1939).
 
 ## Always Do
 
-- **MUST run impact analysis before editing any symbol.** Before modifying a function, class, or method, run `gitnexus_impact({target: "symbolName", direction: "upstream"})` and report the blast radius (direct callers, affected processes, risk level) to the user.
-- **MUST run `gitnexus_detect_changes()` before committing** to verify your changes only affect expected symbols and execution flows.
+- **MUST run impact analysis before editing any symbol.** Before modifying a function, class, or method, run `impact({target: "symbolName", direction: "upstream"})` and report the blast radius (direct callers, affected processes, risk level) to the user.
+- **MUST run `detect_changes()` before committing** to verify your changes only affect expected symbols and execution flows. For regression review, compare against the default branch: `detect_changes({scope: "compare", base_ref: "main"})`.
 - **MUST warn the user** if impact analysis returns HIGH or CRITICAL risk before proceeding with edits.
-- When exploring unfamiliar code, use `gitnexus_query({query: "concept"})` to find execution flows instead of grepping. It returns process-grouped results ranked by relevance.
-- When you need full context on a specific symbol — callers, callees, which execution flows it participates in — use `gitnexus_context({name: "symbolName"})`.
-
-## When Debugging
-
-1. `gitnexus_query({query: "<error or symptom>"})` — find execution flows related to the issue
-2. `gitnexus_context({name: "<suspect function>"})` — see all callers, callees, and process participation
-3. `READ gitnexus://repo/bmad-mcp-server/process/{processName}` — trace the full execution flow step by step
-4. For regressions: `gitnexus_detect_changes({scope: "compare", base_ref: "main"})` — see what your branch changed
-
-## When Refactoring
-
-- **Renaming**: MUST use `gitnexus_rename({symbol_name: "old", new_name: "new", dry_run: true})` first. Review the preview — graph edits are safe, text_search edits need manual review. Then run with `dry_run: false`.
-- **Extracting/Splitting**: MUST run `gitnexus_context({name: "target"})` to see all incoming/outgoing refs, then `gitnexus_impact({target: "target", direction: "upstream"})` to find all external callers before moving code.
-- After any refactor: run `gitnexus_detect_changes({scope: "all"})` to verify only expected files changed.
+- When exploring unfamiliar code, use `query({query: "concept"})` to find execution flows instead of grepping. It returns process-grouped results ranked by relevance.
+- When you need full context on a specific symbol — callers, callees, which execution flows it participates in — use `context({name: "symbolName"})`.
 
 ## Never Do
 
-- NEVER edit a function, class, or method without first running `gitnexus_impact` on it.
+- NEVER edit a function, class, or method without first running `impact` on it.
 - NEVER ignore HIGH or CRITICAL risk warnings from impact analysis.
-- NEVER rename symbols with find-and-replace — use `gitnexus_rename` which understands the call graph.
-- NEVER commit changes without running `gitnexus_detect_changes()` to check affected scope.
-
-## Tools Quick Reference
-
-| Tool             | When to use                   | Command                                                                 |
-| ---------------- | ----------------------------- | ----------------------------------------------------------------------- |
-| `query`          | Find code by concept          | `gitnexus_query({query: "auth validation"})`                            |
-| `context`        | 360-degree view of one symbol | `gitnexus_context({name: "validateUser"})`                              |
-| `impact`         | Blast radius before editing   | `gitnexus_impact({target: "X", direction: "upstream"})`                 |
-| `detect_changes` | Pre-commit scope check        | `gitnexus_detect_changes({scope: "staged"})`                            |
-| `rename`         | Safe multi-file rename        | `gitnexus_rename({symbol_name: "old", new_name: "new", dry_run: true})` |
-| `cypher`         | Custom graph queries          | `gitnexus_cypher({query: "MATCH ..."})`                                 |
-
-## Impact Risk Levels
-
-| Depth | Meaning                               | Action                |
-| ----- | ------------------------------------- | --------------------- |
-| d=1   | WILL BREAK — direct callers/importers | MUST update these     |
-| d=2   | LIKELY AFFECTED — indirect deps       | Should test           |
-| d=3   | MAY NEED TESTING — transitive         | Test if critical path |
+- NEVER rename symbols with find-and-replace — use `rename` which understands the call graph.
+- NEVER commit changes without running `detect_changes()` to check affected scope.
 
 ## Resources
 
-| Resource                                         | Use for                                  |
-| ------------------------------------------------ | ---------------------------------------- |
-| `gitnexus://repo/bmad-mcp-server/context`        | Codebase overview, check index freshness |
-| `gitnexus://repo/bmad-mcp-server/clusters`       | All functional areas                     |
-| `gitnexus://repo/bmad-mcp-server/processes`      | All execution flows                      |
-| `gitnexus://repo/bmad-mcp-server/process/{name}` | Step-by-step execution trace             |
-
-## Self-Check Before Finishing
-
-Before completing any code modification task, verify:
-
-1. `gitnexus_impact` was run for all modified symbols
-2. No HIGH/CRITICAL risk warnings were ignored
-3. `gitnexus_detect_changes()` confirms changes match expected scope
-4. All d=1 (WILL BREAK) dependents were updated
+| Resource | Use for |
+|----------|---------|
+| `gitnexus://repo/bmad-mcp-server/context` | Codebase overview, check index freshness |
+| `gitnexus://repo/bmad-mcp-server/clusters` | All functional areas |
+| `gitnexus://repo/bmad-mcp-server/processes` | All execution flows |
+| `gitnexus://repo/bmad-mcp-server/process/{name}` | Step-by-step execution trace |
 
 ## CLI
 
-- Re-index: `npx gitnexus analyze`
-- Check freshness: `npx gitnexus status`
-- Generate docs: `npx gitnexus wiki`
+| Task | Read this skill file |
+|------|---------------------|
+| Understand architecture / "How does X work?" | `.claude/skills/gitnexus/gitnexus-exploring/SKILL.md` |
+| Blast radius / "What breaks if I change X?" | `.claude/skills/gitnexus/gitnexus-impact-analysis/SKILL.md` |
+| Trace bugs / "Why is X failing?" | `.claude/skills/gitnexus/gitnexus-debugging/SKILL.md` |
+| Rename / extract / split / refactor | `.claude/skills/gitnexus/gitnexus-refactoring/SKILL.md` |
+| Tools, resources, schema reference | `.claude/skills/gitnexus/gitnexus-guide/SKILL.md` |
+| Index, status, clean, wiki CLI commands | `.claude/skills/gitnexus/gitnexus-cli/SKILL.md` |
 
 <!-- gitnexus:end -->

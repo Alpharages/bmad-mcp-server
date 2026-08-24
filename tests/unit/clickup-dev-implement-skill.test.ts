@@ -10,12 +10,12 @@ const step10Path = join(
   projectRoot,
   'src',
   'custom-skills',
-  'clickup-dev-implement',
+  'bmad-clickup-dev-implement',
   'steps',
   'step-10-lore-lesson-save.md',
 );
 
-describe('clickup-dev-implement step-10-lore-lesson-save', () => {
+describe('bmad-clickup-dev-implement step-10-lore-lesson-save', () => {
   const content = readFileSync(step10Path, 'utf-8');
 
   it('resolves the project slug from lore.yaml (or inherits from step-03)', () => {

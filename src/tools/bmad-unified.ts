@@ -25,7 +25,7 @@ export interface BMADToolConfig {
 }
 
 import { Tool, TextContent } from '@modelcontextprotocol/sdk/types.js';
-import type { BMADEngine } from '../core/bmad-engine.js';
+import type { BMADEngine, BMADResult } from '../core/bmad-engine.js';
 import type { AgentMetadata } from '../core/resource-loader.js';
 import type { Workflow } from '../types/index.js';
 
@@ -394,6 +394,42 @@ function groupWorkflowsByModule(
  * @param engine - BMAD Engine instance
  * @returns Tool execution result
  */
+/**
+ * Render a discovery-operation result (`list` / `search` / `read`) as MCP
+ * content.
+ *
+ * On success these operations return their structured payload as JSON. On
+ * failure `result.data` is `undefined`, and `JSON.stringify(undefined)`
+ * returns `undefined` rather than a string — which fails the MCP SDK's
+ * content-schema validation and turns a clean "workflow not found" into an
+ * opaque `-32602` protocol error. Failures therefore surface the operation's
+ * own human-readable text instead, so an unknown agent, workflow, or resource
+ * reads as exactly that.
+ */
+function renderDiscoveryResult(result: BMADResult): {
+  content: TextContent[];
+} {
+  if (!result.success) {
+    return {
+      content: [
+        {
+          type: 'text',
+          text: result.text || `❌ ${result.error ?? 'Unknown error'}`,
+        },
+      ],
+    };
+  }
+
+  return {
+    content: [
+      {
+        type: 'text',
+        text: JSON.stringify(result.data ?? null, null, 2),
+      },
+    ],
+  };
+}
+
 export async function handleBMADTool(
   params: BMADToolParams,
   engine: BMADEngine,
@@ -457,15 +493,8 @@ async function handleList(
   // Execute operation
   const result = await executeListOperation(engine, listParams);
 
-  // Return JSON data for discovery operations
-  return {
-    content: [
-      {
-        type: 'text',
-        text: JSON.stringify(result.data, null, 2),
-      },
-    ],
-  };
+  // Return JSON data for discovery operations; failures surface their own text.
+  return renderDiscoveryResult(result);
 }
 
 /**
@@ -498,15 +527,8 @@ async function handleSearch(
   // Execute operation
   const result = await executeSearchOperation(engine, searchParams);
 
-  // Return JSON data for discovery operations
-  return {
-    content: [
-      {
-        type: 'text',
-        text: JSON.stringify(result.data, null, 2),
-      },
-    ],
-  };
+  // Return JSON data for discovery operations; failures surface their own text.
+  return renderDiscoveryResult(result);
 }
 
 /**
@@ -553,15 +575,8 @@ async function handleRead(
   // Execute operation
   const result = await executeReadOperation(engine, readParams);
 
-  // Return JSON data for discovery operations
-  return {
-    content: [
-      {
-        type: 'text',
-        text: JSON.stringify(result.data, null, 2),
-      },
-    ],
-  };
+  // Return JSON data for discovery operations; failures surface their own text.
+  return renderDiscoveryResult(result);
 }
 
 /**

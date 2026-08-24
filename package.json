@@ -36,6 +36,7 @@
     "format": "prettier --write .",
     "precommit": "npm run lint:fix && npm run format",
     "cli": "node scripts/bmad-cli.mjs",
+    "install-skills": "node scripts/install-skills.mjs",
     "cli:list-tools": "node scripts/bmad-cli.mjs tools/list",
     "cli:list-resources": "node scripts/bmad-cli.mjs resources/list",
     "cli:list-agents": "node scripts/show-list-agents.mjs",

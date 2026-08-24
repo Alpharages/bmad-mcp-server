@@ -383,6 +383,13 @@ export function registerTaskToolsWrite(server: McpServer, userData: any) {
           requestBody.markdown_description = description;
         }
 
+        // Tags: the create endpoint accepts them inline, unlike the update
+        // endpoint (which needs the dedicated tag routes buildTaskRequestBody
+        // defers to). Without this the parameter is silently discarded.
+        if (tags !== undefined) {
+          requestBody.tags = tags;
+        }
+
         const response = await fetch(`https://api.clickup.com/api/v2/list/${list_id}/task`, {
           method: 'POST',
           headers: {
@@ -459,9 +466,15 @@ function convertPriorityToNumber(priority: string): number {
   }
 }
 
-function convertPriorityToString(priority: number): string {
-  const priorityMap = { 1: 'urgent', 2: 'high', 3: 'normal', 4: 'low' };
-  return priorityMap[priority as keyof typeof priorityMap] || 'unknown';
+// ClickUp returns `priority.priority` as the label ('high') and `priority.id`
+// as a numeric string ('2'), so accept both shapes — a label-only lookup in the
+// numeric map reported every real priority as 'unknown'.
+function convertPriorityToString(priority: number | string): string {
+  const byNumber: Record<number, string> = { 1: 'urgent', 2: 'high', 3: 'normal', 4: 'low' };
+  const asNumber = Number(priority);
+  if (Number.isInteger(asNumber) && asNumber in byNumber) return byNumber[asNumber];
+  const label = String(priority).toLowerCase();
+  return ['urgent', 'high', 'normal', 'low'].includes(label) ? label : 'unknown';
 }
 
 function formatTimeEstimate(hours: number): string {

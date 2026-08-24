@@ -9,6 +9,7 @@ import { describe, it } from 'vitest';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { isBuiltin } from 'node:module';
 
 // Resolve the repo root from this test file's location rather than process.cwd(),
 // so behavior is stable when tests are invoked from a subdirectory (IDE runners,
@@ -74,38 +75,13 @@ describe('dependency-audit', () => {
     ]);
 
     // Node.js built-in modules (don't need to be in package.json).
-    // Both `node:`-prefixed and unprefixed forms are listed because TS
-    // resolution accepts either; the vendored tree uses both styles.
-    const builtinModules = new Set([
-      'fs',
-      'path',
-      'os',
-      'crypto',
-      'process',
-      'util',
-      'url',
-      'child_process',
-      'http',
-      'buffer',
-      'assert',
-      'test',
-      'timers',
-      'node:fs',
-      'node:path',
-      'node:os',
-      'node:crypto',
-      'node:process',
-      'node:util',
-      'node:url',
-      'node:child_process',
-      'node:http',
-      'node:buffer',
-      'node:test',
-      'node:assert',
-      'node:assert/strict',
-      'node:timers',
-      'node:timers/promises',
-    ]);
+    // `isBuiltin` from node:module is authoritative and self-maintaining, so
+    // a newly used builtin (e.g. `node:async_hooks`) never trips the audit.
+    // It only recognises the bare form for modules that are resolvable
+    // without the `node:` prefix, hence the extra prefix-stripping check.
+    const isNodeBuiltin = (specifier: string): boolean =>
+      isBuiltin(specifier) ||
+      (!specifier.startsWith('node:') && isBuiltin(`node:${specifier}`));
 
     const sourceFiles = findTsFiles(SRC_ROOT);
 
@@ -137,7 +113,7 @@ describe('dependency-audit', () => {
         // of the declared dep keeps these pure-types dependencies from
         // tripping the audit while still catching genuinely undeclared deps.
         if (
-          builtinModules.has(basePackage) ||
+          isNodeBuiltin(basePackage) ||
           declaredDeps.has(basePackage) ||
           declaredDeps.has(`@types/${basePackage}`)
         ) {

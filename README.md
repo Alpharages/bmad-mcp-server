@@ -2,33 +2,54 @@
 
 <div align="center">
 
-[![npm version](https://badge.fury.io/js/bmad-mcp-server.svg)](https://www.npmjs.com/package/bmad-mcp-server)
-[![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](LICENSE)
+Bring the [BMAD Method](https://github.com/Alpharages/BMAD-METHOD) to any
+[Model Context Protocol](https://modelcontextprotocol.io/) client.
 
-A [Model Context Protocol](https://modelcontextprotocol.io/) server that exposes the [BMAD Method](https://github.com/Alpharages/BMAD-METHOD) to any MCP-capable AI client.
+[![npm](https://img.shields.io/npm/v/bmad-mcp-server?logo=npm)](https://www.npmjs.com/package/bmad-mcp-server)
+[![CI](https://github.com/Alpharages/bmad-mcp-server/actions/workflows/ci.yml/badge.svg)](https://github.com/Alpharages/bmad-mcp-server/actions/workflows/ci.yml)
+[![Node.js](https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white)](./.nvmrc)
+[![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](./LICENSE)
 
-[Quick start](#quick-start) · [Usage](#usage) · [ClickUp](#clickup-integration) · [Custom skills](#custom-skills) · [Self-hosting](#self-hosting-http) · [Configuration](#configuration) · [Documentation](#documentation)
+[Getting started](#getting-started) · [Usage](#usage) ·
+[ClickUp](#optional-clickup-integration) · [Self-hosting](#self-hosting) ·
+[Contributing](#contributing)
 
 </div>
 
----
+BMAD MCP Server is an open-source TypeScript server that gives AI coding
+clients one consistent interface to BMAD agents, workflows, and resources. It
+works over local stdio or Streamable HTTP, automatically loads BMAD content,
+and optionally adds ClickUp-backed delivery workflows.
 
-## Overview
+## Why use it?
 
-BMAD MCP Server gives MCP clients — Claude Desktop, Claude Code, VS Code Copilot, Cline, and others — universal access to the BMAD methodology through a single unified `bmad` tool: **6 specialized agents** and **29 automated workflows**. Configure it once and use it across every project, with no per-project file copying.
+- **One installation, every project.** Keep BMAD outside individual
+  repositories and update it centrally.
+- **One MCP tool.** Discover, inspect, and execute the complete BMAD catalog
+  through the unified `bmad` tool.
+- **No manual BMAD setup.** The maintained BMAD fork is fetched and cached
+  automatically on first run.
+- **Extensible content.** Layer project, user, or Git-hosted BMAD content over
+  the defaults.
+- **Two transports.** Use stdio for local clients or Streamable HTTP for shared
+  deployments.
+- **Optional ClickUp delivery loop.** Create tickets, implement work, review
+  code, and run QA while keeping ClickUp as the system of record.
 
-- **BMAD** is a software-development methodology built around role-specialized AI agents (Analyst, Architect, Developer, UX Designer, PM, Tech Writer) and pre-built workflows for common tasks (PRD, architecture, debugging, ATDD, and more).
-- **Why MCP?** One installation serves every project, the methodology stays consistent, nothing clutters your repos, and updates are centralized.
+<a id="quick-start"></a>
+<a id="installation"></a>
 
-An optional **ClickUp integration** turns BMAD into an end-to-end delivery loop — creating epics and stories, implementing them, and running code review and QA against live ClickUp tasks.
+## Getting started
 
----
+### Prerequisites
 
-## Quick start
+- Node.js 22 (`22.14.0` is pinned in [`.nvmrc`](./.nvmrc))
+- Git
+- An MCP-compatible client
 
-**Prerequisites:** Node.js 18+ (22.14.0 recommended — see `.nvmrc`) and an MCP-capable client.
+### Configure your MCP client
 
-Add this to your client's MCP configuration:
+Add the following server definition to your client's MCP configuration:
 
 ```json
 {
@@ -41,147 +62,109 @@ Add this to your client's MCP configuration:
 }
 ```
 
-On first run the server fetches BMAD content from the official [`Alpharages/BMAD-METHOD`](https://github.com/Alpharages/BMAD-METHOD) repository and caches it under `~/.bmad/cache/git/`. No separate install step is needed.
-
-### Client setup
-
-<details>
-<summary><b>Claude Desktop</b></summary>
-
-Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows), add the snippet above, and restart Claude Desktop.
-
-</details>
+Restart the client, then ask it to list the available BMAD agents or
+workflows. On first use, the server downloads the maintained Alpharages BMAD
+fork and caches it under `~/.bmad/cache/git/`.
 
 <details>
-<summary><b>Claude Code (CLI)</b></summary>
+<summary><strong>Claude Code</strong></summary>
 
 ```bash
 claude mcp add bmad npx -- -y bmad-mcp-server --scope user
 ```
 
-Use `--scope project` to share with your team via `.mcp.json`.
+Use `--scope project` to create a project-level configuration.
 
 </details>
 
 <details>
-<summary><b>VS Code + GitHub Copilot</b></summary>
-
-```json
-{
-  "github.copilot.chat.mcp.servers": {
-    "bmad": {
-      "command": "npx",
-      "args": ["-y", "bmad-mcp-server"]
-    }
-  }
-}
-```
-
-Restart VS Code.
-
-</details>
-
-<details>
-<summary><b>Cline</b></summary>
-
-Open Cline's MCP settings and add the same `mcpServers` block shown in [Quick start](#quick-start).
-
-</details>
-
-### Alternate installs
+<summary><strong>Install globally</strong></summary>
 
 ```bash
-# Global install
-npm install -g bmad-mcp-server   # command: "bmad-mcp-server"
-
-# From source
-git clone https://github.com/Alpharages/bmad-mcp-server.git
-cd bmad-mcp-server && npm install && npm run build
-# command: "node", args: ["/abs/path/to/build/index.js"]
+npm install --global bmad-mcp-server
 ```
 
----
+Then use `bmad-mcp-server` as the MCP server command.
+
+</details>
+
+<details>
+<summary><strong>Run from source</strong></summary>
+
+```bash
+git clone https://github.com/Alpharages/bmad-mcp-server.git
+cd bmad-mcp-server
+npm install
+npm run build
+node build/index.js
+```
+
+</details>
 
 ## Usage
 
-Describe what you want in natural language and the model picks the right tool call:
+Use natural language; the MCP client chooses the appropriate operation:
 
+```text
+List the available BMAD agents.
+Ask the analyst to assess the market for a task-management SaaS.
+Start the PRD workflow for an inventory application.
+Use the architect to review this system design.
 ```
-"Have Mary analyze the market for a task-management SaaS."
-"Start a PRD workflow for an inventory app."
-"Get Winston to review this system design."
-"Start party-mode with the planning team to brainstorm features."
-```
 
-The server exposes a single `bmad` tool with five operations:
+The MCP server exposes one `bmad` tool with four operations:
 
-| Operation           | Purpose                                                          |
-| ------------------- | ---------------------------------------------------------------- |
-| `list`              | Enumerate available agents and workflows                         |
-| `read`              | Inspect an agent or workflow definition                          |
-| `execute`           | Run an agent or workflow with context                            |
-| `search`            | Search BMAD content                                              |
-| `resolve-doc-paths` | Resolve PRD / architecture / epics paths via the doc-path cascade |
+| Operation | Purpose |
+| --- | --- |
+| `list` | Discover agents, workflows, modules, and resources |
+| `read` | Load an agent, workflow, or resource definition |
+| `execute` | Prepare an agent or workflow for execution with user context |
+| `resolve-doc-paths` | Resolve planning-document paths for integrated workflows |
 
-Direct tool calls (useful for scripts and testing):
+Example tool calls:
 
 ```jsonc
-{ "operation": "list",    "query": "agents" }
-{ "operation": "read",    "type": "agent", "agent": "architect" }
-{ "operation": "execute", "agent": "analyst",  "message": "..." }
-{ "operation": "execute", "workflow": "prd",   "message": "..." }
+{ "operation": "list", "query": "agents" }
+{ "operation": "read", "type": "agent", "agent": "architect" }
+{ "operation": "execute", "workflow": "prd", "message": "Create a PRD for an inventory app" }
 ```
 
-### Agents
+The catalog is loaded at runtime. Use `list` rather than relying on a fixed
+agent or workflow count.
 
-| Agent   | Role             | Load with     |
-| ------- | ---------------- | ------------- |
-| Mary    | Business Analyst | `analyst`     |
-| Winston | System Architect | `architect`   |
-| Amelia  | Developer        | `dev`         |
-| Sally   | UX Designer      | `ux-designer` |
-| John    | Product Manager  | `pm`          |
-| —       | Tech Writer      | `tech-writer` |
+### Content sources
 
-Run `npm run cli:list-agents` for the live list.
+BMAD content is resolved in this order, with the first match winning:
 
-### Workflows
+1. Project-local `./bmad/`
+2. User-global `~/.bmad/`
+3. Git remotes passed to the server
+4. The [`Alpharages/BMAD-METHOD`](https://github.com/Alpharages/BMAD-METHOD)
+   fork
 
-29 workflows, including `prd`, `architecture`, `debug-inspect`, `atdd`, `ux-design`, and `party-mode`. Run `npm run cli:list-workflows` for the full list.
-
-### Content resolution
-
-BMAD content is loaded from the first source that matches, highest priority first:
-
-1. `./bmad/` — project-local
-2. `~/.bmad/` — user-global defaults
-3. Git remotes passed as CLI args (cached under `~/.bmad/cache/git/`)
-4. Official `Alpharages/BMAD-METHOD` repo (auto-fetched on first run)
-
-To layer your own BMAD content over the defaults, append a Git URL to the args:
+Add a custom Git source by appending it to the server arguments:
 
 ```json
-"args": ["-y", "bmad-mcp-server", "git+https://github.com/your-org/custom-bmad.git#main"]
+{
+  "command": "npx",
+  "args": [
+    "-y",
+    "bmad-mcp-server",
+    "git+https://github.com/your-org/custom-bmad.git#main"
+  ]
+}
 ```
 
-Set `BMAD_ROOT` to override the discovery root entirely.
+Set `BMAD_ROOT` when you need to override content discovery completely.
 
----
+<a id="clickup-integration"></a>
 
-## ClickUp integration
+## Optional ClickUp integration
 
-ClickUp tools are **additive** — the `bmad` tool works with or without them. The ClickUp surface is enabled when both an API key and team ID are supplied; otherwise the server runs in BMAD-only mode.
+ClickUp support is additive: without ClickUp credentials, the server continues
+to provide the complete BMAD tool in BMAD-only mode.
 
-Credentials are supplied per transport:
-
-| Transport             | How credentials are supplied                                                   |
-| --------------------- | ------------------------------------------------------------------------------ |
-| **stdio** (local/npx) | `env` block in the MCP client config, injected at process startup              |
-| **HTTP** (shared)     | `X-ClickUp-*` request headers, read per-session and held in memory only        |
-
-A shared HTTP server therefore needs **no ClickUp credentials of its own** — each user brings their own key via headers.
-
-**stdio example:**
+For a local stdio client, add the credentials to its server configuration:
 
 ```json
 {
@@ -199,124 +182,118 @@ A shared HTTP server therefore needs **no ClickUp credentials of its own** — e
 }
 ```
 
-### Environment variables / headers
+| Mode | Access |
+| --- | --- |
+| `read-minimal` | Task lookup and search |
+| `read` | Read-only tasks, spaces, lists, time entries, and documents |
+| `write` | Full read/write tool surface; required by custom skills |
 
-| Variable             | Header              | Purpose                                                           |
-| -------------------- | ------------------- | ----------------------------------------------------------------- |
-| `CLICKUP_API_KEY`    | `X-ClickUp-Api-Key` | Personal token from ClickUp → Settings → Apps (starts with `pk_`) |
-| `CLICKUP_TEAM_ID`    | `X-ClickUp-Team-Id` | Workspace/team ID (7–10 digits, visible in any settings URL)      |
-| `CLICKUP_MCP_MODE`   | `X-ClickUp-Mode`    | Tool surface: `read-minimal`, `read`, or `write` (default `write`) |
+The integration includes six BMAD 6.11 skills:
 
-### Mode → tool surface
+| Skill | Purpose |
+| --- | --- |
+| `bmad-clickup-create-epic` | Publish a planned epic to ClickUp |
+| `bmad-clickup-create-story` | Create a planned or ad hoc story |
+| `bmad-clickup-create-bug` | Turn a bug report into a structured ticket |
+| `bmad-clickup-dev-implement` | Implement a ClickUp task and move it to review |
+| `bmad-clickup-code-review` | Review an implementation and report the result |
+| `bmad-clickup-qa` | Run existing tests and visual QA for a ticket |
 
-| Mode              | Tools registered                                                                                                                         |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `read-minimal`    | `getTaskById`, `searchTasks`                                                                                                              |
-| `read`            | above + `searchSpaces`, `getListInfo`, `getTimeEntries`, `readDocument`                                                                   |
-| `write` (default) | above + `addComment`, `updateTask`, `createTask`, `updateListInfo`, `createTimeEntry`, `updateDocumentPage`, `createDocumentOrPage`       |
+See the [ClickUp quickstart](./docs/clickup-quickstart.md) for workspace setup,
+skill triggers, safety behavior, and troubleshooting. The custom skill source
+is documented in [`src/custom-skills`](./src/custom-skills/README.md).
 
-The session-scoped space picker (`pickSpace`, `getCurrentSpace`, `clearCurrentSpace`) is available in all modes. The custom skills below require `write` mode.
+> Never commit ClickUp tokens or other credentials. For shared HTTP
+> deployments, credentials are supplied per session through request headers.
 
-> See [`docs/clickup-quickstart.md`](./docs/clickup-quickstart.md) for the full setup runbook — workspace layout, first-run walkthrough, and troubleshooting.
+## Self-hosting
 
----
-
-## Custom skills
-
-Custom skills are ClickUp-integrated workflows layered on top of the BMAD agent/workflow engine. Unlike BMAD's built-in file-system workflows, they treat **ClickUp as the source of truth** — their output is ClickUp tasks, comments, and status transitions rather than local files. All require `CLICKUP_MCP_MODE=write`.
-
-| Skill                   | Purpose                                                                                                  |
-| ----------------------- | -------------------------------------------------------------------------------------------------------- |
-| `clickup-create-epic`   | Create a root-level epic in the Backlog list from your local epics file.                                 |
-| `clickup-create-story`  | Create a story (under an epic, or standalone) with BDD criteria composed by `bmad-create-story`.         |
-| `clickup-create-bug`    | Create a structured bug ticket (repro / expected / actual / impact) from a free-form report.             |
-| `clickup-dev-implement` | Implement a story from its task ID via `bmad-dev-story`, open a PR, and move the task to review.         |
-| `clickup-code-review`   | Run an adversarial review of an implementation via `bmad-code-review` and transition the task status.    |
-| `clickup-qa`            | Run end-to-end QA (code-access + visual passes), post a QA report, and transition the task status.       |
-
-Skills that read planning artifacts resolve the PRD, architecture, and epics paths through the **doc-path cascade** (per-project `.bmadmcp/config.toml` → BMAD config chain → `planning-artifacts/` default). Project-local pinning of ClickUp space/list IDs lives in `.bmadmcp/config.toml`; see [`.bmadmcp/config.example.toml`](./.bmadmcp/config.example.toml) for the schema, and [`CLAUDE.md`](./CLAUDE.md#doc-path-cascade) for the cascade details.
-
-Skill source lives in `src/custom-skills/` — see [`src/custom-skills/README.md`](./src/custom-skills/README.md).
-
----
-
-## Self-hosting (HTTP)
-
-For shared team deployments, run the HTTP transport behind a reverse proxy.
+The HTTP transport is intended for shared deployments and should be placed
+behind HTTPS in production.
 
 ```bash
 git clone https://github.com/Alpharages/bmad-mcp-server.git
 cd bmad-mcp-server
-cp .env.example .env   # set BMAD_API_KEY — no ClickUp vars needed here
-docker compose up -d
+cp .env.example .env
+# Set a strong BMAD_API_KEY in .env
+docker compose up --detach --build
 ```
 
-The server starts on `http://localhost:3000`. ClickUp credentials are per-user (passed as `X-ClickUp-*` headers), so the server `.env` only needs `PORT`, `BMAD_API_KEY`, and optionally `BMAD_DEBUG`.
+The default endpoint is `http://localhost:3000/mcp`.
 
-### Endpoints
+| Endpoint | Purpose |
+| --- | --- |
+| `GET /health` | Unauthenticated health check |
+| `POST /mcp` | MCP Streamable HTTP requests |
+| `GET /mcp` | Server-to-client event stream |
+| `DELETE /mcp` | Close an MCP session |
 
-| Endpoint      | Auth | Purpose                                        |
-| ------------- | ---- | ---------------------------------------------- |
-| `GET /health` | No   | Health check                                   |
-| `POST /mcp`   | Yes  | MCP Streamable HTTP transport                  |
-| `GET /mcp`    | Yes  | SSE stream for server-to-client notifications  |
-| `DELETE /mcp` | Yes  | Close MCP session                              |
-
-Authenticate with `Authorization: Bearer <key>` or `X-API-Key: <key>`. If `BMAD_API_KEY` is unset, the server runs in open mode (development only). SSE requires `proxy_buffering off` on your reverse proxy.
-
-**Connect from Claude Code:**
+Authenticate with `Authorization: Bearer <key>` or `X-API-Key: <key>`. If
+`BMAD_API_KEY` is unset, HTTP mode is open to anyone who can reach it; only use
+that configuration in a trusted development environment.
 
 ```bash
-claude mcp add --transport http bmad https://your-domain.com/mcp \
+claude mcp add --transport http bmad https://your-domain.example/mcp \
   --header "Authorization: Bearer YOUR_KEY" --scope user
 ```
 
-Claude Desktop is stdio-only; bridge with [`mcp-remote`](https://www.npmjs.com/package/mcp-remote). Full reverse-proxy and version-pinning notes are in [`docs/clickup-quickstart.md`](./docs/clickup-quickstart.md).
-
----
+<a id="environment-variables"></a>
 
 ## Configuration
 
-| Variable               | Default       | Purpose                                                |
-| ---------------------- | ------------- | ------------------------------------------------------ |
-| `BMAD_ROOT`            | auto          | Override BMAD installation root                        |
-| `BMAD_DEBUG`           | `false`       | Verbose logging via `src/utils/logger.ts`              |
-| `BMAD_GIT_AUTO_UPDATE` | `true`        | Auto-refresh Git-cached BMAD content (CI sets `false`) |
-| `BMAD_REQUIRE_CLICKUP` | unset         | `1`/`true` → hard-fail at boot if ClickUp vars missing |
-| `BMAD_API_KEY`         | unset         | API key for the HTTP transport                         |
-| `PORT`                 | `3000`        | HTTP port                                              |
-| `NODE_ENV`             | `development` | `test` / `development` / `production`                  |
+| Variable | Default | Description |
+| --- | --- | --- |
+| `BMAD_ROOT` | Automatic discovery | Override the BMAD content root |
+| `BMAD_DEBUG` | `false` | Enable verbose server logging |
+| `BMAD_GIT_AUTO_UPDATE` | `true` | Refresh cached Git content automatically |
+| `BMAD_API_KEY` | Unset | Protect the HTTP transport |
+| `BMAD_REQUIRE_CLICKUP` | Unset | Fail startup when ClickUp credentials are missing |
+| `CLICKUP_API_KEY` | Unset | ClickUp personal API token |
+| `CLICKUP_TEAM_ID` | Unset | ClickUp workspace/team ID |
+| `CLICKUP_MCP_MODE` | `write` | ClickUp tool scope: `read-minimal`, `read`, or `write` |
+| `PORT` | `3000` | HTTP server port |
 
-ClickUp variables are listed in [ClickUp integration](#clickup-integration). The canonical list lives in [`.env.example`](./.env.example).
+See [`.env.example`](./.env.example) for the complete list and supported
+values. Project-specific ClickUp and planning-path defaults can be stored in
+`.bmadmcp/config.toml`; start from
+[`.bmadmcp/config.example.toml`](./.bmadmcp/config.example.toml).
 
----
+## CLI
+
+The package also installs a `bmad` command for terminal use:
+
+```bash
+bmad list agents
+bmad list workflows --json
+bmad search architecture
+bmad read agent analyst
+bmad execute workflow prd --message "Inventory application"
+```
+
+Run `bmad` without arguments for the interactive interface.
 
 ## Architecture
 
-```
-AI client → MCP transport → Server → BMADEngine → ResourceLoader → BMAD content
-```
-
-`BMADEngine` (`src/core/bmad-engine.ts`) is **transport-agnostic** — it returns plain TypeScript objects rather than MCP types, so the same engine powers the MCP server, the CLI, and the tests.
-
-```
-src/
-├── index.ts            # MCP (stdio) entry point
-├── index-http.ts       # MCP (HTTP) entry point
-├── cli.ts              # CLI entry point
-├── server.ts           # MCP server class
-├── core/
-│   ├── bmad-engine.ts      # Transport-agnostic business logic
-│   └── resource-loader.ts  # Multi-source content loader
-├── tools/
-│   ├── bmad-unified.ts     # Unified `bmad` tool
-│   └── operations/         # list / read / execute / search handlers
-└── utils/                  # logger, git-source-resolver
+```text
+MCP client
+    │
+    ├── stdio ─────────────┐
+    └── Streamable HTTP ───┤
+                           ▼
+                    MCP server layer
+                           │
+                           ▼
+                       BMADEngine
+                           │
+                           ▼
+                     Resource loader
+                           │
+          project → user → Git → Alpharages BMAD fork
 ```
 
-Full design details: [`docs/architecture.md`](./docs/architecture.md).
-
----
+The transport-agnostic `BMADEngine` powers the MCP server, CLI, and tests.
+Read the [architecture guide](./docs/architecture.md) for component and data
+flow details.
 
 ## Development
 
@@ -328,55 +305,67 @@ npm run build
 npm test
 ```
 
-Common scripts:
+Useful commands:
 
-```bash
-npm run dev              # stdio mode, watch
-npm run dev:http         # HTTP mode, watch
-npm test                 # unit + integration
-npm run test:coverage    # with coverage
-npm run test:e2e         # end-to-end
-npm run lint             # ESLint
-npm run format           # Prettier
-npm run cli:list-agents  # verify loaded agents
-```
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Run the stdio server from TypeScript |
+| `npm run dev:http` | Run the HTTP server from TypeScript |
+| `npm test` | Run unit and integration tests |
+| `npm run test:e2e` | Run end-to-end tests |
+| `npm run lint` | Check code quality |
+| `npm run format` | Format supported files |
+| `npm run build` | Create the production build |
 
-**Conventions:** [Conventional Commits](https://www.conventionalcommits.org/) (semantic-release derives version bumps automatically — do not bump `package.json` by hand); never call `console.*` directly (use `src/utils/logger.ts`); use `.js` extensions in TypeScript imports; mirror `src/` under `tests/unit/`.
-
-Live-credential ClickUp smoke tests (`npm run smoke:clickup`, `smoke:clickup:http`, `smoke:clickup:cross-list`) are excluded from CI; see [`docs/development-guide.md`](./docs/development-guide.md).
-
----
+See the [development guide](./docs/development-guide.md) for repository
+conventions, testing strategy, and release details.
 
 ## Contributing
 
-1. Fork and branch off `main` (`feature/your-thing`).
-2. Make your changes with tests.
-3. Run `npm test && npm run lint`.
-4. Commit using Conventional Commits.
-5. Open a PR — the title is validated against the Conventional Commits format.
+Contributions are welcome. Bug reports, feature proposals, documentation
+improvements, and pull requests all help the project.
 
-See [`docs/development-guide.md`](./docs/development-guide.md) for the full contributor flow.
+1. Check existing [issues](https://github.com/Alpharages/bmad-mcp-server/issues)
+   before starting substantial work.
+2. Fork the repository and create a focused branch from `main`.
+3. Add or update tests when behavior changes.
+4. Run `npm test`, `npm run lint`, and `npm run build`.
+5. Open a pull request with a clear description and a
+   [Conventional Commit](https://www.conventionalcommits.org/) title.
 
----
+Please keep changes focused and never include API keys, access tokens, or
+customer data in issues, logs, fixtures, or pull requests.
 
 ## Documentation
 
+- [Documentation index](./docs/index.md)
 - [Architecture](./docs/architecture.md)
 - [API contracts](./docs/api-contracts.md)
 - [Development guide](./docs/development-guide.md)
-- [BMAD + ClickUp quickstart](./docs/clickup-quickstart.md)
-- [Release process](./.github/RELEASE_PROCESS.md)
-
----
+- [ClickUp quickstart](./docs/clickup-quickstart.md)
+- [Changelog](./CHANGELOG.md)
 
 ## Credits
 
-This server was originally created by **[@mkellerman](https://github.com/mkellerman)** at [mkellerman/bmad-mcp-server](https://github.com/mkellerman/bmad-mcp-server) and is now maintained under the [Alpharages](https://github.com/Alpharages) organization. All credit for the original implementation, design, and architecture belongs to the original author.
+This project is a fork of
+[`mkellerman/bmad-mcp-server`](https://github.com/mkellerman/bmad-mcp-server),
+originally created by [@mkellerman](https://github.com/mkellerman). Full credit
+for the original implementation, architecture, and foundation belongs to the
+original author and contributors.
 
-It builds on the [BMAD Method](https://github.com/Alpharages/BMAD-METHOD) — all methodology, agents, and workflows are credited to that project.
+The [Alpharages](https://github.com/Alpharages) community maintains this fork
+and develops its additional features, including the current unified tool,
+HTTP transport, Git-backed content loading, and ClickUp integration.
+
+The BMAD content source used by this server,
+[`Alpharages/BMAD-METHOD`](https://github.com/Alpharages/BMAD-METHOD), is a
+fork of the official
+[`bmad-code-org/bmad-method`](https://github.com/bmad-code-org/bmad-method)
+project. The original BMAD methodology, agents, workflows, and foundation are
+credited to the upstream BMAD maintainers and contributors; Alpharages
+maintains its fork and the features added there.
 
 ## License
 
-[ISC](LICENSE) © Alpharages and contributors.
-</content>
-</invoke>
+BMAD MCP Server is open-source software licensed under the
+[ISC License](./LICENSE). © 2026 Alpharages and contributors.

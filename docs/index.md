@@ -15,8 +15,8 @@ Welcome to the BMAD MCP Server documentation - bringing the power of the [BMAD M
 
 ### 📋 [ClickUp Quickstart](./clickup-quickstart.md)
 
-Team-lead guide for invoking ClickUp-routed skills (`clickup-create-story`,
-`clickup-dev-implement`, `clickup-create-bug`).
+Team-lead guide for invoking ClickUp-routed skills (`bmad-clickup-create-story`,
+`bmad-clickup-dev-implement`, `bmad-clickup-create-bug`).
 
 ### 🏗️ [Architecture](./architecture.md)
 
@@ -122,13 +122,13 @@ This approach:
 
 ## 🔍 What's What
 
-| Document                                  | Purpose                              | Audience                |
-| ----------------------------------------- | ------------------------------------ | ----------------------- |
-| [README.md](../README.md)                 | Project introduction and quick start | Everyone                |
-| [Architecture](architecture.md)           | System design and components         | Developers              |
-| [API Contracts](api-contracts.md)         | Tool and API reference               | Developers, Integrators |
+| Document                                    | Purpose                              | Audience                |
+| ------------------------------------------- | ------------------------------------ | ----------------------- |
+| [README.md](../README.md)                   | Project introduction and quick start | Everyone                |
+| [Architecture](architecture.md)             | System design and components         | Developers              |
+| [API Contracts](api-contracts.md)           | Tool and API reference               | Developers, Integrators |
 | [ClickUp Quickstart](clickup-quickstart.md) | Team-lead ClickUp skill guide        | Team Leads              |
-| [Development Guide](development-guide.md) | Development workflow                 | Contributors            |
+| [Development Guide](development-guide.md)   | Development workflow                 | Contributors            |
 
 ---
 

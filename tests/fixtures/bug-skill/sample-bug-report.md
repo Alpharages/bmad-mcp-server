@@ -3,7 +3,7 @@
 Steps to reproduce:
 
 1. Set `[clickup_create_bug].pinned_epic_id` in `.bmadmcp/config.toml`.
-2. Invoke `clickup-create-bug` and complete steps 1–4.
+2. Invoke `bmad-clickup-create-bug` and complete steps 1–4.
 3. Confirm task creation in step 5.
 
 Expected behaviour: task is created as a subtask of the selected epic.
